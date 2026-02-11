@@ -1,110 +1,115 @@
-📌 Important
+# AGENTS.md — Novira (Single Source of Truth)
 
-If scope changes:
-
-Update SPEC.md
-
-Log decision in DECISIONS.md
-
-Commit before implementation
-
+This file defines operating rules for the Development Agent (Codex) and how to navigate Novira’s documentation.
 
 ---
 
-# `AGENTS.md`
+## 0) Prime Directive
 
-```markdown
-# AGENTS.md – Novira
-
-This file defines operating rules for the Development Assistant (Codex).
+Do not implement features until documentation is internally consistent.
+If a contradiction exists between docs, stop and resolve it via the dedicated docs-cleanup ticket.
 
 ---
 
-## 1. Source of Truth
+## 1) Source of Truth Order (Read in This Order)
 
-Primary documents:
+1) SPEC.md  
+2) TICKETS.md  
+3) DECISIONS.md  
+4) SECURITY.md  
+5) strategy/ (memos that define canonical models)
+
+If any file conflicts with a higher-priority file, the higher-priority file wins, and the conflict must be resolved via a docs ticket.
+
+---
+
+## 2) Repository Structure (Expected)
+
+Root (current truth):
 - SPEC.md
-- SECURITY.md
 - TICKETS.md
 - DECISIONS.md
+- SECURITY.md
+- README.md
+- CHANGELOG.md
+- OPEN_QUESTIONS.md
+- AGENTS.md
 
-Codex must not diverge from these documents.
+Reference docs (conceptual + policies):
+- docs/ (policies + operational memos)
+- strategy/ (canonical models + architecture memos)
+- legal/ (legal baseline and demo corpus policies)
+
+Snapshots:
+- EXPORTS/YYYY-MM-DD_MX/ (immutable milestone snapshots)
 
 ---
 
-## 2. Scope Control
+## 3) Scope Control
 
-- Work only within defined tickets.
-- No architectural changes without explicit instruction.
+- Work only within the active ticket scope.
 - No refactors outside ticket scope.
-- No speculative improvements.
+- No “nice to have” improvements unless explicitly ticketed.
+- Do not silently change product behavior—update docs first.
 
 ---
 
-## 3. Security Rules
+## 4) Documentation Discipline (Hard Rule)
 
-- No API keys in client-side code.
-- All LLM calls must occur server-side.
-- Supabase must use Row-Level Security.
-- No direct public database writes.
-- Validate all external inputs (files/forms).
+If work changes:
+- import formats
+- data model / schema
+- user workflow
+- security posture
 
----
-
-## 4. Data Model Integrity
-
-- Follow Data Model v0 in SPEC.md.
-- Any schema change requires:
-  - Update SPEC.md
-  - Update DECISIONS.md
-  - Explicit migration plan
+Then Codex must:
+1) update SPEC.md and/or DECISIONS.md (and relevant memo)
+2) update TICKETS.md acceptance criteria
+3) commit docs changes BEFORE code changes
 
 ---
 
-## 5. UI/UX Expectations
+## 5) Decision Logging
 
-Minimum states required:
-- Loading
-- Empty
-- Error
-- Success
-
-Responsive layout required.
+- DECISIONS.md must contain short decision statements.
+- Long rationale/specs belong in docs/ or strategy/ memos.
+- New decisions: add D-0xx entries, do not rewrite history.
 
 ---
 
-## 6. Build Discipline
+## 6) Security Rules (Non-negotiable)
 
-After each ticket batch:
-- npm run lint
-- npm run build
-- Manual smoke test
-
-Commit only when build passes.
-
----
-
-## 7. Documentation Discipline
-
-If any implementation affects:
-- UX flow
-- Data model
-- Security model
-
-Codex must stop and request planning clarification.
+- No secrets in client code.
+- Server-side model calls only.
+- Supabase RLS must remain enabled.
+- Validate all uploads (type + size).
+- No public writable DB surface.
 
 ---
 
-## 8. Prohibited Actions
+## 7) Commit Discipline
 
-- Introducing new libraries without ticket
-- Embedding secrets
-- Changing DB policies
-- Making global refactors
-- Altering project structure
+- Prefer small, single-purpose commits.
+- Docs alignment commit must be separate from feature implementation.
+- Never commit unrelated file changes inside a ticket.
+
+Allowed:
+- `git add SPEC.md TICKETS.md DECISIONS.md` (explicit files)
+
+Not allowed:
+- `git add .` (unless ticket explicitly includes all changes)
 
 ---
 
-Project Name: Novira  
-Architecture Stage: Stage 0 → Stage 1  
-Security Level: Production-aware from start
+## 8) When to Stop and Ask
+
+Stop and ask if:
+- docs conflict on scope (e.g., EPUB IN vs EPUB OUT)
+- schema mismatch blocks implementation
+- a change would require new tables/policies not defined in docs
+
+---
+
+Project: Novira  
+Mode: Hungarian-only MVP  
+Current build focus: file upload ingestion (HTML/RTF/DOCX) + canonical parsing

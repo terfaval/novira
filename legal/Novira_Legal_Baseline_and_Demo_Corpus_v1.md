@@ -137,7 +137,7 @@ MEK: https://mek.oszk.hu/00800/00893/
 
 ------------------------------------------------------------------------
 
-# Használati javaslat (belső)
+# Használati javaslat
 
 Induláskor kizárólag vitathatatlan közkincs prózát használunk.\
 Amennyiben kétség merül fel → nem használjuk.
