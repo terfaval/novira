@@ -364,3 +364,41 @@ EPUB-specific import is not required for MVP.
 ------------------------------------------------------------------------
 ---
 
+## D-014 -- Local File Upload First (No Server-side URL Fetch in M4)
+
+**Date:** 2026-02-11\
+**Status:** Accepted\
+**Stage:** Stage 0 -> Stage 1\
+**Impact:** Medium
+
+### Decision
+
+For NOV-004 (M4), ingestion is limited to user-uploaded local files:
+- `.html` (including MEK-compatible exports)
+- `.rtf`
+- `.docx`
+
+Server-side URL fetch/scrape is deferred and out of scope for this ticket.
+
+### Why
+
+1. Keeps ingestion security boundary simple and auditable in MVP.
+2. Delivers canonical parsing value without crawl/origin complexity.
+3. Aligns with D-013 import discipline and stage timeline.
+
+### Security Constraints
+
+- Strict extension + MIME validation
+- File size limit enforcement
+- Parsing failure must not create partial readable artifacts
+- Metadata persistence for provenance and troubleshooting
+
+### Revisit Trigger
+
+URL-based ingest can be reconsidered only when:
+- origin allow-list policy is finalized
+- fetch timeout/retry policy is defined
+- legal/source validation process is documented
+
+---
+

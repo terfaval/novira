@@ -149,3 +149,23 @@ Screens:
   - notes as footnotes/endnotes
 - User can close the app and return later to the same work without logging in.
 
+## 8. M4 addendum: File upload ingestion (NOV-004)
+
+This addendum updates import scope for Stage 0 -> Stage 1 implementation.
+
+IN for NOV-004:
+- Local file upload only (no server-side URL fetch/scrape in M4)
+- Supported formats: `.html`, `.rtf`, `.docx`
+- Canonical normalization: chapter -> block
+- Metadata persistence: filename, size, mime, uploaded timestamp
+- Storage in Supabase Storage plus metadata rows in Postgres
+
+OUT for NOV-004:
+- EPUB ingestion in this ticket
+- Arbitrary domain scraping
+- Automated copyright checks
+
+Book status model for upload processing:
+- `processing` before parsing
+- `ready` on successful canonical parse
+- `failed` on parse/storage failure with captured error message

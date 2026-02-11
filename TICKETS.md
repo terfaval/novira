@@ -63,3 +63,14 @@ Scope is locked to SPEC v0.1.
 - File size limits
 - Error UI states
 - Basic progress indicators
+
+## Ticket NOV-004 -- M4 File Upload Ingestion (MEK-compatible formats)
+**Goal:** Upload `.html`, `.rtf`, `.docx` and normalize text into canonical chapter/block representation.
+**Acceptance:**
+- Upload UI accepts `.html`, `.rtf`, `.docx` with type + size validation
+- `POST /api/upload` validates input and stores source file in Supabase Storage
+- Parser pipeline creates chapters + blocks from uploaded file
+- Book status transitions: `processing` -> `ready` or `failed`
+- Metadata stored: original filename, size, mime type, upload timestamp
+- Library reflects status/progress
+- Parsing follows `docs/MEMO_mek-import.md` and `docs/MEMO_canonical-text-model.md`
