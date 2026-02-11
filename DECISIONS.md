@@ -243,3 +243,125 @@ Risk if ignored:
 
 Future upgrade path:
 Introduce `language_code` fields and i18n only when multi-language becomes a confirmed milestone.
+
+---
+
+## D-012 – Deferred: Multilingual Critical Translation Mode (CN–EN–HU)
+
+Status: Deferred  
+Stage: Post-MVP  
+
+Decision:
+
+Novira may introduce a future “Multilingual Critical Translation Mode” 
+supporting parallel source layers (e.g. Original + Reference + Hungarian output), 
+but only after the core Hungarian translation engine has proven stability.
+
+Strict Activation Gate:
+
+This decision may only move from Deferred to Planning if:
+
+1. At least one full Hungarian public domain novella has been successfully translated.
+2. Block-level validation workflow is stable.
+3. Terminology consistency is demonstrably maintained across long text.
+4. Structured notes function reliably.
+5. Export output is editorial-grade.
+6. Audit trail is functioning correctly.
+
+Until these conditions are satisfied, no architectural planning or implementation may begin.
+
+Why:
+
+- Prevents premature complexity.
+- Protects MVP delivery.
+- Ensures core engine maturity before adding multi-source orchestration.
+- Maintains scope discipline aligned with D-009 and D-011.
+
+Scope of Future Mode:
+
+- Multi-source block schema (Source A + Source B + Hungarian target)
+- Reference-layer support (not mechanical retranslation)
+- Terminology memory system
+- Entity locking (characters, places, doctrinal terms)
+- Three-column parallel reading UI
+- Source-attributed notes
+
+Risk if introduced too early:
+
+- Data model instability.
+- Context orchestration complexity.
+- UX overload.
+- Delayed shipping.
+
+Strategic Classification:
+
+Long-term differentiation feature.
+Not part of MVP.
+Not part of early scaling.
+
+Reference:
+See MEMO_multilingual-critical-mode.md for conceptual and architectural outline.
+
+---
+
+## D-013 -- Controlled MEK Source Import (MVP Scope Clarification)
+
+**Date:** 2026-02-11\
+**Status:** Accepted\
+**Stage:** Stage 0 (Kickoff)\
+**Impact:** Medium
+
+### Decision
+
+The system will support controlled source import specifically from MEK
+(mek.oszk.hu) in MVP form.
+
+Import will: - Accept a MEK work page URL (not direct file links
+required from user) - Programmatically resolve available formats -
+Prefer HTML (fallback: RTF/DOC; PDF only if necessary) - Normalize
+content into canonical internal text representation - Store source
+metadata (URL, format, timestamp)
+
+EPUB-specific import is not required for MVP.
+
+------------------------------------------------------------------------
+
+### Rationale
+
+1.  MEK provides multiple machine-readable formats.
+2.  HTML/RTF are sufficient for clean structural parsing.
+3.  EPUB handling adds unnecessary complexity in Stage 0.
+4.  Controlled domain import strengthens legal transparency.
+5.  Import-from-source supports the Novira brand value: traceability.
+
+------------------------------------------------------------------------
+
+### Non-Goals (MVP)
+
+-   General web scraping
+-   Arbitrary external domain imports
+-   Automated copyright validation logic
+-   EPUB-first pipeline
+
+------------------------------------------------------------------------
+
+### Security Constraints
+
+-   Domain whitelist: mek.oszk.hu only
+-   File size limit
+-   Content-type validation
+-   Metadata storage for audit trail
+
+------------------------------------------------------------------------
+
+### Future Extension
+
+-   Expand whitelist (e.g., gutenberg.org)
+-   Add EPUB ingestion
+-   Automated copyright year checks
+-   Version diff against re-imported source
+
+------------------------------------------------------------------------
+---
+
+
