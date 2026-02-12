@@ -14,8 +14,14 @@ export type BookRow = {
   title: string;
   author: string | null;
   description: string | null;
+  source_format: "html" | "rtf" | "docx";
+  source_filename: string;
+  source_mime: string;
+  source_size_bytes: number;
+  source_storage_path: string;
   status: BookStatus;
-  progress: number; // 0..100
+  error_message: string | null;
+  progress?: number;
   updated_at: string;
   created_at: string;
 };

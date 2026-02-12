@@ -1,24 +1,35 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { detectUploadFormat, parseToCanonical, type CanonicalBook } from "@/lib/upload/parser";
+import {
+  detectUploadFormat,
+  parseToCanonical,
+  type CanonicalBook,
+  type UploadFormat,
+} from "@/lib/upload/parser";
 
 const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
-const BUCKET_NAME = process.env.SUPABASE_UPLOAD_BUCKET ?? "books";
+const BUCKET_NAME = process.env.SUPABASE_UPLOAD_BUCKET ?? "sources";
 
-type BookStatusTarget = "processing" | "ready" | "failed";
+const MIME_BY_FORMAT: Record<UploadFormat, Set<string>> = {
+  html: new Set(["text/html", "application/xhtml+xml"]),
+  rtf: new Set(["application/rtf", "text/rtf", "application/x-rtf"]),
+  docx: new Set(["application/vnd.openxmlformats-officedocument.wordprocessingml.document"]),
+};
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
-  const accessToken = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length).trim() : "";
+  const accessToken = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice("Bearer ".length).trim()
+    : "";
   if (!accessToken) {
-    return NextResponse.json({ ok: false, message: "Hiányzó auth token." }, { status: 401 });
+    return NextResponse.json({ ok: false, message: "Hianyzo auth token." }, { status: 401 });
   }
 
   const supabase = getSupabaseServerClient(accessToken);
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   if (authErr || !authData.user) {
-    return NextResponse.json({ ok: false, message: "Érvénytelen munkamenet." }, { status: 401 });
+    return NextResponse.json({ ok: false, message: "Ervenytelen munkamenet." }, { status: 401 });
   }
 
   const userId = authData.user.id;
@@ -29,53 +40,78 @@ export async function POST(req: NextRequest) {
   const description = String(form.get("description") ?? "").trim();
 
   if (!(file instanceof File)) {
-    return NextResponse.json({ ok: false, message: "A fájl kötelező." }, { status: 400 });
+    return NextResponse.json({ ok: false, message: "A fajl kotelezo." }, { status: 400 });
   }
   if (!title) {
-    return NextResponse.json({ ok: false, message: "A cím kötelező." }, { status: 400 });
+    return NextResponse.json({ ok: false, message: "A cim kotelezo." }, { status: 400 });
   }
   if (file.size > MAX_UPLOAD_BYTES) {
-    return NextResponse.json({ ok: false, message: "A fájl túl nagy (max 12 MB)." }, { status: 413 });
+    return NextResponse.json({ ok: false, message: "A fajl tul nagy (max 12 MB)." }, { status: 413 });
   }
 
   const format = detectUploadFormat(file.name, file.type);
   if (!format) {
-    return NextResponse.json({ ok: false, message: "Csak HTML, RTF és DOCX formátum támogatott." }, { status: 415 });
+    return NextResponse.json(
+      { ok: false, message: "Csak HTML, RTF es DOCX formatum tamogatott." },
+      { status: 415 }
+    );
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  if (!isAllowedMime(format, file.type)) {
+    return NextResponse.json(
+      { ok: false, message: "A MIME tipus nem megfelelo a fajl kiterjesztesehez." },
+      { status: 415 }
+    );
+  }
+
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
   const ext = format === "html" ? "html" : format;
   const storagePath = `${userId}/${Date.now()}-${safeBaseName(file.name)}.${ext}`;
+  const sourceMime = normalizeMime(file.type);
+
+  const uploadRes = await supabase.storage
+    .from(BUCKET_NAME)
+    .upload(storagePath, fileBuffer, { upsert: false, contentType: sourceMime });
+  if (uploadRes.error) {
+    return NextResponse.json(
+      { ok: false, message: `A fajl tarolasa sikertelen: ${uploadRes.error.message}` },
+      { status: 500 }
+    );
+  }
 
   let bookId: string | null = null;
   try {
-    const created = await createBookRow(supabase, userId, {
-      title,
-      author: author || null,
-      description: description || null,
-      format,
-      filename: file.name,
-    });
-    bookId = created.id;
+    const { data, error } = await supabase
+      .from("books")
+      .insert({
+        owner_id: userId,
+        user_id: userId,
+        title,
+        author: author || null,
+        description: description || null,
+        source_format: format,
+        source_filename: file.name,
+        source_mime: sourceMime,
+        source_size_bytes: file.size,
+        source_storage_path: storagePath,
+        status: "processing",
+      })
+      .select("id")
+      .single();
 
-    await setBookProgress(supabase, bookId, "processing", 10);
-
-    const uploadRes = await supabase.storage
-      .from(BUCKET_NAME)
-      .upload(storagePath, buffer, { upsert: false, contentType: file.type || contentTypeForFormat(format) });
-    if (uploadRes.error) {
-      throw new Error(`Storage upload failed: ${uploadRes.error.message}`);
+    if (error || !data?.id) {
+      throw mapInsertError(error);
     }
 
-    await setBookProgress(supabase, bookId, "processing", 40);
+    bookId = data.id as string;
 
-    const canonical = await parseToCanonical(buffer, format);
+    const canonical = await parseToCanonical(fileBuffer, format);
     if (canonical.chapters.length === 0) {
-      throw new Error("A parser nem talált feldolgozható tartalmat.");
+      throw new Error("A parser nem talalt feldolgozhato tartalmat.");
     }
 
     await persistCanonical(supabase, bookId, userId, canonical);
-    await setBookProgress(supabase, bookId, "ready", 100);
+    await setBookStatus(supabase, bookId, "ready", null);
 
     return NextResponse.json({
       ok: true,
@@ -84,69 +120,58 @@ export async function POST(req: NextRequest) {
       blocks: canonical.chapters.reduce((sum, ch) => sum + ch.blocks.length, 0),
     });
   } catch (err: any) {
-    if (bookId) await setBookProgress(supabase, bookId, "failed", 100);
-    return NextResponse.json(
-      { ok: false, message: err?.message ?? "Sikertelen feltöltés." },
-      { status: 500 }
+    const message = err?.message ?? "Sikertelen feltoltes.";
+
+    if (bookId) {
+      await setBookStatus(supabase, bookId, "failed", message);
+    } else {
+      await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
+    }
+
+    return NextResponse.json({ ok: false, message }, { status: 500 });
+  }
+}
+
+function normalizeMime(mime: string): string {
+  return mime.trim().toLowerCase();
+}
+
+function isAllowedMime(format: UploadFormat, mime: string): boolean {
+  const normalized = normalizeMime(mime);
+  if (!normalized) return false;
+  return MIME_BY_FORMAT[format].has(normalized);
+}
+
+function mapInsertError(error: { message?: string } | null): Error {
+  const raw = error?.message ?? "Nem sikerult letrehozni a konyv rekordot.";
+  const normalized = raw.toLowerCase();
+
+  if (normalized.includes("could not find") && normalized.includes("column")) {
+    return new Error(
+      "Adatbazis schema elteres: hianyzik egy feltolteshez szukseges oszlop a books tablabol."
     );
   }
-}
-
-async function createBookRow(
-  supabase: ReturnType<typeof getSupabaseServerClient>,
-  userId: string,
-  args: { title: string; author: string | null; description: string | null; format: string; filename: string }
-): Promise<{ id: string }> {
-  const base = {
-    title: args.title,
-    author: args.author,
-    description: args.description,
-  };
-
-  const payloads: Record<string, unknown>[] = [
-    { ...base, status: "processing", progress: 5, source_format: args.format, source_filename: args.filename, user_id: userId },
-    { ...base, status: "processing", progress: 5, source_format: args.format, source_filename: args.filename, owner_id: userId },
-    { ...base, status: "processing", progress: 5, user_id: userId },
-    { ...base, status: "processing", progress: 5, owner_id: userId },
-    { ...base, status: "processing", progress: 5 },
-    { ...base, source_format: args.format, source_filename: args.filename, user_id: userId },
-    { ...base, source_format: args.format, source_filename: args.filename, owner_id: userId },
-    base,
-  ];
-
-  let lastError: any = null;
-  for (const payload of payloads) {
-    const { data, error } = await supabase.from("books").insert(payload).select("id").single();
-    if (!error && data?.id) return { id: data.id as string };
-    lastError = error;
+  if (normalized.includes("row-level security")) {
+    return new Error("Nincs jogosultsag a konyv letrehozasahoz (RLS policy hiba).");
   }
 
-  throw new Error(lastError?.message ?? "Nem sikerült létrehozni a könyv rekordot.");
+  return new Error(raw);
 }
 
-async function setBookProgress(
+async function setBookStatus(
   supabase: ReturnType<typeof getSupabaseServerClient>,
   bookId: string,
-  status: BookStatusTarget,
-  progress: number
+  status: "processing" | "ready" | "failed",
+  errorMessage: string | null
 ) {
-  const statusCandidates = status === "processing"
-    ? ["processing", "feldolgozas", "uj"]
-    : status === "ready"
-      ? ["ready", "kesz", "szerkesztes"]
-      : ["failed", "hiba"];
+  const payload =
+    status === "failed"
+      ? { status, error_message: errorMessage ?? "Ismeretlen feldolgozasi hiba." }
+      : { status, error_message: null };
 
-  for (const st of statusCandidates) {
-    const variants: Record<string, unknown>[] = [
-      { status: st, progress },
-      { status: st },
-      { progress },
-    ];
-
-    for (const payload of variants) {
-      const { error } = await supabase.from("books").update(payload).eq("id", bookId);
-      if (!error) return;
-    }
+  const { error } = await supabase.from("books").update(payload).eq("id", bookId);
+  if (error) {
+    throw new Error(`Nem sikerult frissiteni a konyv statuszt: ${error.message}`);
   }
 }
 
@@ -195,7 +220,7 @@ async function insertChapter(
     lastError = error;
   }
 
-  throw new Error(lastError?.message ?? "Nem sikerült menteni a fejezetet.");
+  throw new Error(lastError?.message ?? "Nem sikerult menteni a fejezetet.");
 }
 
 async function insertBlock(
@@ -204,31 +229,19 @@ async function insertBlock(
   base: { book_id: string; chapter_id: string; block_index: number; raw_text: string }
 ) {
   const hash = createHash("sha256").update(base.raw_text).digest("hex");
-  const payloads: Record<string, unknown>[] = [
-    { ...base, type: "paragraph", original_text: base.raw_text, original_hash: hash, owner_id: userId },
-    { ...base, type: "paragraph", original_text: base.raw_text, original_hash: hash, user_id: userId },
-    { ...base, type: "paragraph", original_text: base.raw_text, owner_id: userId },
-    { ...base, type: "paragraph", raw_text: base.raw_text, owner_id: userId },
-    { ...base, type: "paragraph", text: base.raw_text, owner_id: userId },
-    { ...base, original_text: base.raw_text, original_hash: hash },
-    { ...base, raw_text: base.raw_text },
-    { ...base, text: base.raw_text },
-  ];
+  const payload = {
+    owner_id: userId,
+    book_id: base.book_id,
+    chapter_id: base.chapter_id,
+    block_index: base.block_index,
+    original_text: base.raw_text,
+    original_hash: hash,
+  };
 
-  let lastError: any = null;
-  for (const payload of payloads) {
-    const { error } = await supabase.from("blocks").insert(payload);
-    if (!error) return;
-    lastError = error;
+  const { error } = await supabase.from("blocks").insert(payload);
+  if (error) {
+    throw new Error(error.message ?? "Nem sikerult menteni a blokkot.");
   }
-
-  throw new Error(lastError?.message ?? "Nem sikerült menteni a blokkot.");
-}
-
-function contentTypeForFormat(format: "html" | "rtf" | "docx") {
-  if (format === "html") return "text/html";
-  if (format === "rtf") return "application/rtf";
-  return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 }
 
 function safeBaseName(name: string) {
