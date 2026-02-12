@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
+    "cheerio": "^1.2.0",
     "jszip": "^3.10.1",
     "next": "^14.2.0",
     "react": "^18.3.0",
@@ -17,6 +18,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",

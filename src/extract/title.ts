@@ -1,4 +1,5 @@
-import { CheerioAPI } from "cheerio"
+import type { CheerioAPI } from "cheerio"
+import type { Element } from "domhandler"
 
 export function extractTitle($: CheerioAPI): string {
   const titleTag = $("title").first().text().trim()
@@ -11,7 +12,7 @@ export function extractTitle($: CheerioAPI): string {
 
   const centered = $("body")
     .find("p")
-    .filter((_, el) => {
+    .filter((_: number, el: Element) => {
       const text = $(el).text().trim()
       return text.length > 5 && text.length < 120
     })

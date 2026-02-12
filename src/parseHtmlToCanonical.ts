@@ -1,4 +1,4 @@
-import cheerio from "cheerio"
+import { load } from "cheerio"
 import { CanonicalBook } from "./types"
 import { normalizeDom } from "./dom/normalizeDom"
 import { extractTitle } from "./extract/title"
@@ -6,9 +6,7 @@ import { extractChapters } from "./extract/chapters"
 import { normalizeBlocks } from "./extract/blocks"
 
 export function parseHtmlToCanonical(html: string): CanonicalBook {
-  const $ = cheerio.load(html, {
-    decodeEntities: true
-  })
+  const $ = load(html)
 
   normalizeDom($)
 
