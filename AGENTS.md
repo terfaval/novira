@@ -28,6 +28,26 @@ the higher-priority document wins and the conflict must be resolved.
 - No “nice-to-have” changes unless explicitly ticketed.
 - Do not modify legal/* unless explicitly instructed.
 
+## Ticket Handling (Important)
+
+If a task references a ticket ID that does not exist in TICKETS.md:
+
+- Do not block execution.
+- Treat the provided task description as the temporary ticket definition.
+- Proceed with implementation within the described scope.
+- After completion, append a short entry to TICKETS.md under:
+
+  "Implemented (Ad-hoc)"
+
+  including:
+  - Ticket name / ID used in prompt
+  - One-line goal
+  - Files modified
+  - Commit hash
+
+Lack of a predefined ticket must not prevent implementation.
+
+
 ## Commit Discipline
 - Keep docs-only commits separate from feature commits.
 - Do not use `git add .` during scoped tickets.
