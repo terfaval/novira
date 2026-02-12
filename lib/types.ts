@@ -1,4 +1,12 @@
-export type BookStatus = "uj" | "feldolgozas" | "szerkesztes" | "kesz" | "hiba";
+export type BookStatus =
+  | "uj"
+  | "feldolgozas"
+  | "szerkesztes"
+  | "kesz"
+  | "hiba"
+  | "processing"
+  | "ready"
+  | "failed";
 
 export type BookRow = {
   id: string;

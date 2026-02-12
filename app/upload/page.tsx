@@ -4,24 +4,23 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ensureAnonIdentity } from "@/lib/auth/anon";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { BookRow } from "@/lib/types";
 
-type Status = "idle" | "saving" | "done" | "error";
+type Status = "idle" | "uploading" | "done" | "error";
 
 export default function UploadPage() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [description, setDescription] = useState("");
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [createdId, setCreatedId] = useState<string | null>(null);
+  const [bookId, setBookId] = useState<string | null>(null);
 
-  async function onCreate() {
-    setStatus("saving");
+  async function onUpload() {
+    setStatus("uploading");
     setError(null);
-    setCreatedId(null);
+    setBookId(null);
 
     const boot = await ensureAnonIdentity();
     if (!boot.ok) {
@@ -36,29 +35,49 @@ export default function UploadPage() {
       return;
     }
 
-    // NOTE: M3 creates the Book row only. Actual file upload + parsing is M4+.
-    const payload: Partial<BookRow> = {
-      title: title.trim(),
-      author: author.trim() ? author.trim() : null,
-      description: description.trim() ? description.trim() : null,
-      status: "uj",
-      progress: 0,
-    };
-
-    const { data, error: insErr } = await supabase
-      .from("books")
-      .insert(payload)
-      .select("*")
-      .single();
-
-    if (insErr) {
+    if (!file) {
       setStatus("error");
-      setError(insErr.message);
+      setError("Kérlek válassz egy fájlt.");
+      return;
+    }
+
+    const fileName = file.name.toLowerCase();
+    if (!(/\.(html?|rtf|docx)$/.test(fileName))) {
+      setStatus("error");
+      setError("Csak HTML, RTF és DOCX fájl tölthető fel.");
+      return;
+    }
+
+    const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+    if (sessionErr || !sessionData.session?.access_token) {
+      setStatus("error");
+      setError(sessionErr?.message ?? "Nem található érvényes munkamenet.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("title", title.trim());
+    if (author.trim()) formData.append("author", author.trim());
+    if (description.trim()) formData.append("description", description.trim());
+
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+      },
+      body: formData,
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result?.ok) {
+      setStatus("error");
+      setError(result?.message ?? "A feltöltés nem sikerült.");
       return;
     }
 
     setStatus("done");
-    setCreatedId((data as any)?.id ?? null);
+    setBookId(result.bookId ?? null);
   }
 
   return (
@@ -66,22 +85,22 @@ export default function UploadPage() {
       <div className="row">
         <div>
           <div className="h1">Új könyv</div>
-          <p className="sub">Könyv létrehozása a könyvtárban. (Feldolgozás M4-ben.)</p>
+          <p className="sub">Lokális feltöltés (HTML, RTF, DOCX) és automatikus feldolgozás.</p>
         </div>
         <Link className="btn" href="/">Vissza a könyvtárba</Link>
       </div>
 
       <div className="card stack">
         <label>
-          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Fájl (M3: csak jelzés)</div>
+          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Fájl</div>
           <input
             className="input"
             type="file"
-            accept=".docx,.epub,.html,.txt"
-            onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+            accept=".html,.htm,.rtf,.docx"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
           <div style={{ marginTop: 6 }}>
-            <small>{fileName ? `Kiválasztva: ${fileName}` : "Később itt indul a feltöltés + feldolgozás."}</small>
+            <small>{file ? `Kiválasztva: ${file.name}` : "A kiválasztott fájl a szerverre kerül és feldolgozás indul."}</small>
           </div>
         </label>
 
@@ -101,10 +120,10 @@ export default function UploadPage() {
         </label>
 
         <div className="row">
-          <button className="btn" onClick={onCreate} disabled={status === "saving"}>
-            {status === "saving" ? "Mentés…" : "Könyv létrehozása"}
+          <button className="btn" onClick={onUpload} disabled={status === "uploading"}>
+            {status === "uploading" ? "Feltöltés…" : "Feltöltés indítása"}
           </button>
-          {createdId ? <Link className="btn" href={`/book/${createdId}`}>Megnyitás</Link> : <span />}
+          {bookId ? <Link className="btn" href={`/book/${bookId}`}>Megnyitás</Link> : <span />}
         </div>
 
         {status === "error" && error ? (

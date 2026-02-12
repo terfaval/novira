@@ -8,6 +8,9 @@ function statusLabel(status: BookRow["status"]) {
     case "szerkesztes": return "Szerkesztés";
     case "kesz": return "Kész";
     case "hiba": return "Hiba";
+    case "processing": return "Feldolgozás";
+    case "ready": return "Kész";
+    case "failed": return "Hiba";
     default: return "Ismeretlen";
   }
 }

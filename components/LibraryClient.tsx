@@ -20,7 +20,7 @@ export function LibraryClient() {
   useEffect(() => {
     let cancelled = false;
 
-    async function run() {
+    async function loadBooks() {
       const boot = await ensureAnonIdentity();
       if (!boot.ok) {
         if (!cancelled) setState({ status: "error", message: boot.reason });
@@ -40,9 +40,12 @@ export function LibraryClient() {
       if (!cancelled) setState({ status: "ready", books: (data ?? []) as BookRow[] });
     }
 
-    run();
+    loadBooks();
+    const id = window.setInterval(loadBooks, 4000);
+
     return () => {
       cancelled = true;
+      window.clearInterval(id);
     };
   }, [supabase]);
 
