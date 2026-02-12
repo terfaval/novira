@@ -69,7 +69,7 @@ export function LibraryClient() {
   if (state.books.length === 0) return <LibraryEmpty />;
 
   return (
-    <div className="stack">
+    <div className="library-grid">
       {state.books.map((b) => (
         <BookCard key={b.id} book={b} />
       ))}

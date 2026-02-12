@@ -15,40 +15,53 @@ function statusLabel(status: BookRow["status"]) {
   }
 }
 
+function toCoverSlug(book: BookRow) {
+  if (typeof book.cover_slug === "string" && book.cover_slug.trim()) {
+    return book.cover_slug.trim().toLowerCase();
+  }
+
+  return book.title
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function resolveBookYear(book: BookRow) {
+  const direct = book.publication_year ?? book.year;
+  if (direct !== null && direct !== undefined && `${direct}`.trim() !== "") {
+    return `${direct}`.trim();
+  }
+
+  const fromText = `${book.description ?? ""} ${book.source_filename ?? ""}`.match(/\b(1[5-9]\d{2}|20\d{2})\b/);
+  if (fromText) return fromText[1];
+
+  const date = new Date(book.created_at);
+  return Number.isNaN(date.getTime()) ? null : `${date.getUTCFullYear()}`;
+}
+
 export function BookCard({ book }: { book: BookRow }) {
   const progress = typeof book.progress === "number" ? Math.max(0, Math.min(100, book.progress)) : 0;
+  const coverPath = `/covers/${toCoverSlug(book)}.png`;
+  const year = resolveBookYear(book);
 
   return (
-    <div className="card">
-      <div className="row">
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: 16,
-              fontWeight: 650,
-              marginBottom: 2,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            <Link href={`/book/${book.id}`}>{book.title}</Link>
-          </div>
-          <div
-            style={{
-              color: "var(--muted)",
-              fontSize: 13,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {book.author ?? "-"}
-          </div>
+    <div className="card book-card">
+      <Link href={`/book/${book.id}`} className="book-cover-link" aria-label={`${book.title} megnyitasa`}>
+        <div className="book-cover" style={{ backgroundImage: `url('${coverPath}')` }} />
+      </Link>
+
+      <div className="book-meta">
+        <div className="book-title">
+          <Link href={`/book/${book.id}`}>{book.title}</Link>
         </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <span className="badge">{statusLabel(book.status)}</span>
-        </div>
+        <div className="book-author">{book.author?.trim() || "Ismeretlen szerzo"}</div>
+        {year ? <div className="book-year">{year}</div> : null}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
+        <span className="badge">{statusLabel(book.status)}</span>
       </div>
 
       <div style={{ marginTop: 10 }}>

@@ -34,6 +34,64 @@ main { max-width: 980px; margin: 0 auto; padding: 32px 20px 56px; }
 .row { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
 .stack { display: grid; gap: 10px; }
 
+.library-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 700px) {
+  .library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 920px) {
+  .library-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 980px) {
+  .library-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.book-card {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+.book-cover-link {
+  display: block;
+}
+.book-cover {
+  width: min(100%, 200px);
+  margin: 0 auto 12px;
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background-color: rgba(0,0,0,0.25);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.book-meta {
+  min-width: 0;
+}
+.book-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.book-author {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.book-year {
+  margin-top: 2px;
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+}
+
 .btn {
   border: 1px solid var(--line);
   background: var(--panel-2);
