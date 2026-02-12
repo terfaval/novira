@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { extractAndAnchorFootnotes } from "@/lib/upload/footnotes";
 import {
   detectUploadFormat,
   parseToCanonical,
@@ -111,6 +112,7 @@ export async function POST(req: NextRequest) {
     }
 
     await persistCanonical(supabase, bookId, userId, canonical);
+    await extractAndAnchorFootnotes(supabase, { userId, bookId });
     await setBookStatus(supabase, bookId, "ready", null);
 
     return NextResponse.json({
