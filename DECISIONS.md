@@ -402,3 +402,33 @@ URL-based ingest can be reconsidered only when:
 
 ---
 
+## D-015 -- NOVIRA Color System v1 (Closed Palette)
+
+**Date:** 2026-02-12  
+**Status:** Accepted  
+**Stage:** M2  
+**Impact:** Medium
+
+### Decision
+
+Novira UI must use the closed `NOVIRA COLOR SYSTEM v1` palette below.  
+No additional brand colors are allowed unless this decision is explicitly updated.
+
+Core colors:
+- Indigo (primary): `#1F2A44`
+- Indigo (deeper alternative): `#162033`
+- Off-white background: `#F4F1E8`
+- Pale gold accent: `#C6A75E`
+- Bronze depth accent: `#8C6B3E`
+
+### Why
+
+- Preserves visual identity consistency from MVP.
+- Supports calm, editorial brand tone defined in D-006.
+- Prevents ad hoc palette drift across surfaces.
+
+### Constraint
+
+This is a closed system. Do not deviate from the palette without a new decision entry.
+
+---
