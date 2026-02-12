@@ -1,115 +1,35 @@
-# AGENTS.md — Novira (Single Source of Truth)
+# AGENTS.md — Novira (Source of Truth)
 
-This file defines operating rules for the Development Agent (Codex) and how to navigate Novira’s documentation.
+Rules for the development agent (Codex). Purpose: prevent scope drift and documentation contradictions.
 
----
+## Prime Directive
+Do not implement features while documentation is inconsistent.
+If conflicts exist, resolve them via the documentation alignment ticket before writing code.
 
-## 0) Prime Directive
+## Source of Truth (read order)
+1) SPEC.md
+2) TICKETS.md
+3) DECISIONS.md
+4) SECURITY.md
+5) docs/ and strategy/ (memos; must not override higher-priority docs)
 
-Do not implement features until documentation is internally consistent.
-If a contradiction exists between docs, stop and resolve it via the dedicated docs-cleanup ticket.
+If a lower-priority document conflicts with a higher-priority document,
+the higher-priority document wins and the conflict must be resolved.
 
----
+## Folder Map
+- docs/ : operational memos (e.g., MEK import positioning)
+- strategy/ : canonical models (e.g., canonical text model)
+- legal/ : legal baseline and demo corpus (do not modify unless ticketed)
+- EXPORTS/ : immutable milestone snapshots
 
-## 1) Source of Truth Order (Read in This Order)
-
-1) SPEC.md  
-2) TICKETS.md  
-3) DECISIONS.md  
-4) SECURITY.md  
-5) strategy/ (memos that define canonical models)
-
-If any file conflicts with a higher-priority file, the higher-priority file wins, and the conflict must be resolved via a docs ticket.
-
----
-
-## 2) Repository Structure (Expected)
-
-Root (current truth):
-- SPEC.md
-- TICKETS.md
-- DECISIONS.md
-- SECURITY.md
-- README.md
-- CHANGELOG.md
-- OPEN_QUESTIONS.md
-- AGENTS.md
-
-Reference docs (conceptual + policies):
-- docs/ (policies + operational memos)
-- strategy/ (canonical models + architecture memos)
-- legal/ (legal baseline and demo corpus policies)
-
-Snapshots:
-- EXPORTS/YYYY-MM-DD_MX/ (immutable milestone snapshots)
-
----
-
-## 3) Scope Control
-
-- Work only within the active ticket scope.
+## Scope Control
+- Work only within the active ticket.
 - No refactors outside ticket scope.
-- No “nice to have” improvements unless explicitly ticketed.
-- Do not silently change product behavior—update docs first.
+- No “nice-to-have” changes unless explicitly ticketed.
+- Do not modify legal/* unless explicitly instructed.
 
----
-
-## 4) Documentation Discipline (Hard Rule)
-
-If work changes:
-- import formats
-- data model / schema
-- user workflow
-- security posture
-
-Then Codex must:
-1) update SPEC.md and/or DECISIONS.md (and relevant memo)
-2) update TICKETS.md acceptance criteria
-3) commit docs changes BEFORE code changes
-
----
-
-## 5) Decision Logging
-
-- DECISIONS.md must contain short decision statements.
-- Long rationale/specs belong in docs/ or strategy/ memos.
-- New decisions: add D-0xx entries, do not rewrite history.
-
----
-
-## 6) Security Rules (Non-negotiable)
-
-- No secrets in client code.
-- Server-side model calls only.
-- Supabase RLS must remain enabled.
-- Validate all uploads (type + size).
-- No public writable DB surface.
-
----
-
-## 7) Commit Discipline
-
-- Prefer small, single-purpose commits.
-- Docs alignment commit must be separate from feature implementation.
-- Never commit unrelated file changes inside a ticket.
-
-Allowed:
-- `git add SPEC.md TICKETS.md DECISIONS.md` (explicit files)
-
-Not allowed:
-- `git add .` (unless ticket explicitly includes all changes)
-
----
-
-## 8) When to Stop and Ask
-
-Stop and ask if:
-- docs conflict on scope (e.g., EPUB IN vs EPUB OUT)
-- schema mismatch blocks implementation
-- a change would require new tables/policies not defined in docs
-
----
-
-Project: Novira  
-Mode: Hungarian-only MVP  
-Current build focus: file upload ingestion (HTML/RTF/DOCX) + canonical parsing
+## Commit Discipline
+- Keep docs-only commits separate from feature commits.
+- Do not use `git add .` during scoped tickets.
+- Prefer explicit staging:
+  - git add SPEC.md TICKETS.md DECISIONS.md AGENTS.md
