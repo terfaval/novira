@@ -187,15 +187,15 @@ async function persistCanonical(
   for (const chapter of canonical.chapters) {
     const chapterId = await insertChapter(supabase, userId, {
       book_id: bookId,
-      chapter_index: chapter.order_index,
-      title: chapter.title,
+      chapter_index: chapter.chapter_index,
+      title: chapter.title || null,
     });
 
     for (const block of chapter.blocks) {
       await insertBlock(supabase, userId, {
         book_id: bookId,
         chapter_id: chapterId,
-        block_index: block.order_index,
+        block_index: block.chapter_index,
         raw_text: block.raw_text,
       });
     }
@@ -205,22 +205,26 @@ async function persistCanonical(
 async function insertChapter(
   supabase: ReturnType<typeof getSupabaseServerClient>,
   userId: string,
-  base: { book_id: string; chapter_index: number; title: string }
+  base: { book_id: string; chapter_index: number; title: string | null }
 ): Promise<string> {
-  const payloads: Record<string, unknown>[] = [
-    { ...base, owner_id: userId },
-    { ...base, user_id: userId },
-    base,
-  ];
+  const payload = {
+    owner_id: userId,
+    book_id: base.book_id,
+    chapter_index: base.chapter_index,
+    title: base.title,
+  };
 
-  let lastError: any = null;
-  for (const payload of payloads) {
-    const { data, error } = await supabase.from("chapters").insert(payload).select("id").single();
-    if (!error && data?.id) return data.id as string;
-    lastError = error;
+  const { data, error } = await supabase
+    .from("chapters")
+    .insert(payload)
+    .select("id")
+    .single();
+
+  if (error || !data?.id) {
+    throw new Error(error?.message ?? "Nem sikerult menteni a fejezetet.");
   }
 
-  throw new Error(lastError?.message ?? "Nem sikerult menteni a fejezetet.");
+  return data.id as string;
 }
 
 async function insertBlock(
