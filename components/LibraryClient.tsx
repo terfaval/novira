@@ -14,7 +14,7 @@ type LoadState =
 
 export function LibraryClient() {
   const [state, setState] = useState<LoadState>({ status: "booting" });
-
+  const [activeBookId, setActiveBookId] = useState<string | null>(null);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   useEffect(() => {
@@ -37,7 +37,9 @@ export function LibraryClient() {
         return;
       }
 
-      if (!cancelled) setState({ status: "ready", books: (data ?? []) as BookRow[] });
+      if (!cancelled) {
+        setState({ status: "ready", books: (data ?? []) as BookRow[] });
+      }
     }
 
     loadBooks();
@@ -49,18 +51,24 @@ export function LibraryClient() {
     };
   }, [supabase]);
 
+  useEffect(() => {
+    if (state.status !== "ready" || state.books.length === 0) return;
+    if (activeBookId && !state.books.some((book) => book.id === activeBookId)) {
+      setActiveBookId(null);
+    }
+  }, [activeBookId, state]);
+
   if (state.status === "booting") {
-    return <div className="card">Betöltés…</div>;
+    return <div className="card">Betoltes...</div>;
   }
+
   if (state.status === "error") {
     return (
       <div className="card">
-        <div style={{ fontWeight: 650, marginBottom: 6 }}>Hiba történt</div>
-        <div style={{ color: "var(--muted)", lineHeight: 1.55 }}>
-          {state.message}
-        </div>
+        <div style={{ fontWeight: 650, marginBottom: 6 }}>Hiba tortent</div>
+        <div style={{ color: "var(--muted)", lineHeight: 1.55 }}>{state.message}</div>
         <div style={{ marginTop: 10 }}>
-          <small>Ellenőrizd a Supabase env változókat és az anon auth beállítást.</small>
+          <small>Ellenorizd a Supabase env valtozokat es az anon auth beallitast.</small>
         </div>
       </div>
     );
@@ -69,10 +77,18 @@ export function LibraryClient() {
   if (state.books.length === 0) return <LibraryEmpty />;
 
   return (
-    <div className="library-grid">
-      {state.books.map((b) => (
-        <BookCard key={b.id} book={b} />
-      ))}
-    </div>
+    <section className="library-carousel" aria-label="Konyvlista">
+      {state.books.map((book) => {
+        const isActive = activeBookId === book.id;
+        return (
+          <div
+            key={book.id}
+            className={`library-carousel-item${isActive ? " is-active" : " is-inactive"}`}
+          >
+            <BookCard book={book} isActive={isActive} onActivate={setActiveBookId} />
+          </div>
+        );
+      })}
+    </section>
   );
 }

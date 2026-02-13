@@ -22,6 +22,14 @@ type LoadState =
   | { status: "error"; message: string }
   | { status: "ready"; userId: string; data: BookDashboardData };
 
+type BookEditForm = {
+  title: string;
+  author: string;
+  year: string;
+  description: string;
+  icon: string;
+};
+
 /**
  * Store-like UI state for this dashboard.
  *
@@ -41,6 +49,35 @@ const MOBILE_BREAKPOINT = 960;
 function completionPercent(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, Math.min(100, Math.round(value * 100)));
+}
+
+function normalizeIconSlug(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9._-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function toBookEditForm(data: BookDashboardData): BookEditForm {
+  const publicationYear = data.book.publication_year;
+  const legacyYear = data.book.year;
+
+  return {
+    title: data.book.title ?? "",
+    author: data.book.author ?? "",
+    year:
+      publicationYear !== null && publicationYear !== undefined && String(publicationYear).trim() !== ""
+        ? String(publicationYear)
+        : legacyYear !== null && legacyYear !== undefined && String(legacyYear).trim() !== ""
+          ? String(legacyYear)
+          : "",
+    description: data.book.description ?? "",
+    icon: data.book.cover_slug ?? "",
+  };
 }
 
 function blockStatusLabel(block: DashboardBlock): string {
@@ -114,6 +151,16 @@ function BlockCard({
 export function BookDashboard({ bookId }: { bookId: string }) {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [state, setState] = useState<LoadState>({ status: "booting" });
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState<BookEditForm>({
+    title: "",
+    author: "",
+    year: "",
+    description: "",
+    icon: "",
+  });
+  const [isEditSaving, setIsEditSaving] = useState(false);
+  const [editFeedback, setEditFeedback] = useState<string | null>(null);
   const [store, setStore] = useState<DashboardViewStore>({
     viewState: "workbench",
     panelMode: "single",
@@ -151,6 +198,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       try {
         const data = await fetchBookDashboardData(supabase, bookId);
         setState({ status: "ready", userId: boot.userId, data });
+        setEditForm(toBookEditForm(data));
 
         if (opts?.keepCurrentView) {
           if (data.completion.isComplete) {
@@ -208,6 +256,85 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     [loadDashboard, state, supabase],
   );
 
+  const handleEditSubmit = useCallback(async () => {
+    if (state.status !== "ready") return;
+
+    const title = editForm.title.trim();
+    const author = editForm.author.trim();
+    const description = editForm.description.trim();
+    const icon = normalizeIconSlug(editForm.icon);
+    const yearRaw = editForm.year.trim();
+
+    if (!title) {
+      setEditFeedback("A cim kotelezo.");
+      return;
+    }
+
+    let yearValue: number | null = null;
+    if (yearRaw) {
+      if (!/^\d{3,4}$/.test(yearRaw)) {
+        setEditFeedback("Az ev csak 3 vagy 4 szamjegy lehet.");
+        return;
+      }
+      yearValue = Number(yearRaw);
+    }
+
+    setEditFeedback(null);
+    setIsEditSaving(true);
+
+    const fullPayload = {
+      title,
+      author: author || null,
+      publication_year: yearValue,
+      description: description || null,
+      cover_slug: icon || null,
+    };
+
+    const basePayload = {
+      title,
+      author: author || null,
+      description: description || null,
+    };
+
+    const updateQuery = supabase.from("books").update(fullPayload).eq("id", bookId).eq("user_id", state.userId);
+    const { error } = await updateQuery;
+
+    if (error) {
+      const message = `${error.message ?? ""}`.toLowerCase();
+      const missingOptionalColumn =
+        message.includes("publication_year") ||
+        message.includes("cover_slug");
+
+      if (missingOptionalColumn) {
+        const fallback = await supabase
+          .from("books")
+          .update(basePayload)
+          .eq("id", bookId)
+          .eq("user_id", state.userId);
+
+        if (fallback.error) {
+          setEditFeedback(fallback.error.message || "Sikertelen mentes.");
+          setIsEditSaving(false);
+          return;
+        }
+
+        setEditFeedback("A cim/szerzo/leiras mentve. Az ev vagy ikon oszlop hianyzik az adatbazisban.");
+        setIsEditSaving(false);
+        await loadDashboard({ keepCurrentView: true });
+        return;
+      }
+
+      setEditFeedback(error.message || "Sikertelen mentes.");
+      setIsEditSaving(false);
+      return;
+    }
+
+    setEditFeedback("Konyv adatai mentve.");
+    setIsEditSaving(false);
+    setIsEditOpen(false);
+    await loadDashboard({ keepCurrentView: true });
+  }, [bookId, editForm, loadDashboard, state, supabase]);
+
   const syncPanels = useCallback(
     (source: "original" | "translated") => {
       if (isMobile || !store.syncScroll || store.viewState !== "workbench") return;
@@ -251,6 +378,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const { book, blocks, completion } = state.data;
   const progress = completionPercent(completion.ratio);
   const canReader = completion.isComplete;
+  const iconPreviewSlug = normalizeIconSlug(editForm.icon);
+  const iconPreviewPath = iconPreviewSlug
+    ? `url('/covers/SVG/${iconPreviewSlug}.svg'), url('/covers/${iconPreviewSlug}.png')`
+    : null;
 
   const renderOriginalPanel = (showControls: boolean) => (
     <section className={styles.panel}>
@@ -358,6 +489,17 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             <button
               className="btn"
               type="button"
+              onClick={() => {
+                setEditFeedback(null);
+                setEditForm(toBookEditForm(state.data));
+                setIsEditOpen((prev) => !prev);
+              }}
+            >
+              {isEditOpen ? "Szerkesztes bezarasa" : "Konyv adatai szerkesztese"}
+            </button>
+            <button
+              className="btn"
+              type="button"
               onClick={() => setStore((prev) => ({ ...prev, viewState: "workbench" }))}
             >
               Workbench
@@ -381,6 +523,96 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             <div style={{ width: `${progress}%` }} />
           </div>
         </div>
+
+        {isEditOpen ? (
+          <section className={styles.editPanel}>
+            <div className={styles.editGrid}>
+              <label className={styles.editField}>
+                <span>Cim</span>
+                <input
+                  className="input"
+                  value={editForm.title}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, title: event.target.value }))
+                  }
+                  placeholder="pl. A jo palocok"
+                />
+              </label>
+              <label className={styles.editField}>
+                <span>Szerzo</span>
+                <input
+                  className="input"
+                  value={editForm.author}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, author: event.target.value }))
+                  }
+                  placeholder="pl. Mikszath Kalman"
+                />
+              </label>
+              <label className={styles.editField}>
+                <span>Ev</span>
+                <input
+                  className="input"
+                  value={editForm.year}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, year: event.target.value }))
+                  }
+                  placeholder="pl. 1901"
+                  inputMode="numeric"
+                />
+              </label>
+              <label className={styles.editField}>
+                <span>Ikon (slug)</span>
+                <input
+                  className="input"
+                  value={editForm.icon}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, icon: event.target.value }))
+                  }
+                  placeholder="pl. golyakalifa"
+                />
+              </label>
+            </div>
+
+            <label className={styles.editField}>
+              <span>Rovid leiras</span>
+              <textarea
+                className={styles.editTextarea}
+                value={editForm.description}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, description: event.target.value }))
+                }
+                placeholder="1-2 mondat."
+              />
+            </label>
+
+            {iconPreviewPath ? (
+              <div className={styles.iconPreview}>
+                <div className={styles.iconPreviewImage} style={{ backgroundImage: iconPreviewPath }} />
+                <span>{iconPreviewSlug}</span>
+              </div>
+            ) : null}
+
+            {editFeedback ? <div className={styles.editFeedback}>{editFeedback}</div> : null}
+
+            <div className={styles.editActions}>
+              <button className="btn" type="button" onClick={handleEditSubmit} disabled={isEditSaving}>
+                {isEditSaving ? "Mentese..." : "Mentes"}
+              </button>
+              <button
+                className="btn"
+                type="button"
+                onClick={() => {
+                  setEditFeedback(null);
+                  setEditForm(toBookEditForm(state.data));
+                }}
+                disabled={isEditSaving}
+              >
+                Visszaallitas
+              </button>
+            </div>
+          </section>
+        ) : null}
 
         <div className={styles.controlsRow}>
           {isMobile ? (

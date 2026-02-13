@@ -1,7 +1,9 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import type { BookRow } from "@/lib/types";
+import { BookCoverIcon } from "@/components/BookCoverIcon";
 
 function statusMeta(status: BookRow["status"]) {
   switch (status) {
@@ -50,11 +52,48 @@ function resolveBookYear(book: BookRow) {
   return Number.isNaN(date.getTime()) ? null : `${date.getUTCFullYear()}`;
 }
 
-export function BookCard({ book }: { book: BookRow }) {
+function normalizeAuthor(author: string) {
+  return author
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function authorSpineColor(author: string) {
+  const normalized = normalizeAuthor(author);
+
+  if (normalized.includes("babits")) return "#2F3A52";
+  if (normalized.includes("mikszath")) return "#4A3E34";
+  if (normalized.includes("jokai")) return "#1E3A5F";
+  if (normalized.includes("gardonyi")) return "#4F6F6B";
+  if (normalized.includes("krudy")) return "#2B3248";
+  if (normalized.includes("moricz")) return "#3C4B3D";
+  if (normalized.includes("tomorkeny")) return "#6E7A6B";
+
+  return "#4A5C78";
+}
+
+export function BookCard({
+  book,
+  isActive = true,
+  onActivate,
+}: {
+  book: BookRow;
+  isActive?: boolean;
+  onActivate?: (bookId: string) => void;
+}) {
   const router = useRouter();
   const href = `/book/${book.id}`;
   const progress = typeof book.progress === "number" ? Math.max(0, Math.min(100, book.progress)) : 0;
-  const coverPath = `/covers/${toCoverSlug(book)}.png`;
+  const coverSlug = toCoverSlug(book);
+  const author = book.author?.trim() || "Ismeretlen szerzo";
+  const cardBackgroundImage = coverSlug ? `url('/covers/SVG/${encodeURIComponent(coverSlug)}.png')` : "none";
+  const cardStyle = {
+    "--book-card-bg-image": cardBackgroundImage,
+    "--active-spine-color": authorSpineColor(author),
+  } as CSSProperties;
   const year = resolveBookYear(book);
   const status = statusMeta(book.status);
 
@@ -62,16 +101,50 @@ export function BookCard({ book }: { book: BookRow }) {
     router.push(href);
   }
 
+  function primaryAction() {
+    if (isActive) {
+      navigate();
+      return;
+    }
+    onActivate?.(book.id);
+  }
+
+  if (!isActive) {
+    const spineStyle = { "--spine-color": authorSpineColor(author) } as CSSProperties;
+    return (
+      <div
+        className="book-spine book-card-clickable"
+        style={spineStyle}
+        role="link"
+        tabIndex={0}
+        onClick={primaryAction}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            primaryAction();
+          }
+        }}
+        aria-label={`${book.title} megnyitasa`}
+      >
+        <div className="book-spine-icon" aria-hidden="true">
+          <BookCoverIcon slug={coverSlug} title={book.title} />
+        </div>
+        <div className="book-spine-line">{author} - {book.title}</div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="card book-card book-card-clickable"
+      style={cardStyle}
       role="link"
       tabIndex={0}
-      onClick={navigate}
+      onClick={primaryAction}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          navigate();
+          primaryAction();
         }
       }}
       aria-label={`${book.title} megnyitasa`}
@@ -82,12 +155,14 @@ export function BookCard({ book }: { book: BookRow }) {
       </div>
 
       <div className="book-cover-link" aria-hidden="true">
-        <div className="book-cover" style={{ backgroundImage: `url('${coverPath}')` }} />
+        <div className="book-cover" aria-hidden="true">
+          <BookCoverIcon slug={coverSlug} title={book.title} />
+        </div>
       </div>
 
       <div className="book-meta">
         <div className="book-title">{book.title}</div>
-        <div className="book-author">{book.author?.trim() || "Ismeretlen szerzo"}</div>
+        <div className="book-author">{author}</div>
         {year ? <div className="book-year">{year}</div> : null}
       </div>
 
@@ -104,9 +179,7 @@ export function BookCard({ book }: { book: BookRow }) {
           onKeyDown={(event) => event.stopPropagation()}
         >
           <summary className="book-accordion-trigger" aria-label="Leiras kinyitasa vagy bezarasa" />
-          <div className="details">
-            {book.description?.trim() ? book.description : "Nincs megadva leiras."}
-          </div>
+          <div className="details">{book.description?.trim() ? book.description : "Nincs megadva leiras."}</div>
         </details>
 
         {book.status !== "ready" ? (
