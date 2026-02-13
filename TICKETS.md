@@ -56,3 +56,12 @@ Markdown + DOCX export with notes.
 
 ## Ticket 8 - Guardrails
 Rate limiting, file size limits, error states.
+
+---
+
+## Implemented (Ad-hoc)
+
+- Ticket: Ticket 4A' - Book Dashboard (Workbench + Reader + Documentation)
+- Goal: Add a functional `/book/[id]` dashboard with desktop/mobile modes, completion tracking, and in-code/project documentation.
+- Files modified: `app/book/[id]/page.tsx`, `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `components/BookDashboard/types.ts`, `components/BookDashboard/README.md`, `lib/db/queries/books.ts`, `docs/BOOK_DASHBOARD.md`, `README.md`, `SECURITY.md`, `OPEN_QUESTIONS.md`, `TICKETS.md`
+- Commit hash: `27db94bb2e5776d2f01d40d1e16fd39823529138` (workspace base head; no new commit created in this session)

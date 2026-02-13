@@ -9,7 +9,7 @@ Date: 2026-02-11
 - **LLM API key leakage** if called directly from the browser
 - Unbounded cost / spam requests against LLM endpoints
 - Data loss (accidental deletion) without recovery
-- Malformed uploads (DOCX/EPUB) causing crashes or memory spikes
+- Malformed uploads (HTML/RTF/DOCX) causing crashes or memory spikes
 
 ## 2. Mandatory security controls (MVP)
 

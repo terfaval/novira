@@ -8,7 +8,7 @@ These are the remaining decisions that may affect architecture or scope.
 
 ## 2) Import rules
 - DOCX chapter detection: rely on Heading styles or fallback heuristics?
-- EPUB chapter boundaries: TOC-based only, or content heuristics?
+- RTF chapter boundaries: title-based only, or content heuristics?
 
 ## 3) Segmentation granularity
 - Default blocks: paragraph-level

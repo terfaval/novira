@@ -25,7 +25,7 @@ See:
 
 Novira enables:
 
-- Full book upload (DOCX / EPUB)
+- Full book upload (HTML / RTF / DOCX)
 - Structured segmentation (chapter → block)
 - Block-based modernization workflow
 - Style-profile driven transformations

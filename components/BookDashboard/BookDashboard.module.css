@@ -1,0 +1,172 @@
+.dashboard {
+  display: grid;
+  gap: 12px;
+}
+
+.header {
+  display: grid;
+  gap: 12px;
+}
+
+.headerTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.metaRow {
+  color: var(--muted);
+}
+
+.progressRow {
+  display: grid;
+  gap: 8px;
+}
+
+.progressLabel {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.controlsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.syncToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.desktopSplit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.readerDesktop {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mobileStack {
+  display: grid;
+  gap: 12px;
+}
+
+.mobileToggleGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.activeToggle {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  min-height: 420px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.panelTitle {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 650;
+}
+
+.panelBody {
+  overflow: auto;
+  max-height: 68vh;
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.blockCard {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.blockHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.blockTitle {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.blockSubtitle {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.blockText {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.blockFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.blockStatus {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.blockStatus[data-state="accepted"] {
+  color: #9de6bc;
+  border-color: rgba(157, 230, 188, 0.45);
+  background: rgba(34, 88, 56, 0.4);
+}
+
+@media (max-width: 959px) {
+  .headerTop {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .headerActions {
+    justify-content: flex-start;
+  }
+
+  .panel {
+    min-height: 320px;
+  }
+
+  .panelBody {
+    max-height: none;
+  }
+}

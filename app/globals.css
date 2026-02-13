@@ -53,18 +53,35 @@ main { max-width: 980px; margin: 0 auto; padding: 32px 20px 56px; }
   display: flex;
   flex-direction: column;
   text-align: center;
+  position: relative;
+  background: #FEFBF6;
+  color: #373F60;
+  border-color: rgba(55, 63, 96, 0.18);
+  padding-top: 42px;
+}
+.book-card-clickable {
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.book-card-clickable:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(55, 63, 96, 0.12);
+}
+.book-card-clickable:focus-visible {
+  outline: 2px solid rgba(47, 106, 168, 0.6);
+  outline-offset: 2px;
 }
 .book-cover-link {
   display: block;
 }
 .book-cover {
-  width: min(100%, 200px);
+  width: min(100%, 160px);
   margin: 0 auto 12px;
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 1 / 1;
   border-radius: 10px;
-  border: 1px solid var(--line);
-  background-color: rgba(0,0,0,0.25);
-  background-size: cover;
+  border: 1px solid transparent;
+  background-color: #fff;
+  background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }
@@ -80,7 +97,7 @@ main { max-width: 980px; margin: 0 auto; padding: 32px 20px 56px; }
   text-overflow: ellipsis;
 }
 .book-author {
-  color: var(--muted);
+  color: rgba(55, 63, 96, 0.8);
   font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
@@ -88,7 +105,7 @@ main { max-width: 980px; margin: 0 auto; padding: 32px 20px 56px; }
 }
 .book-year {
   margin-top: 2px;
-  color: rgba(255,255,255,0.55);
+  color: rgba(55, 63, 96, 0.62);
   font-size: 12px;
 }
 
@@ -138,9 +155,50 @@ main { max-width: 980px; margin: 0 auto; padding: 32px 20px 56px; }
 }
 .details {
   margin-top: 10px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid rgba(55, 63, 96, 0.2);
   padding-top: 10px;
-  color: var(--muted);
+  color: rgba(55, 63, 96, 0.82);
   line-height: 1.55;
+}
+.status-pin {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 9px;
+  border: 1px solid currentColor;
+}
+.status-pin-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+}
+.book-accordion-trigger {
+  list-style: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+.book-accordion-trigger::-webkit-details-marker {
+  display: none;
+}
+.book-accordion-trigger::after {
+  content: "▾";
+  display: inline-block;
+  color: rgba(55, 63, 96, 0.68);
+  font-size: 16px;
+  font-weight: 700;
+}
+details[open] > .book-accordion-trigger::after {
+  content: "▴";
 }
 small { color: var(--muted); }

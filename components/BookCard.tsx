@@ -1,17 +1,26 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
 import type { BookRow } from "@/lib/types";
 
-function statusLabel(status: BookRow["status"]) {
+function statusMeta(status: BookRow["status"]) {
   switch (status) {
-    case "uj": return "Uj";
-    case "feldolgozas": return "Feldolgozas";
-    case "szerkesztes": return "Szerkesztes";
-    case "kesz": return "Kesz";
-    case "hiba": return "Hiba";
-    case "processing": return "Feldolgozas";
-    case "ready": return "Feltoltve";
-    case "failed": return "Hiba";
-    default: return "Ismeretlen";
+    case "uj":
+      return { label: "Uj", color: "#A2672D" };
+    case "feldolgozas":
+    case "processing":
+      return { label: "Feldolgozas", color: "#2F6AA8" };
+    case "szerkesztes":
+      return { label: "Szerkesztes", color: "#2A7A66" };
+    case "kesz":
+      return { label: "Kesz", color: "#2D8A4F" };
+    case "ready":
+      return { label: "Feltoltve", color: "#B08D57" };
+    case "hiba":
+    case "failed":
+      return { label: "Hiba", color: "#B24A3A" };
+    default:
+      return { label: "Ismeretlen", color: "#6F7691" };
   }
 }
 
@@ -42,50 +51,74 @@ function resolveBookYear(book: BookRow) {
 }
 
 export function BookCard({ book }: { book: BookRow }) {
+  const router = useRouter();
+  const href = `/book/${book.id}`;
   const progress = typeof book.progress === "number" ? Math.max(0, Math.min(100, book.progress)) : 0;
   const coverPath = `/covers/${toCoverSlug(book)}.png`;
   const year = resolveBookYear(book);
+  const status = statusMeta(book.status);
+
+  function navigate() {
+    router.push(href);
+  }
 
   return (
-    <div className="card book-card">
-      <Link href={`/book/${book.id}`} className="book-cover-link" aria-label={`${book.title} megnyitasa`}>
+    <div
+      className="card book-card book-card-clickable"
+      role="link"
+      tabIndex={0}
+      onClick={navigate}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          navigate();
+        }
+      }}
+      aria-label={`${book.title} megnyitasa`}
+    >
+      <div className="status-pin" style={{ color: status.color }}>
+        <span className="status-pin-dot" aria-hidden="true" />
+        <span>{status.label}</span>
+      </div>
+
+      <div className="book-cover-link" aria-hidden="true">
         <div className="book-cover" style={{ backgroundImage: `url('${coverPath}')` }} />
-      </Link>
+      </div>
 
       <div className="book-meta">
-        <div className="book-title">
-          <Link href={`/book/${book.id}`}>{book.title}</Link>
-        </div>
+        <div className="book-title">{book.title}</div>
         <div className="book-author">{book.author?.trim() || "Ismeretlen szerzo"}</div>
         {year ? <div className="book-year">{year}</div> : null}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
-        <span className="badge">{statusLabel(book.status)}</span>
-      </div>
-
       <div style={{ marginTop: 10 }}>
-        {book.status === "failed" && book.error_message ? (
+        {(book.status === "failed" || book.status === "hiba") && book.error_message ? (
           <div style={{ color: "var(--muted)", lineHeight: 1.55, marginBottom: 10 }}>
             <strong>Hiba:</strong> {book.error_message}
           </div>
         ) : null}
 
-        <details style={{ marginTop: 10 }}>
-          <summary style={{ cursor: "pointer", color: "var(--muted)" }}>Rovid leiras</summary>
+        <details
+          style={{ marginTop: 10 }}
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          <summary className="book-accordion-trigger" aria-label="Leiras kinyitasa vagy bezarasa" />
           <div className="details">
             {book.description?.trim() ? book.description : "Nincs megadva leiras."}
           </div>
         </details>
 
-        <div style={{ marginTop: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1 }}>{progress}%</div>
-            <div className="progress" style={{ flex: 1 }}>
-              <div style={{ width: `${progress}%` }} />
+        {book.status !== "ready" ? (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1 }}>{progress}%</div>
+              <div className="progress" style={{ flex: 1 }}>
+                <div style={{ width: `${progress}%` }} />
+              </div>
             </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );
