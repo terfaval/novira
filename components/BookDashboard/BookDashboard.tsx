@@ -10,6 +10,7 @@ import {
   type BookDashboardData,
   type DashboardBlock,
 } from "@/lib/db/queries/books";
+import type { LlmResponse } from "@/lib/llm/types";
 import type {
   DashboardActivePanel,
   DashboardPanelMode,
@@ -29,6 +30,11 @@ type BookEditForm = {
   description: string;
   icon: string;
   background: string;
+};
+
+type GenerateErrorState = {
+  blockId: string;
+  message: string;
 };
 
 /**
@@ -89,32 +95,99 @@ function blockStatusLabel(block: DashboardBlock): string {
   return "Nincs forditas";
 }
 
+function mapGenerateError(status: number, fallbackMessage?: string): string {
+  if (status === 429) {
+    return "Tul sok generalasi keres erkezett. Varj egy kicsit, majd probald ujra.";
+  }
+  if (status === 400) {
+    return "A blokk most nem generalhato. Ellenorizd a tartalmat, majd probald ujra.";
+  }
+  if (status >= 500) {
+    return "A generalas most nem elerheto. Probald meg par perc mulva.";
+  }
+  if (fallbackMessage && fallbackMessage.trim()) {
+    return fallbackMessage;
+  }
+  return "Sikertelen generalas.";
+}
+
+async function requestDraftGeneration(args: {
+  supabase: ReturnType<typeof getSupabaseBrowserClient>;
+  bookId: string;
+  blockId: string;
+}): Promise<void> {
+  const { supabase, bookId, blockId } = args;
+  const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (sessionErr || !accessToken) {
+    throw new Error(sessionErr?.message ?? "Nem talalhato ervenyes munkamenet.");
+  }
+
+  const response = await fetch("/api/llm", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      action: "translate_block",
+      bookId,
+      blockId,
+    }),
+  });
+
+  const payload = (await response.json().catch(() => null)) as LlmResponse | null;
+  if (!response.ok || !payload?.ok) {
+    const fallbackMessage = payload && !payload.ok ? payload.error.message : undefined;
+    throw new Error(mapGenerateError(response.status, fallbackMessage));
+  }
+}
+
 function BlockControls({
   block,
   acceptInFlight,
+  generateInFlight,
+  generateError,
   onAccept,
+  onGenerate,
 }: {
   block: DashboardBlock;
   acceptInFlight: boolean;
+  generateInFlight: boolean;
+  generateError: string | null;
   onAccept: (block: DashboardBlock) => void;
+  onGenerate: (block: DashboardBlock) => void;
 }) {
   const canAccept = block.hasAcceptableVariant && !block.isAccepted;
   const acceptDisabledReason = canAccept ? undefined : "Nincs elfogadhato valtozat";
 
   return (
     <div className={styles.blockFooter}>
-      <span className={styles.blockStatus} data-state={block.workflowStatus}>
-        {blockStatusLabel(block)}
-      </span>
-      <button
-        className="btn"
-        type="button"
-        onClick={() => onAccept(block)}
-        disabled={!canAccept || acceptInFlight}
-        title={acceptDisabledReason}
-      >
-        {block.isAccepted ? "Elfogadva" : acceptInFlight ? "Mentese..." : "Elfogad"}
-      </button>
+      <div className={styles.blockActionRow}>
+        <span className={styles.blockStatus} data-state={block.workflowStatus}>
+          {blockStatusLabel(block)}
+        </span>
+        <div className={styles.blockActions}>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => onGenerate(block)}
+            disabled={generateInFlight || acceptInFlight}
+          >
+            {generateInFlight ? "Generalas..." : "Generalas"}
+          </button>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => onAccept(block)}
+            disabled={!canAccept || acceptInFlight || generateInFlight}
+            title={acceptDisabledReason}
+          >
+            {block.isAccepted ? "Elfogadva" : acceptInFlight ? "Mentese..." : "Elfogad"}
+          </button>
+        </div>
+      </div>
+      {generateError ? <div className={styles.blockError}>{generateError}</div> : null}
     </div>
   );
 }
@@ -123,13 +196,19 @@ function BlockCard({
   block,
   textMode,
   acceptInFlight,
+  generateInFlight,
+  generateError,
   onAccept,
+  onGenerate,
   showControls,
 }: {
   block: DashboardBlock;
   textMode: DashboardActivePanel;
   acceptInFlight: boolean;
+  generateInFlight: boolean;
+  generateError: string | null;
   onAccept: (block: DashboardBlock) => void;
+  onGenerate: (block: DashboardBlock) => void;
   showControls: boolean;
 }) {
   const title = `Fejezet ${block.chapterIndex} / Blokk ${block.blockIndex}`;
@@ -147,7 +226,14 @@ function BlockCard({
       </header>
       <p className={styles.blockText}>{text}</p>
       {showControls ? (
-        <BlockControls block={block} acceptInFlight={acceptInFlight} onAccept={onAccept} />
+        <BlockControls
+          block={block}
+          acceptInFlight={acceptInFlight}
+          generateInFlight={generateInFlight}
+          generateError={generateError}
+          onAccept={onAccept}
+          onGenerate={onGenerate}
+        />
       ) : null}
     </article>
   );
@@ -174,6 +260,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     syncScroll: true,
   });
   const [acceptingBlockId, setAcceptingBlockId] = useState<string | null>(null);
+  const [generatingBlockId, setGeneratingBlockId] = useState<string | null>(null);
+  const [generateError, setGenerateError] = useState<GenerateErrorState | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const initializedView = useRef(false);
   const originalPanelRef = useRef<HTMLDivElement | null>(null);
@@ -260,6 +348,28 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       }
     },
     [loadDashboard, state, supabase],
+  );
+
+  const handleGenerate = useCallback(
+    async (block: DashboardBlock) => {
+      if (state.status !== "ready") return;
+      setGenerateError(null);
+      setGeneratingBlockId(block.id);
+      try {
+        await requestDraftGeneration({
+          supabase,
+          bookId,
+          blockId: block.id,
+        });
+        await loadDashboard({ keepCurrentView: true });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Sikertelen generalas.";
+        setGenerateError({ blockId: block.id, message });
+      } finally {
+        setGeneratingBlockId(null);
+      }
+    },
+    [bookId, loadDashboard, state.status, supabase],
   );
 
   const handleEditSubmit = useCallback(async () => {
@@ -411,7 +521,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             block={block}
             textMode="original"
             acceptInFlight={acceptingBlockId === block.id}
+            generateInFlight={generatingBlockId === block.id}
+            generateError={generateError?.blockId === block.id ? generateError.message : null}
             onAccept={handleAccept}
+            onGenerate={handleGenerate}
             showControls={showControls}
           />
         ))}
@@ -433,7 +546,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             block={block}
             textMode="translated"
             acceptInFlight={acceptingBlockId === block.id}
+            generateInFlight={generatingBlockId === block.id}
+            generateError={generateError?.blockId === block.id ? generateError.message : null}
             onAccept={handleAccept}
+            onGenerate={handleGenerate}
             showControls={showControls}
           />
         ))}

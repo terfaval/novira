@@ -7,9 +7,9 @@
  */
 export async function insertDraftVariant(
   supabase: any,
-  args: { bookId: string; blockId: string; text: string }
+  args: { ownerId: string; bookId: string; chapterId: string; blockId: string; text: string }
 ): Promise<{ id: string; block_id: string; status: "draft"; text: string }> {
-  const { bookId, blockId, text } = args;
+  const { ownerId, bookId, chapterId, blockId, text } = args;
 
   const { data: latestRows, error: latestErr } = await supabase
     .from("variants")
@@ -19,14 +19,16 @@ export async function insertDraftVariant(
     .order("variant_index", { ascending: false })
     .limit(1);
 
-  if (latestErr) throw new Error("Nem sikerült a variáns index lekérdezése.");
+  if (latestErr) throw new Error("Nem sikerult a varians index lekerdezese.");
 
   const nextIndex = (latestRows?.[0]?.variant_index ?? 0) + 1;
 
   const { data: inserted, error: insErr } = await supabase
     .from("variants")
     .insert({
+      owner_id: ownerId,
       book_id: bookId,
+      chapter_id: chapterId,
       block_id: blockId,
       text,
       status: "draft",
@@ -35,6 +37,6 @@ export async function insertDraftVariant(
     .select("id,block_id,status,text")
     .single();
 
-  if (insErr || !inserted) throw new Error("Nem sikerült a variáns mentése.");
+  if (insErr || !inserted) throw new Error("Nem sikerult a varians mentese.");
   return inserted;
 }

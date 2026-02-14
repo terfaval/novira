@@ -1,10 +1,9 @@
 /**
  * Fetch minimal LLM context for a block.
- *
- * NOTE: adjust Supabase client usage to match your repo.
  */
 export type LlmContextRow = {
   blockId: string;
+  chapterId: string;
   originalText: string;
   chapterTitle: string | null;
   bookTitle: string | null;
@@ -13,50 +12,64 @@ export type LlmContextRow = {
   nextText: string | null;
 };
 
-export async function getLlmContextForBlock(supabase: any, args: { bookId: string; blockId: string }): Promise<LlmContextRow> {
+export async function getLlmContextForBlock(
+  supabase: any,
+  args: { bookId: string; blockId: string }
+): Promise<LlmContextRow> {
   const { bookId, blockId } = args;
 
   const { data: blockRow, error: blockErr } = await supabase
     .from("blocks")
-    .select("id,chapter_id,block_index,original_text,chapters!inner(id,book_id,title),books!inner(id,title,author)")
+    .select("id,book_id,chapter_id,block_index,original_text")
     .eq("id", blockId)
-    .eq("chapters.book_id", bookId)
+    .eq("book_id", bookId)
     .single();
 
-  if (blockErr || !blockRow) throw new Error("A blokk nem található.");
+  if (blockErr) throw new Error(`Nem sikerult beolvasni a blokkot: ${blockErr.message}`);
+  if (!blockRow) throw new Error("A blokk nem talalhato.");
 
-  const chapter_id = blockRow.chapter_id ?? blockRow.chapters?.id;
+  const chapterId = blockRow.chapter_id;
   const blockIndex = blockRow.block_index;
 
-  let prevText: string | null = null;
-  let nextText: string | null = null;
+  const { data: chapterRow, error: chapterErr } = await supabase
+    .from("chapters")
+    .select("title")
+    .eq("id", chapterId)
+    .eq("book_id", bookId)
+    .maybeSingle();
 
-  if (chapter_id) {
-    const { data: prevRow } = await supabase
-      .from("blocks")
-      .select("original_text")
-      .eq("chapter_id", chapter_id)
-      .eq("block_index", blockIndex - 1)
-      .maybeSingle();
+  if (chapterErr) throw new Error(`Nem sikerult beolvasni a fejezetet: ${chapterErr.message}`);
 
-    const { data: nextRow } = await supabase
-      .from("blocks")
-      .select("original_text")
-      .eq("chapter_id", chapter_id)
-      .eq("block_index", blockIndex + 1)
-      .maybeSingle();
+  const { data: bookRow, error: bookErr } = await supabase
+    .from("books")
+    .select("title,author")
+    .eq("id", bookId)
+    .maybeSingle();
 
-    prevText = prevRow?.original_text ?? null;
-    nextText = nextRow?.original_text ?? null;
-  }
+  if (bookErr) throw new Error(`Nem sikerult beolvasni a konyvet: ${bookErr.message}`);
+
+  const { data: prevRow } = await supabase
+    .from("blocks")
+    .select("original_text")
+    .eq("chapter_id", chapterId)
+    .eq("block_index", blockIndex - 1)
+    .maybeSingle();
+
+  const { data: nextRow } = await supabase
+    .from("blocks")
+    .select("original_text")
+    .eq("chapter_id", chapterId)
+    .eq("block_index", blockIndex + 1)
+    .maybeSingle();
 
   return {
     blockId,
+    chapterId,
     originalText: blockRow.original_text,
-    chapterTitle: blockRow.chapters?.title ?? null,
-    bookTitle: blockRow.books?.title ?? null,
-    author: blockRow.books?.author ?? null,
-    prevText,
-    nextText,
+    chapterTitle: chapterRow?.title ?? null,
+    bookTitle: bookRow?.title ?? null,
+    author: bookRow?.author ?? null,
+    prevText: prevRow?.original_text ?? null,
+    nextText: nextRow?.original_text ?? null,
   };
 }

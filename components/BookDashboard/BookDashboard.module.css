@@ -262,10 +262,21 @@
 }
 
 .blockFooter {
+  display: grid;
+  gap: 8px;
+}
+
+.blockActionRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.blockActions {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .blockStatus {
@@ -286,6 +297,12 @@
   color: #f2b6b6;
   border-color: rgba(242, 166, 166, 0.45);
   background: rgba(124, 44, 44, 0.32);
+}
+
+.blockError {
+  color: #f2b6b6;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 @media (max-width: 959px) {

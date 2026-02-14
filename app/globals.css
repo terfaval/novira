@@ -360,7 +360,8 @@ main {
   justify-content: center;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 22px;
+  margin-bottom: 22px;
 }
 
 .carousel-dot {
@@ -389,11 +390,22 @@ main {
 }
 
 .library-prototype-tools {
-  margin-top: 10px;
+  margin-top: 0;
   border: 1px dashed var(--line);
   border-radius: 14px;
   padding: 10px;
   background: rgba(47, 54, 85, 0.05);
+}
+
+body:has(.home-page-shell) {
+  overflow: hidden;
+}
+
+main:has(.home-page-shell) {
+  max-width: none;
+  min-height: 100vh;
+  padding: 0;
+  overflow: hidden;
 }
 
 .library-tools-grid {

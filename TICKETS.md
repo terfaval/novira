@@ -61,6 +61,16 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-HOME-CAROUSEL-GAPS-AND-HOME-SCROLL-LOCK
+- Goal: Increase vertical spacing between carousel shell, pagination, and prototype tools, and lock home page scrolling so the main screen does not move vertically.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `525aa23c6354fb7b051b929deed65cce82d63f31` (workspace base head; no new commit created in this session)
+
+- Ticket: Ticket 5A-2 - Book Dashboard UI Hook (Generalas gomb)
+- Goal: Add block-level `Generalas` action in Workbench to create draft variants via `/api/llm` and refresh translated panel state.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `components/BookDashboard/README.md`, `docs/BOOK_DASHBOARD.md`, `TICKETS.md`
+- Commit hash: `525aa23c6354fb7b051b929deed65cce82d63f31` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-HOME-SPINE-ICON-BRAND-PAPER-FRAME-SCALE
 - Goal: Add a brand-paper frame to inactive spine icons and apply a slight base scale so the icon renders larger inside its container with overflow clipping.
 - Files modified: `app/globals.css`, `TICKETS.md`

@@ -116,7 +116,13 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
       return NextResponse.json({ ok: false, error: mapProviderError(providerError) }, { status: 500 });
     }
 
-    const variant = await insertDraftVariant(supabase, { bookId, blockId, text: out.text });
+    const variant = await insertDraftVariant(supabase, {
+      ownerId: userId,
+      bookId,
+      chapterId: ctx.chapterId,
+      blockId,
+      text: out.text,
+    });
     return NextResponse.json({ ok: true, variant }, { status: 200 });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Ismeretlen szerverhiba.";

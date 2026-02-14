@@ -29,6 +29,17 @@ This ticket adds the Book Dashboard base behavior for `/book/[id]`:
   - `rejected`: subtle red marker
 - Completion row emphasizes `%` and keeps `accepted/total` as secondary metadata.
 
+## Workbench generation flow (Ticket 5A-2)
+- Every Workbench block card has a `Generalas` action.
+- Client call: `POST /api/llm` with `translate_block`, `bookId`, `blockId`, and bearer token from anon session.
+- During request: block-level in-flight button state (`Generalas...`).
+- Success path: dashboard reload in current view, translated panel shows the latest draft (so `hasAcceptableVariant` can become true).
+- `Elfogad` enablement remains the existing 4B guard (no auto-accept).
+- Error messaging (HU):
+  - `429`: clear rate-limit guidance
+  - `400`: clear request/block validation guidance
+  - `500+`: temporary service failure guidance
+
 ## Non-goals
-- No LLM generation or provider logic in this ticket.
+- No batch generation, background jobs, or auto-accept in dashboard flow.
 - No schema migrations in this ticket.
