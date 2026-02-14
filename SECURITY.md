@@ -55,3 +55,24 @@ Date: 2026-02-11
 - Formal compliance programs (SOC2 etc.)
 - Advanced secrets management beyond env vars
 - Multi-tenant enterprise controls
+
+## 5. Temporary exception - open read mode (OSS/demo)
+
+Date: 2026-02-14
+
+- RLS remains enabled.
+- `SELECT` is temporarily open (`using (true)`) on:
+  - `books`
+  - `chapters`
+  - `blocks`
+  - `variants`
+  - `notes`
+  - `footnotes`
+  - `footnote_anchors`
+- `INSERT/UPDATE/DELETE` policies remain owner-bound.
+
+Risk:
+- Any user with project anon key can read all shared book content in this environment.
+
+Rollback:
+- Replace open `SELECT` policies with owner-bound policies (`owner_id = auth.uid()` / `user_id = auth.uid()`) when private mode is required again.

@@ -61,6 +61,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-OSS-OPEN-READ-RLS-SELECT
+- Goal: Keep RLS enabled but temporarily open `SELECT` policies for shared book/dashboard data so Vercel users can see Supabase content across anon sessions.
+- Files modified: `supabase/migrations/supabase_migrations_0004_open_read_mode.sql`, `SECURITY.md`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-SUPABASE-GLOBAL-ACCESS-TEMP
 - Goal: Expose the browser Supabase client on `globalThis` (`__NOVIRA_SUPABASE__`) so it is globally reachable for temporary development/debug usage.
 - Files modified: `lib/supabase/client.ts`, `TICKETS.md`
