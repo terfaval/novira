@@ -61,6 +61,66 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-SUPABASE-GLOBAL-ACCESS-TEMP
+- Goal: Expose the browser Supabase client on `globalThis` (`__NOVIRA_SUPABASE__`) so it is globally reachable for temporary development/debug usage.
+- Files modified: `lib/supabase/client.ts`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-DASHBOARD-CHAPTER-TITLE-STICKY-TOP
+- Goal: Keep chapter title header fixed at the top edge of each dashboard panel while scrolling through chapter blocks.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-DASHBOARD-NO-EDGE-COLOR-ON-ORIGINAL-FALLBACK
+- Goal: In the edited panel, keep block left edge uncolored when the rendered text is original fallback (no translated content).
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-DASHBOARD-HIDE-BLOCK-TITLE
+- Goal: Remove block title row from dashboard block cards so only block text is shown.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-DASHBOARD-INLINE-CHAPTER-EDIT-ORIGINAL-BLOCK-DELETE
+- Goal: Right-align block action controls, switch chapter title editing to inline sticky-header mode via pencil action, allow chapter delete directly from header, and allow deleting original parser-only blocks (without edited variant).
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-DASHBOARD-BLOCK-POPUP-STACKING-CHAPTER-DELETE-RENUMBER
+- Goal: Remove original-panel block edge color, fix edited block action popup stacking/expansion direction, and add chapter delete action with automatic chapter index re-numbering after delete.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-DASHBOARD-STICKY-CHAPTERS-ICON-HOVER-ACTIONS
+- Goal: Simplify book dashboard block cards by rendering chapter title once per chapter as sticky section header, add chapter-title pencil edit overlay, remove original-panel block buttons, and replace edited-panel actions with color-coded icon-only hover popup controls.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-SHELL-WIDTH-FIXED-TOPBAR-EDGE-PANEL-CARD-SHAPE
+- Goal: Align `/book/[id]` content width to home layout, move book topbar into reusable shell component with fixed position, make dashboard scrollable with static background, move progress below main viewport, and restyle dashboard/panel/block cards to active-book-card form with author-color left stripe and compact one-column editor panel options.
+- Files modified: `components/ShellTopBar.tsx`, `components/TopBar.tsx`, `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-EDITED-PANEL-NAME-FALLBACK-DELETE-BLOCK
+- Goal: Rename the translated panel to `Szerkesztett`, render original block text in edited view when no generated variant exists, and add per-block delete action to remove the current edited variant from the edited pane.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `lib/db/queries/books.ts`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-RIGHT-PANEL-ICON-ONLY-VERTICAL-EDGE
+- Goal: Change right-side editor panel controls to icon-only buttons, stack them vertically, and move the panel closer to the right screen edge; convert single-page title switch button to icon-only as well.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-RIGHT-EDITOR-PANEL-DESKTOP-VIEW-SWITCH
+- Goal: Add a right-side z-index editor activity panel on `/book/[id]` with desktop view switching (single-page vs split-page), and add title-row switch action in single-page mode to toggle original/translated panel content.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-SHELL-TOPBAR-ADMIN-BOTTOM-SPLIT-PROGRESS
+- Goal: Rebuild `/book/[id]` with home-like fixed shell (title+author topbar, back button on right), move dashboard controls under bottom-bar Admin sheet, keep page fixed with internal scrolling only, and place completion progress as a separate element directly below the desktop dashboard area.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-HOME-CAROUSEL-GAPS-AND-HOME-SCROLL-LOCK
 - Goal: Increase vertical spacing between carousel shell, pagination, and prototype tools, and lock home page scrolling so the main screen does not move vertically.
 - Files modified: `app/globals.css`, `TICKETS.md`
@@ -296,3 +356,23 @@ Rate limiting, file size limits, error states.
 - Goal: Apply Spectral as display font and Source Serif 4 as body font via Next font variables.
 - Files modified: `app/layout.tsx`, `app/globals.css`, `DECISIONS.md`, `TICKETS.md`
 - Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-EDITED-INLINE-NOTE-SUGGESTION-AND-SELECTION
+- Goal: In edited view, show imported footnote-based note suggestions and allow manual text selection to generate/save anchored inline notes with dotted-underline + tooltip rendering.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `lib/db/queries/books.ts`, `app/api/llm/route.ts`, `lib/llm/types.ts`, `lib/llm/providers/provider.ts`, `lib/llm/providers/openai.ts`, `lib/llm/prompts/generateNote.ts`, `components/BookDashboard/README.md`, `docs/BOOK_DASHBOARD.md`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-NOTE-TOOLTIP-WIDTH-AND-INLINE-SUGGESTION-APPROVAL
+- Goal: Remove separate suggestion infoline, render suggestion markers inline with tooltip-only UI constrained to panel width, and add suggestion approve/reject controls (`?` / `X`) directly in tooltip.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `components/BookDashboard/README.md`, `docs/BOOK_DASHBOARD.md`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-NOTE-SIGNAL-COUNT-BADGE
+- Goal: Restore visible per-block explanation signal count (suggested + saved notes) while keeping inline tooltip-based suggestion workflow.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `components/BookDashboard/README.md`, `docs/BOOK_DASHBOARD.md`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-SUGGESTION-MARK-ON-TARGET-TEXT
+- Goal: Render system note suggestions on the referenced target text segment (word/phrase) instead of standalone marker token, keeping tooltip + approve/reject actions.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `components/BookDashboard/README.md`, `docs/BOOK_DASHBOARD.md`, `TICKETS.md`
+- Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)

@@ -26,6 +26,40 @@ type VariantQueryRow = {
   updated_at: string;
 };
 
+type NoteQueryRow = {
+  id: string;
+  block_id: string;
+  anchor_start: number | null;
+  anchor_end: number | null;
+  kind: string;
+  content: string;
+  created_at: string;
+};
+
+type FootnoteQueryRow = {
+  number: number;
+  text: string;
+};
+
+type FootnoteAnchorRow = {
+  block_id: string;
+  footnote_number: number;
+};
+
+export type DashboardInlineNote = {
+  id: string;
+  anchorStart: number;
+  anchorEnd: number;
+  kind: string;
+  content: string;
+  createdAt: string;
+};
+
+export type DashboardFootnoteSuggestion = {
+  number: number;
+  text: string;
+};
+
 export type DashboardBlock = {
   id: string;
   bookId: string;
@@ -35,10 +69,13 @@ export type DashboardBlock = {
   blockIndex: number;
   originalText: string;
   translatedText: string | null;
+  editedVariantId: string | null;
   acceptedVariantId: string | null;
   isAccepted: boolean;
   hasAcceptableVariant: boolean;
   workflowStatus: VariantStatus;
+  inlineNotes: DashboardInlineNote[];
+  footnoteSuggestions: DashboardFootnoteSuggestion[];
 };
 
 export type DashboardCompletion = {
@@ -102,6 +139,28 @@ export async function fetchBookDashboardData(
 
   if (variantError) throw new Error(errorMessage(variantError));
 
+  const { data: notesRows, error: notesError } = await supabase
+    .from("notes")
+    .select("id,block_id,anchor_start,anchor_end,kind,content,created_at")
+    .eq("book_id", bookId)
+    .order("created_at", { ascending: true });
+
+  if (notesError) throw new Error(errorMessage(notesError));
+
+  const { data: footnoteRows, error: footnoteError } = await supabase
+    .from("footnotes")
+    .select("number,text")
+    .eq("book_id", bookId);
+
+  if (footnoteError) throw new Error(errorMessage(footnoteError));
+
+  const { data: footnoteAnchorRows, error: footnoteAnchorError } = await supabase
+    .from("footnote_anchors")
+    .select("block_id,footnote_number")
+    .eq("book_id", bookId);
+
+  if (footnoteAnchorError) throw new Error(errorMessage(footnoteAnchorError));
+
   const latestAcceptedByBlock = new Map<string, VariantQueryRow>();
   const latestVariantByBlock = new Map<string, VariantQueryRow>();
   const latestNonRejectedByBlock = new Map<string, VariantQueryRow>();
@@ -115,6 +174,35 @@ export async function fetchBookDashboardData(
     if (row.status !== "rejected" && !latestNonRejectedByBlock.has(row.block_id)) {
       latestNonRejectedByBlock.set(row.block_id, row);
     }
+  }
+
+  const inlineNotesByBlock = new Map<string, DashboardInlineNote[]>();
+  for (const row of (notesRows ?? []) as NoteQueryRow[]) {
+    if (typeof row.anchor_start !== "number" || typeof row.anchor_end !== "number") continue;
+    if (row.anchor_start < 0 || row.anchor_end <= row.anchor_start) continue;
+
+    const current = inlineNotesByBlock.get(row.block_id) ?? [];
+    current.push({
+      id: row.id,
+      anchorStart: row.anchor_start,
+      anchorEnd: row.anchor_end,
+      kind: row.kind,
+      content: row.content,
+      createdAt: row.created_at,
+    });
+    inlineNotesByBlock.set(row.block_id, current);
+  }
+
+  const footnoteTextByNumber = new Map<number, string>();
+  for (const row of (footnoteRows ?? []) as FootnoteQueryRow[]) {
+    footnoteTextByNumber.set(row.number, row.text);
+  }
+
+  const footnoteNumbersByBlock = new Map<string, Set<number>>();
+  for (const row of (footnoteAnchorRows ?? []) as FootnoteAnchorRow[]) {
+    const current = footnoteNumbersByBlock.get(row.block_id) ?? new Set<number>();
+    current.add(row.footnote_number);
+    footnoteNumbersByBlock.set(row.block_id, current);
   }
 
   const blocks = ((blockRows ?? []) as BlockQueryRow[])
@@ -131,6 +219,11 @@ export async function fetchBookDashboardData(
           ? "rejected"
           : "draft";
 
+      const inlineNotes = (inlineNotesByBlock.get(row.id) ?? []).sort((a, b) => a.anchorStart - b.anchorStart);
+      const footnoteSuggestions = [...(footnoteNumbersByBlock.get(row.id) ?? new Set<number>())]
+        .sort((a, b) => a - b)
+        .map((number) => ({ number, text: footnoteTextByNumber.get(number) ?? "" }));
+
       return {
         id: row.id,
         bookId: row.book_id,
@@ -140,10 +233,13 @@ export async function fetchBookDashboardData(
         blockIndex: row.block_index,
         originalText: row.original_text,
         translatedText,
+        editedVariantId: latestNonRejectedVariant?.id ?? null,
         acceptedVariantId: acceptedVariant?.id ?? null,
         isAccepted: Boolean(acceptedVariant),
         hasAcceptableVariant,
         workflowStatus,
+        inlineNotes,
+        footnoteSuggestions,
       } satisfies DashboardBlock;
     })
     .sort((a, b) => {
@@ -232,4 +328,20 @@ export async function acceptBlockVariant({ supabase, userId, block }: AcceptBloc
 
   const { error: insertError } = await supabase.from("variants").insert(payload);
   if (insertError) throw new Error(errorMessage(insertError));
+}
+
+export async function deleteEditedBlockVariant(args: {
+  supabase: SupabaseClient;
+  block: DashboardBlock;
+}): Promise<void> {
+  const { supabase, block } = args;
+  if (!block.editedVariantId) return;
+
+  const { error } = await supabase
+    .from("variants")
+    .delete()
+    .eq("id", block.editedVariantId)
+    .eq("block_id", block.id);
+
+  if (error) throw new Error(errorMessage(error));
 }

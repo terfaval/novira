@@ -1,4 +1,4 @@
-export type LlmAction = "translate_block";
+export type LlmAction = "translate_block" | "generate_note";
 
 export type LlmErrorCode =
   | "BAD_REQUEST"
@@ -14,7 +14,12 @@ export type LlmError = {
 };
 
 export type TranslateBlockOptions = {
-  style?: "modernize_hu"; // MVP: HU-only modernizálás / szerkesztett változat
+  style?: "modernize_hu";
+  tone?: "editorial";
+  maxOutputTokens?: number;
+};
+
+export type GenerateNoteOptions = {
   tone?: "editorial";
   maxOutputTokens?: number;
 };
@@ -25,6 +30,13 @@ export type LlmRequest =
       bookId: string;
       blockId: string;
       options?: TranslateBlockOptions;
+    }
+  | {
+      action: "generate_note";
+      bookId: string;
+      blockId: string;
+      selectedText: string;
+      options?: GenerateNoteOptions;
     };
 
 export type VariantStatus = "draft" | "accepted" | "rejected";
@@ -41,9 +53,14 @@ export type LlmSuccessResponse = {
   variant: VariantRow;
 };
 
+export type LlmNoteSuccessResponse = {
+  ok: true;
+  noteText: string;
+};
+
 export type LlmErrorResponse = {
   ok: false;
   error: LlmError;
 };
 
-export type LlmResponse = LlmSuccessResponse | LlmErrorResponse;
+export type LlmResponse = LlmSuccessResponse | LlmNoteSuccessResponse | LlmErrorResponse;

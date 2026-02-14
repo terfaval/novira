@@ -38,3 +38,9 @@ This folder contains the Ticket 4A' Book Dashboard UI.
   - `429`: user-friendly HU rate-limit message
   - `400`: user-friendly HU invalid-request message
   - `500+`: user-friendly HU temporary-service message
+
+## Inline note behavior (Ad-hoc)
+- Edited block can display imported footnote-based note suggestions directly on the referenced word/phrase (with small index marker) and tooltip.
+- User can select any edited text span and trigger note generation.
+- Generated note is saved as anchored record in `notes` and rendered as dotted underline + tooltip.
+- Suggested note tooltip supports `✓` approval (save as inline note) and `X` dismissal.

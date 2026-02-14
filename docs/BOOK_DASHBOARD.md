@@ -40,6 +40,14 @@ This ticket adds the Book Dashboard base behavior for `/book/[id]`:
   - `400`: clear request/block validation guidance
   - `500+`: temporary service failure guidance
 
+## Inline notes in edited panel (Ad-hoc)
+- If the importer recognized original footnotes, edited blocks highlight detected markers in-text (`[N]`) with hover tooltip text.
+- In edited text, users can manually select a span and request note generation (`Jegyzet kerese`).
+- Generated note is stored in `notes` with block-level anchors (`anchor_start`, `anchor_end`).
+- Saved anchored spans are rendered with dotted underline and hover tooltip.
+- Suggested note tooltip includes quick decisions: `✓` (approve/save) or `X` (dismiss).
+- LLM call uses `POST /api/llm` with `action=generate_note` and current block context.
+
 ## Non-goals
 - No batch generation, background jobs, or auto-accept in dashboard flow.
 - No schema migrations in this ticket.

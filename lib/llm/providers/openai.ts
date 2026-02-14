@@ -5,8 +5,15 @@
  * - Server-side only (no client keys)
  * - Reads API key from env
  */
-import type { LlmProvider, TranslateBlockInput, TranslateBlockOutput } from "./provider";
+import type {
+  GenerateNoteInput,
+  GenerateNoteOutput,
+  LlmProvider,
+  TranslateBlockInput,
+  TranslateBlockOutput,
+} from "./provider";
 import { buildTranslateBlockPrompt } from "../prompts/translateBlock";
+import { buildGenerateNotePrompt } from "../prompts/generateNote";
 
 export class OpenAiProvider implements LlmProvider {
   public name = "openai";
@@ -37,5 +44,32 @@ export class OpenAiProvider implements LlmProvider {
     const text = (resp?.choices?.[0]?.message?.content ?? "").trim();
     if (!text) throw new Error("Empty model output");
     return { text };
+  }
+
+  async generateNote(input: GenerateNoteInput): Promise<GenerateNoteOutput> {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const OpenAI = require("openai");
+    const client = new OpenAI({ apiKey });
+
+    const { system, user } = buildGenerateNotePrompt(input);
+    const maxOutputTokens = input.options?.maxOutputTokens ?? 220;
+    const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+
+    const resp = await client.chat.completions.create({
+      model,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      temperature: 0.2,
+      max_tokens: maxOutputTokens,
+    });
+
+    const noteText = (resp?.choices?.[0]?.message?.content ?? "").trim();
+    if (!noteText) throw new Error("Empty model output");
+    return { noteText };
   }
 }

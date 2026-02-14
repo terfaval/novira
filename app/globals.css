@@ -408,6 +408,18 @@ main:has(.home-page-shell) {
   overflow: hidden;
 }
 
+body:has(.book-page-shell) {
+  overflow: hidden;
+  background-attachment: fixed, fixed;
+}
+
+main:has(.book-page-shell) {
+  max-width: none;
+  min-height: 100vh;
+  padding: 0;
+  overflow: hidden;
+}
+
 .library-tools-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

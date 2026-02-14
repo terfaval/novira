@@ -13,15 +13,14 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
  * - server-side only
  * - provider abstraction
  * - minimal rate limiting and payload caps
- *
- * Action: translate_block -> create draft variant
  */
 
 const RATE_CFG = { windowMs: 10 * 60 * 1000, max: 30 };
 const INPUT_CHAR_CAP = 8000;
+const SELECTED_TEXT_CAP = 1200;
 const MAX_OUTPUT_TOKENS_CAP = 1200;
 
-const LlmRequestSchema = z
+const TranslateBlockSchema = z
   .object({
     action: z.literal("translate_block"),
     bookId: z.string().uuid(),
@@ -35,6 +34,23 @@ const LlmRequestSchema = z
       .optional(),
   })
   .strict();
+
+const GenerateNoteSchema = z
+  .object({
+    action: z.literal("generate_note"),
+    bookId: z.string().uuid(),
+    blockId: z.string().uuid(),
+    selectedText: z.string().min(1).max(SELECTED_TEXT_CAP),
+    options: z
+      .object({
+        tone: z.literal("editorial").optional(),
+        maxOutputTokens: z.number().int().positive().max(MAX_OUTPUT_TOKENS_CAP).optional(),
+      })
+      .optional(),
+  })
+  .strict();
+
+const LlmRequestSchema = z.discriminatedUnion("action", [TranslateBlockSchema, GenerateNoteSchema]);
 
 function getAccessToken(req: NextRequest): string {
   const authHeader = req.headers.get("authorization");
@@ -61,7 +77,6 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
     }
 
     const body: LlmRequest = parsed.data;
-    const { bookId, blockId, options } = body;
 
     const accessToken = getAccessToken(req);
     if (!accessToken) {
@@ -92,7 +107,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
       );
     }
 
-    const ctx = await getLlmContextForBlock(supabase, { bookId, blockId });
+    const ctx = await getLlmContextForBlock(supabase, { bookId: body.bookId, blockId: body.blockId });
     if (ctx.originalText.length > INPUT_CHAR_CAP) {
       return NextResponse.json(
         { ok: false, error: err("BAD_REQUEST", "A blokk tul hosszu az MVP limithez.", { cap: INPUT_CHAR_CAP }) },
@@ -100,30 +115,51 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
       );
     }
 
-    let out: { text: string };
+    const provider = new OpenAiProvider();
+
+    if (body.action === "translate_block") {
+      let out: { text: string };
+      try {
+        out = await provider.translateBlock({
+          originalText: ctx.originalText,
+          chapterTitle: ctx.chapterTitle,
+          bookTitle: ctx.bookTitle,
+          author: ctx.author,
+          prevText: ctx.prevText,
+          nextText: ctx.nextText,
+          options: body.options,
+        });
+      } catch (providerError) {
+        return NextResponse.json({ ok: false, error: mapProviderError(providerError) }, { status: 500 });
+      }
+
+      const variant = await insertDraftVariant(supabase, {
+        ownerId: userId,
+        bookId: body.bookId,
+        chapterId: ctx.chapterId,
+        blockId: body.blockId,
+        text: out.text,
+      });
+      return NextResponse.json({ ok: true, variant }, { status: 200 });
+    }
+
+    let noteOut: { noteText: string };
     try {
-      const provider = new OpenAiProvider();
-      out = await provider.translateBlock({
+      noteOut = await provider.generateNote({
         originalText: ctx.originalText,
+        selectedText: body.selectedText,
         chapterTitle: ctx.chapterTitle,
         bookTitle: ctx.bookTitle,
         author: ctx.author,
         prevText: ctx.prevText,
         nextText: ctx.nextText,
-        options,
+        options: body.options,
       });
     } catch (providerError) {
       return NextResponse.json({ ok: false, error: mapProviderError(providerError) }, { status: 500 });
     }
 
-    const variant = await insertDraftVariant(supabase, {
-      ownerId: userId,
-      bookId,
-      chapterId: ctx.chapterId,
-      blockId,
-      text: out.text,
-    });
-    return NextResponse.json({ ok: true, variant }, { status: 200 });
+    return NextResponse.json({ ok: true, noteText: noteOut.noteText }, { status: 200 });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Ismeretlen szerverhiba.";
     return NextResponse.json({ ok: false, error: err("INTERNAL", message) }, { status: 500 });
