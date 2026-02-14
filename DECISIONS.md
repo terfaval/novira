@@ -92,3 +92,9 @@ MVP ingestion limited to:
 - DOCX
 
 Server-side URL fetch is deferred.
+
+---
+
+## D-015 - Typography Baseline: Spectral + Source Serif 4
+Status: Accepted | Stage: M1
+Use Spectral as display font and Source Serif 4 as body font. Source Serif 4 keeps Minion-like book typography and allows future migration to licensed Minion without structural refactor.

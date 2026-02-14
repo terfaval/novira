@@ -61,6 +61,86 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-HOME-SPINE-ICON-BRAND-PAPER-FRAME-SCALE
+- Goal: Add a brand-paper frame to inactive spine icons and apply a slight base scale so the icon renders larger inside its container with overflow clipping.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-LAYER-ZINDEX-NO-VERTICAL-SCROLL
+- Goal: Keep top logo and plus button on a dedicated higher z-index layer and disable vertical scrolling/overflow on the home page shell.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-ACTIVE-CARD-NEUTRALIZED-IMAGE-SEPARATE-BASE-GRADIENT
+- Goal: Make active card neutralization clearly visible by separating author-color base gradient (card background) from the faded, desaturated image layer.
+- Files modified: `components/BookCard.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-ACTIVE-CARD-GRADIENT-TINT-VISIBILITY-BOOST
+- Goal: Increase active card background visibility by using a stronger author-color gradient tint and stronger image fade/filter treatment.
+- Files modified: `components/BookCard.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-ACTIVE-CARD-FAINT-IMAGE-AUTHOR-TINT
+- Goal: Make active home carousel card background image fainter and add subtle author-color tint behind it.
+- Files modified: `components/BookCard.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `eb7356bcf5e97513bc22d40b6ca72e96a8b5dcee` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-TOPBAR-BRAND-COPY-OFFSETS-CENTERING
+- Goal: Move home floating logo/plus further left with larger top/bottom offsets, add two-line NOVIRA brand copy next to the logo, and vertically center main home content.
+- Files modified: `components/TopBar.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-DIV-CENTER-ALIGN
+- Goal: Keep the home container centered on the page with an explicit reusable `home-container` width+margin rule.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-LIBRARY-DEFAULT-SORT-AUTHOR-ASC
+- Goal: Set Library default sort order to author ascending (A-Z).
+- Files modified: `components/LibraryClient.tsx`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-SPINE-LEFT-FILL-VISIBLE-SLOTS
+- Goal: Render home carousel from left to right (left-filled shelf) so active card starts the visible slice and remaining visible slots are filled with inactive spines.
+- Files modified: `components/LibraryClient.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-SPINE-HORIZONTAL-CENTERING-TWEAK
+- Goal: Center spine author/title elements horizontally to avoid left drift while keeping vertical writing mode and rotation.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-SPINE-KEEP-WRITINGMODE-TRANSFORM
+- Goal: Keep `writing-mode` and `transform` on separate spine author/title elements so labels remain readable on narrow spines while preserving 3-item vertical layout with icon.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-SPINE-LABEL-LAYOUT-AUTHOR-TOP-TITLE-CENTER
+- Goal: Increase inactive spine icon size and change spine label layout so author is top-aligned, title is centered horizontally in the middle section, and spine content is center-aligned.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-SPINE-ROTATED-LABEL-BOLD-AUTHOR
+- Goal: Rotate inactive spine label to fit one line on the spine, keep only author name bold, and tune spine width/slot calculation to show as many books as fit on screen.
+- Files modified: `components/BookCard.tsx`, `components/LibraryClient.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-SPINE-STYLE-AUTHOR-COLOR-ICON-SIZE
+- Goal: Make inactive home carousel books render as narrow full-height solid-color spines with top-fixed `author: title`, bottom-fixed small paper-color icon, and ensure at least one spine remains visible beside active card.
+- Files modified: `components/LibraryClient.tsx`, `components/BookCard.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-CAROUSEL-DYNAMIC-SLOTS-SPINE-VISIBLE
+- Goal: Keep inactive spine cards visible in home carousel while removing horizontal scrolling and dynamically calculating how many books fit on screen.
+- Files modified: `components/LibraryClient.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-CAROUSEL-FIRST-ACTIVE-FILTER-SORT-PAGINATION
+- Goal: Set first home book active on load, switch to per-book carousel navigation with side arrows/pagination, and add a filter/sort prototype below the shelf.
+- Files modified: `components/LibraryClient.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
 - Ticket: Ticket 5A-1 - LLM Route Wire-up (Supabase server client + guardrails)
 - Goal: Wire `POST /api/llm` to repo Supabase server client with auth-aware rate-limit key, payload sanity checks, and draft variant insertion.
 - Files modified: `app/api/llm/route.ts`, `docs/LLM_MODULE.md`, `TICKETS.md`
@@ -156,3 +236,53 @@ Rate limiting, file size limits, error states.
 - Goal: Add editable `background slug` for books and use it to resolve active card PNG background, independently from icon slug.
 - Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookCard.tsx`, `lib/types.ts`, `TICKETS.md`
 - Commit hash: `c618ef72ff9b39aa42383d3b0ce17cf4f8fd056e` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-LIBRARY-KEYBOARD-PAGINATION-AND-DASHBOARD-TS-FIX
+- Goal: Add left/right keyboard arrow pagination on home library and fix BookDashboard TypeScript `update(...): never` errors.
+- Files modified: `components/LibraryClient.tsx`, `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-AUTHOR-UNIQUE-SPINE-COLORS
+- Goal: Assign unique spine color per listed author and handle common author name spelling variants.
+- Files modified: `components/BookCard.tsx`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-CAROUSEL-ARROW-SQUARE-SIMPLE-HEAD
+- Goal: Make carousel arrow buttons square with fully rounded container and use simple arrowhead glyphs.
+- Files modified: `app/globals.css`, `components/LibraryClient.tsx`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-CAROUSEL-ARROW-ICON-CHEVRON
+- Goal: Replace arrowhead text glyphs with minimal CSS chevron icons in carousel arrow buttons.
+- Files modified: `app/globals.css`, `components/LibraryClient.tsx`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-ACTIVE-CARD-AUTHOR-TINT-OVERLAY-LAYER
+- Goal: Ensure active card author tint is rendered as an overlay on top of background image, not behind it.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-ACTIVE-CARD-AUTHOR-TINT-LIGHTER-SAME-HUE
+- Goal: Lighten active card tint and tie overlay hue directly to spine color to improve visual color match.
+- Files modified: `components/BookCard.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-SHELL-LOGO-PLUS-NO-SCROLL
+- Goal: Remove home title/subtitle text, add fixed left-aligned shell logo and plus upload button, and tighten/widen home layout so main content fits without scrolling.
+- Files modified: `components/TopBar.tsx`, `app/page.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-LAYERED-SHELL-LOGO-INK-ALIGN
+- Goal: Split home into separate top/main/plus layers, make topbar logo smaller and brand-ink colored, and keep equal left offset for logo and plus button with top/bottom edge alignment.
+- Files modified: `components/TopBar.tsx`, `app/page.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-TOPBAR-FAVICON-V2-LOGO
+- Goal: Use `novira_favicon_v2.svg` as the topbar logo mark on home and adjust it to square favicon proportions.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-TYPOGRAPHY-SPECTRAL-SOURCE-SERIF4
+- Goal: Apply Spectral as display font and Source Serif 4 as body font via Next font variables.
+- Files modified: `app/layout.tsx`, `app/globals.css`, `DECISIONS.md`, `TICKETS.md`
+- Commit hash: `ebe5d09b42bcc447b7f0f0301230b30c68c0696f` (workspace base head; no new commit created in this session)

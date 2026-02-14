@@ -12,9 +12,35 @@ type LoadState =
   | { status: "error"; message: string }
   | { status: "ready"; books: BookRow[] };
 
+type SortMode = "updated_desc" | "updated_asc" | "title_asc" | "author_asc" | "year_desc";
+
+function normalizeText(value: string | null | undefined) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function resolveBookYear(book: BookRow) {
+  const direct = book.publication_year ?? book.year;
+  if (direct !== null && direct !== undefined && `${direct}`.trim() !== "") {
+    const parsed = Number.parseInt(`${direct}`, 10);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  const fromText = `${book.description ?? ""} ${book.source_filename ?? ""}`.match(/\b(1[5-9]\d{2}|20\d{2})\b/);
+  if (!fromText) return null;
+  const parsed = Number.parseInt(fromText[1], 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
 export function LibraryClient() {
   const [state, setState] = useState<LoadState>({ status: "booting" });
   const [activeBookId, setActiveBookId] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sortMode, setSortMode] = useState<SortMode>("author_asc");
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   useEffect(() => {
@@ -52,11 +78,82 @@ export function LibraryClient() {
   }, [supabase]);
 
   useEffect(() => {
-    if (state.status !== "ready" || state.books.length === 0) return;
-    if (activeBookId && !state.books.some((book) => book.id === activeBookId)) {
-      setActiveBookId(null);
+    if (state.status !== "ready") return;
+    if (state.books.length === 0) {
+      if (activeBookId !== null) setActiveBookId(null);
+      return;
+    }
+    if (!activeBookId || !state.books.some((book) => book.id === activeBookId)) {
+      setActiveBookId(state.books[0].id);
     }
   }, [activeBookId, state]);
+  const readyBooks = state.status === "ready" ? state.books : [];
+  const normalizedSearch = normalizeText(searchText);
+  const books = [...readyBooks];
+  const filteredBooks = books
+    .filter((book) => {
+      if (statusFilter !== "all" && book.status !== statusFilter) return false;
+      if (!normalizedSearch) return true;
+      const haystack = `${normalizeText(book.title)} ${normalizeText(book.author)} ${normalizeText(book.description)}`;
+      return haystack.includes(normalizedSearch);
+    })
+    .sort((a, b) => {
+      if (sortMode === "updated_asc") return a.updated_at.localeCompare(b.updated_at);
+      if (sortMode === "title_asc") return a.title.localeCompare(b.title, "hu");
+      if (sortMode === "author_asc") return (a.author ?? "").localeCompare(b.author ?? "", "hu");
+      if (sortMode === "year_desc") return (resolveBookYear(b) ?? -1) - (resolveBookYear(a) ?? -1);
+      return b.updated_at.localeCompare(a.updated_at);
+    });
+
+  const activeIndex = filteredBooks.findIndex((book) => book.id === activeBookId);
+  const effectiveActiveIndex = activeIndex >= 0 ? activeIndex : filteredBooks.length > 0 ? 0 : -1;
+  const activeBook = effectiveActiveIndex >= 0 ? filteredBooks[effectiveActiveIndex] : null;
+  const visibleBooks = filteredBooks;
+  const hasPrev = effectiveActiveIndex > 0;
+  const hasNext = effectiveActiveIndex >= 0 && effectiveActiveIndex < filteredBooks.length - 1;
+
+  function activateByIndex(index: number) {
+    const next = filteredBooks[index];
+    if (!next) return;
+    setActiveBookId(next.id);
+  }
+
+  function goPrev() {
+    if (!hasPrev) return;
+    activateByIndex(effectiveActiveIndex - 1);
+  }
+
+  function goNext() {
+    if (!hasNext) return;
+    activateByIndex(effectiveActiveIndex + 1);
+  }
+
+  useEffect(() => {
+    function isTypingTarget(target: EventTarget | null) {
+      if (!(target instanceof HTMLElement)) return false;
+      if (target.isContentEditable) return true;
+      const tagName = target.tagName;
+      return tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT";
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (isTypingTarget(event.target)) return;
+
+      if (event.key === "ArrowLeft" && hasPrev) {
+        event.preventDefault();
+        activateByIndex(effectiveActiveIndex - 1);
+      }
+
+      if (event.key === "ArrowRight" && hasNext) {
+        event.preventDefault();
+        activateByIndex(effectiveActiveIndex + 1);
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [effectiveActiveIndex, hasNext, hasPrev, filteredBooks]);
 
   if (state.status === "booting") {
     return <div className="card">Betoltes...</div>;
@@ -74,21 +171,114 @@ export function LibraryClient() {
     );
   }
 
-  if (state.books.length === 0) return <LibraryEmpty />;
+  if (readyBooks.length === 0) return <LibraryEmpty />;
+
+  const allStatuses = Array.from(new Set(readyBooks.map((book) => book.status))).sort((a, b) =>
+    a.localeCompare(b, "hu")
+  );
 
   return (
-    <section className="library-carousel" aria-label="Konyvlista">
-      {state.books.map((book) => {
-        const isActive = activeBookId === book.id;
-        return (
-          <div
+    <>
+      <section className="library-carousel-shell" aria-label="Konyvlista">
+        <button
+          type="button"
+          className="carousel-arrow"
+          onClick={goPrev}
+          disabled={!hasPrev}
+          aria-label="Elozo konyv"
+        >
+          <span className="carousel-arrow-icon left" aria-hidden="true" />
+        </button>
+
+        <div className="library-carousel-stage">
+          {activeBook ? (
+            <div className="library-carousel-track">
+              {visibleBooks.map((book) => {
+                const isActive = book.id === activeBook.id;
+                return (
+                  <div
+                    key={book.id}
+                    className={`library-carousel-item${isActive ? " is-active" : " is-inactive"}`}
+                  >
+                    <BookCard book={book} isActive={isActive} onActivate={setActiveBookId} />
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="card">Nincs talalat a jelenlegi szuresre.</div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          className="carousel-arrow"
+          onClick={goNext}
+          disabled={!hasNext}
+          aria-label="Kovetkezo konyv"
+        >
+          <span className="carousel-arrow-icon right" aria-hidden="true" />
+        </button>
+      </section>
+
+      <div className="carousel-pagination" aria-label="Konyv oldalak">
+        {filteredBooks.map((book, index) => (
+          <button
             key={book.id}
-            className={`library-carousel-item${isActive ? " is-active" : " is-inactive"}`}
-          >
-            <BookCard book={book} isActive={isActive} onActivate={setActiveBookId} />
-          </div>
-        );
-      })}
-    </section>
+            type="button"
+            className={`carousel-dot${book.id === activeBook?.id ? " is-active" : ""}`}
+            aria-label={`${index + 1}. konyv: ${book.title}`}
+            onClick={() => activateByIndex(index)}
+          />
+        ))}
+      </div>
+
+      <section className="library-prototype-tools" aria-label="Konyvespolc szures es sorbarendezes prototipus">
+        <div className="library-tools-grid">
+          <label className="library-tool-field">
+            <span className="library-tool-label">Szures</span>
+            <input
+              className="input"
+              type="text"
+              placeholder="Cim, szerzo, leiras..."
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+            />
+          </label>
+
+          <label className="library-tool-field">
+            <span className="library-tool-label">Statusz</span>
+            <select
+              className="input"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+            >
+              <option value="all">Minden</option>
+              {allStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="library-tool-field">
+            <span className="library-tool-label">Sorbarendezes</span>
+            <select
+              className="input"
+              value={sortMode}
+              onChange={(event) => setSortMode(event.target.value as SortMode)}
+            >
+              <option value="updated_desc">Frissites (uj -&gt; regi)</option>
+              <option value="updated_asc">Frissites (regi -&gt; uj)</option>
+              <option value="title_asc">Cim (A-Z)</option>
+              <option value="author_asc">Szerzo (A-Z)</option>
+              <option value="year_desc">Ev (uj -&gt; regi)</option>
+            </select>
+          </label>
+        </div>
+      </section>
+    </>
   );
 }
+

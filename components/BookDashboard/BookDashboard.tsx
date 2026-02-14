@@ -304,7 +304,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       description: description || null,
     };
 
-    const updateQuery = supabase.from("books").update(fullPayload).eq("id", bookId).eq("user_id", state.userId);
+    // Untyped browser client can infer `update` payload as `never`; use a local loose table handle for this form submit.
+    const booksTable = supabase.from("books") as any;
+    const updateQuery = booksTable.update(fullPayload).eq("id", bookId).eq("user_id", state.userId);
     const { error } = await updateQuery;
 
     if (error) {
@@ -315,11 +317,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         message.includes("background_slug");
 
       if (missingOptionalColumn) {
-        const fallback = await supabase
-          .from("books")
-          .update(basePayload)
-          .eq("id", bookId)
-          .eq("user_id", state.userId);
+        const fallback = await booksTable.update(basePayload).eq("id", bookId).eq("user_id", state.userId);
 
         if (fallback.error) {
           setEditFeedback(fallback.error.message || "Sikertelen mentes.");

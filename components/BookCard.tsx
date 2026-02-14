@@ -13,11 +13,11 @@ function statusMeta(status: BookRow["status"]) {
     case "processing":
       return { label: "Feldolgozas", color: "#2F6AA8" };
     case "szerkesztes":
-      return { label: "Szerkesztes", color: "#2A7A66" };
+      return { label: "Szerkesztes", color: "#B08D57" };
     case "kesz":
       return { label: "Kesz", color: "#2D8A4F" };
     case "ready":
-      return { label: "Feltoltve", color: "#B08D57" };
+      return { label: "Új", color: "#2A7A66" };
     case "hiba":
     case "failed":
       return { label: "Hiba", color: "#B24A3A" };
@@ -68,16 +68,30 @@ function normalizeAuthor(author: string) {
     .trim();
 }
 
+const AUTHOR_SPINE_COLOR_RULES: Array<{ match: string[]; color: string }> = [
+  { match: ["babits"], color: "#2F3A52" },
+  { match: ["benedek"], color: "#7E9B91" },
+  { match: ["nietzsche", "nietzche", "friederich", "friedrich"], color: "#5B4F3F" },
+  { match: ["gardonyi"], color: "#6B7D6A" },
+  { match: ["justh"], color: "#8A6F52" },
+  { match: ["krudy"], color: "#2B3248" },
+  { match: ["mikszath"], color: "#4A3E34" },
+  { match: ["mora"], color: "#6F8E8A" },
+  { match: ["moricz"], color: "#5A664A" },
+  { match: ["tomorkeny", "tomotkeny"], color: "#6E775C" },
+  { match: ["madach"], color: "#3E4A63" },
+  { match: ["jokai"], color: "#1E3A5F" },
+  { match: ["arany"], color: "#7A6A49" },
+];
+
 function authorSpineColor(author: string) {
   const normalized = normalizeAuthor(author);
 
-  if (normalized.includes("babits")) return "#2F3A52";
-  if (normalized.includes("mikszath")) return "#4A3E34";
-  if (normalized.includes("jokai")) return "#1E3A5F";
-  if (normalized.includes("gardonyi")) return "#4F6F6B";
-  if (normalized.includes("krudy")) return "#2B3248";
-  if (normalized.includes("moricz")) return "#3C4B3D";
-  if (normalized.includes("tomorkeny")) return "#6E7A6B";
+  for (const rule of AUTHOR_SPINE_COLOR_RULES) {
+    if (rule.match.some((name) => normalized.includes(name))) {
+      return rule.color;
+    }
+  }
 
   return "#4A5C78";
 }
@@ -97,12 +111,13 @@ export function BookCard({
   const coverSlug = toCoverSlug(book);
   const backgroundSlug = toBackgroundSlug(book, coverSlug);
   const author = book.author?.trim() || "Ismeretlen szerzo";
+  const spineColor = authorSpineColor(author);
   const cardBackgroundImage = backgroundSlug
     ? `url('/covers/SVG/${encodeURIComponent(backgroundSlug)}.png')`
     : "none";
   const cardStyle = {
     "--book-card-bg-image": cardBackgroundImage,
-    "--active-spine-color": authorSpineColor(author),
+    "--active-spine-color": spineColor,
   } as CSSProperties;
   const year = resolveBookYear(book);
   const status = statusMeta(book.status);
@@ -120,7 +135,7 @@ export function BookCard({
   }
 
   if (!isActive) {
-    const spineStyle = { "--spine-color": authorSpineColor(author) } as CSSProperties;
+    const spineStyle = { "--spine-color": spineColor } as CSSProperties;
     return (
       <div
         className="book-spine book-card-clickable"
@@ -136,10 +151,11 @@ export function BookCard({
         }}
         aria-label={`${book.title} megnyitasa`}
       >
+        <div className="book-spine-author-line">{author}</div>
+        <div className="book-spine-title-line">{book.title}</div>
         <div className="book-spine-icon" aria-hidden="true">
           <BookCoverIcon slug={coverSlug} title={book.title} />
         </div>
-        <div className="book-spine-line">{author} - {book.title}</div>
       </div>
     );
   }

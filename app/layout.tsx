@@ -1,4 +1,17 @@
 import "./globals.css";
+import { Spectral, Source_Serif_4 } from "next/font/google";
+
+const fontDisplay = Spectral({
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
+});
+
+const fontBody = Source_Serif_4({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "600"],
+  variable: "--font-body",
+});
 
 export const metadata = {
   title: "Novira",
@@ -7,7 +20,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="hu">
+    <html lang="hu" className={`${fontDisplay.variable} ${fontBody.variable}`}>
       <body>
         <main>{children}</main>
       </body>
