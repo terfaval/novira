@@ -61,6 +61,17 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: Ticket 5A-1 - LLM Route Wire-up (Supabase server client + guardrails)
+- Goal: Wire `POST /api/llm` to repo Supabase server client with auth-aware rate-limit key, payload sanity checks, and draft variant insertion.
+- Files modified: `app/api/llm/route.ts`, `docs/LLM_MODULE.md`, `TICKETS.md`
+- Commit hash: `c618ef72ff9b39aa42383d3b0ce17cf4f8fd056e` (workspace base head; no new commit created in this session)
+
+- Ticket: Ticket 4B-Refinement - Workflow UI Stabilizalas
+- Goal: Stabilize Book Dashboard validation workflow before LLM with strict accept guard, status stripe, completion emphasis, and Reader state rules.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `lib/db/queries/books.ts`, `components/BookDashboard/README.md`, `docs/BOOK_DASHBOARD.md`, `app/book/[id]/page.tsx`, `TICKETS.md`
+- Commit hash: `c618ef72ff9b39aa42383d3b0ce17cf4f8fd056e` (workspace base head; no new commit created in this session)
+- Commit note: Workflow fix only; restored D-004 acceptance safety by blocking accept without an existing translatable variant and strengthening visual state feedback.
+
 - Ticket: Ticket 4A' - Book Dashboard (Workbench + Reader + Documentation)
 - Goal: Add a functional `/book/[id]` dashboard with desktop/mobile modes, completion tracking, and in-code/project documentation.
 - Files modified: `app/book/[id]/page.tsx`, `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `components/BookDashboard/types.ts`, `components/BookDashboard/README.md`, `lib/db/queries/books.ts`, `docs/BOOK_DASHBOARD.md`, `README.md`, `SECURITY.md`, `OPEN_QUESTIONS.md`, `TICKETS.md`
@@ -140,3 +151,8 @@ Rate limiting, file size limits, error states.
 - Goal: Resolve active card PNG background from `cover_slug` automatically (no hardcoded slug allowlist), so any uploaded `public/covers/SVG/<slug>.png` can appear behind the cover.
 - Files modified: `components/BookCard.tsx`, `TICKETS.md`
 - Commit hash: `eb7356bcf5e97513bc22d40b6ca72e96a8b5dcee` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-METADATA-BACKGROUND-SLUG
+- Goal: Add editable `background slug` for books and use it to resolve active card PNG background, independently from icon slug.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookCard.tsx`, `lib/types.ts`, `TICKETS.md`
+- Commit hash: `c618ef72ff9b39aa42383d3b0ce17cf4f8fd056e` (workspace base head; no new commit created in this session)

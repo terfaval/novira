@@ -32,9 +32,49 @@
   gap: 8px;
 }
 
+.progressSummary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.progressPercent {
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 800;
+  color: #f5f7ff;
+}
+
 .progressLabel {
   color: var(--muted);
   font-weight: 600;
+  font-size: 12px;
+}
+
+.progressTrack {
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6ea8ff 0%, #9de6bc 100%);
+  transition: width 150ms ease-out;
+}
+
+.progressTrackComplete {
+  border-color: rgba(157, 230, 188, 0.55);
+}
+
+.primaryAction {
+  border-color: rgba(157, 230, 188, 0.55);
+  background: rgba(40, 111, 70, 0.4);
+  color: #daf8e7;
 }
 
 .editPanel {
@@ -175,9 +215,29 @@
   border: 1px solid var(--line);
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.2);
-  padding: 10px;
+  padding: 10px 10px 10px 14px;
   display: grid;
   gap: 8px;
+  position: relative;
+}
+
+.blockCard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 12px 0 0 12px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.blockCard[data-status="accepted"]::before {
+  background: rgba(157, 230, 188, 0.8);
+}
+
+.blockCard[data-status="rejected"]::before {
+  background: rgba(242, 166, 166, 0.75);
 }
 
 .blockHeader {
@@ -220,6 +280,12 @@
   color: #9de6bc;
   border-color: rgba(157, 230, 188, 0.45);
   background: rgba(34, 88, 56, 0.4);
+}
+
+.blockStatus[data-state="rejected"] {
+  color: #f2b6b6;
+  border-color: rgba(242, 166, 166, 0.45);
+  background: rgba(124, 44, 44, 0.32);
 }
 
 @media (max-width: 959px) {

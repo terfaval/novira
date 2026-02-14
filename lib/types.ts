@@ -14,6 +14,7 @@ export type BookRow = {
   title: string;
   author: string | null;
   cover_slug?: string | null;
+  background_slug?: string | null;
   publication_year?: number | string | null;
   year?: number | string | null;
   description: string | null;

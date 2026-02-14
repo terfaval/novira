@@ -39,6 +39,13 @@ function toCoverSlug(book: BookRow) {
     .replace(/^_+|_+$/g, "");
 }
 
+function toBackgroundSlug(book: BookRow, fallbackSlug: string) {
+  if (typeof book.background_slug === "string" && book.background_slug.trim()) {
+    return book.background_slug.trim().toLowerCase();
+  }
+  return fallbackSlug;
+}
+
 function resolveBookYear(book: BookRow) {
   const direct = book.publication_year ?? book.year;
   if (direct !== null && direct !== undefined && `${direct}`.trim() !== "") {
@@ -88,8 +95,11 @@ export function BookCard({
   const href = `/book/${book.id}`;
   const progress = typeof book.progress === "number" ? Math.max(0, Math.min(100, book.progress)) : 0;
   const coverSlug = toCoverSlug(book);
+  const backgroundSlug = toBackgroundSlug(book, coverSlug);
   const author = book.author?.trim() || "Ismeretlen szerzo";
-  const cardBackgroundImage = coverSlug ? `url('/covers/SVG/${encodeURIComponent(coverSlug)}.png')` : "none";
+  const cardBackgroundImage = backgroundSlug
+    ? `url('/covers/SVG/${encodeURIComponent(backgroundSlug)}.png')`
+    : "none";
   const cardStyle = {
     "--book-card-bg-image": cardBackgroundImage,
     "--active-spine-color": authorSpineColor(author),

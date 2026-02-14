@@ -28,6 +28,7 @@ type BookEditForm = {
   year: string;
   description: string;
   icon: string;
+  background: string;
 };
 
 /**
@@ -77,12 +78,14 @@ function toBookEditForm(data: BookDashboardData): BookEditForm {
           : "",
     description: data.book.description ?? "",
     icon: data.book.cover_slug ?? "",
+    background: data.book.background_slug ?? data.book.cover_slug ?? "",
   };
 }
 
 function blockStatusLabel(block: DashboardBlock): string {
   if (block.isAccepted) return "Elfogadva";
-  if (block.translatedText?.trim()) return "Ellenorizendo";
+  if (block.workflowStatus === "rejected") return "Elutasitott";
+  if (block.hasAcceptableVariant) return "Ellenorizendo";
   return "Nincs forditas";
 }
 
@@ -95,11 +98,12 @@ function BlockControls({
   acceptInFlight: boolean;
   onAccept: (block: DashboardBlock) => void;
 }) {
-  const canAccept = Boolean(block.translatedText?.trim()) && !block.isAccepted;
+  const canAccept = block.hasAcceptableVariant && !block.isAccepted;
+  const acceptDisabledReason = canAccept ? undefined : "Nincs elfogadhato valtozat";
 
   return (
     <div className={styles.blockFooter}>
-      <span className={styles.blockStatus} data-state={block.isAccepted ? "accepted" : "pending"}>
+      <span className={styles.blockStatus} data-state={block.workflowStatus}>
         {blockStatusLabel(block)}
       </span>
       <button
@@ -107,6 +111,7 @@ function BlockControls({
         type="button"
         onClick={() => onAccept(block)}
         disabled={!canAccept || acceptInFlight}
+        title={acceptDisabledReason}
       >
         {block.isAccepted ? "Elfogadva" : acceptInFlight ? "Mentese..." : "Elfogad"}
       </button>
@@ -135,7 +140,7 @@ function BlockCard({
       : block.translatedText?.trim() || "Nincs forditott valtozat.";
 
   return (
-    <article className={styles.blockCard}>
+    <article className={styles.blockCard} data-status={block.workflowStatus}>
       <header className={styles.blockHeader}>
         <div className={styles.blockTitle}>{title}</div>
         <div className={styles.blockSubtitle}>{subtitle}</div>
@@ -158,6 +163,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     year: "",
     description: "",
     icon: "",
+    background: "",
   });
   const [isEditSaving, setIsEditSaving] = useState(false);
   const [editFeedback, setEditFeedback] = useState<string | null>(null);
@@ -263,6 +269,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     const author = editForm.author.trim();
     const description = editForm.description.trim();
     const icon = normalizeIconSlug(editForm.icon);
+    const background = normalizeIconSlug(editForm.background);
     const yearRaw = editForm.year.trim();
 
     if (!title) {
@@ -288,6 +295,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       publication_year: yearValue,
       description: description || null,
       cover_slug: icon || null,
+      background_slug: background || null,
     };
 
     const basePayload = {
@@ -303,7 +311,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       const message = `${error.message ?? ""}`.toLowerCase();
       const missingOptionalColumn =
         message.includes("publication_year") ||
-        message.includes("cover_slug");
+        message.includes("cover_slug") ||
+        message.includes("background_slug");
 
       if (missingOptionalColumn) {
         const fallback = await supabase
@@ -318,7 +327,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           return;
         }
 
-        setEditFeedback("A cim/szerzo/leiras mentve. Az ev vagy ikon oszlop hianyzik az adatbazisban.");
+        setEditFeedback(
+          "A cim/szerzo/leiras mentve. Az ev, ikon vagy hatter oszlop hianyzik az adatbazisban.",
+        );
         setIsEditSaving(false);
         await loadDashboard({ keepCurrentView: true });
         return;
@@ -378,6 +389,11 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const { book, blocks, completion } = state.data;
   const progress = completionPercent(completion.ratio);
   const canReader = completion.isComplete;
+  const isReaderPrimary = completion.isComplete;
+  const readerDisabledReason =
+    completion.accepted === 0
+      ? "Reader mod 0%-nal nem erheto el."
+      : "Reader mod csak 100%-os completionnel erheto el.";
   const iconPreviewSlug = normalizeIconSlug(editForm.icon);
   const iconPreviewPath = iconPreviewSlug
     ? `url('/covers/SVG/${iconPreviewSlug}.svg'), url('/covers/${iconPreviewSlug}.png')`
@@ -505,9 +521,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               Workbench
             </button>
             <button
-              className="btn"
+              className={`btn ${isReaderPrimary ? styles.primaryAction : ""}`}
               type="button"
               disabled={!canReader}
+              title={!canReader ? readerDisabledReason : undefined}
               onClick={() => setStore((prev) => ({ ...prev, viewState: "reader", activePanel: "translated" }))}
             >
               Reader
@@ -516,11 +533,17 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         </div>
 
         <div className={styles.progressRow}>
-          <div className={styles.progressLabel}>
-            Completion: {completion.accepted} / {completion.total} ({progress}%)
+          <div className={styles.progressSummary}>
+            <div className={styles.progressPercent}>{progress}%</div>
+            <div className={styles.progressLabel}>
+              Completion: <span>{completion.accepted}</span> / <span>{completion.total}</span>
+            </div>
           </div>
-          <div className="progress">
-            <div style={{ width: `${progress}%` }} />
+          <div
+            className={`${styles.progressTrack} ${progress === 100 ? styles.progressTrackComplete : ""}`}
+            aria-label={`Completion ${progress}%`}
+          >
+            <div className={styles.progressFill} style={{ width: `${progress}%` }} />
           </div>
         </div>
 
@@ -568,6 +591,17 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   value={editForm.icon}
                   onChange={(event) =>
                     setEditForm((prev) => ({ ...prev, icon: event.target.value }))
+                  }
+                  placeholder="pl. golyakalifa"
+                />
+              </label>
+              <label className={styles.editField}>
+                <span>Hatter (slug)</span>
+                <input
+                  className="input"
+                  value={editForm.background}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, background: event.target.value }))
                   }
                   placeholder="pl. golyakalifa"
                 />

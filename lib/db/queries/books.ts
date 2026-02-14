@@ -12,14 +12,17 @@ type BlockQueryRow = {
   chapter_id: string;
   block_index: number;
   original_text: string;
-  normalized_text: string | null;
   chapters: ChapterJoinRow;
 };
 
-type AcceptedVariantRow = {
+type VariantStatus = "draft" | "accepted" | "rejected";
+
+type VariantQueryRow = {
   id: string;
   block_id: string;
   text: string;
+  status: VariantStatus;
+  variant_index: number;
   updated_at: string;
 };
 
@@ -34,6 +37,8 @@ export type DashboardBlock = {
   translatedText: string | null;
   acceptedVariantId: string | null;
   isAccepted: boolean;
+  hasAcceptableVariant: boolean;
+  workflowStatus: VariantStatus;
 };
 
 export type DashboardCompletion = {
@@ -83,24 +88,32 @@ export async function fetchBookDashboardData(
 
   const { data: blockRows, error: blockError } = await supabase
     .from("blocks")
-    .select("id,book_id,chapter_id,block_index,original_text,normalized_text,chapters!inner(chapter_index,title)")
+    .select("id,book_id,chapter_id,block_index,original_text,chapters!inner(chapter_index,title)")
     .eq("book_id", bookId);
 
   if (blockError) throw new Error(errorMessage(blockError));
 
-  const { data: acceptedRows, error: acceptedError } = await supabase
+  const { data: variantRows, error: variantError } = await supabase
     .from("variants")
-    .select("id,block_id,text,updated_at")
+    .select("id,block_id,text,status,variant_index,updated_at")
     .eq("book_id", bookId)
-    .eq("status", "accepted")
-    .order("updated_at", { ascending: false });
+    .order("updated_at", { ascending: false })
+    .order("variant_index", { ascending: false });
 
-  if (acceptedError) throw new Error(errorMessage(acceptedError));
+  if (variantError) throw new Error(errorMessage(variantError));
 
-  const latestAcceptedByBlock = new Map<string, AcceptedVariantRow>();
-  for (const row of (acceptedRows ?? []) as AcceptedVariantRow[]) {
-    if (!latestAcceptedByBlock.has(row.block_id)) {
+  const latestAcceptedByBlock = new Map<string, VariantQueryRow>();
+  const latestVariantByBlock = new Map<string, VariantQueryRow>();
+  const latestNonRejectedByBlock = new Map<string, VariantQueryRow>();
+  for (const row of (variantRows ?? []) as VariantQueryRow[]) {
+    if (!latestVariantByBlock.has(row.block_id)) {
+      latestVariantByBlock.set(row.block_id, row);
+    }
+    if (row.status === "accepted" && !latestAcceptedByBlock.has(row.block_id)) {
       latestAcceptedByBlock.set(row.block_id, row);
+    }
+    if (row.status !== "rejected" && !latestNonRejectedByBlock.has(row.block_id)) {
+      latestNonRejectedByBlock.set(row.block_id, row);
     }
   }
 
@@ -108,6 +121,16 @@ export async function fetchBookDashboardData(
     .map((row) => {
       const chapter = readChapter(row.chapters);
       const acceptedVariant = latestAcceptedByBlock.get(row.id);
+      const latestVariant = latestVariantByBlock.get(row.id);
+      const latestNonRejectedVariant = latestNonRejectedByBlock.get(row.id);
+      const translatedText = acceptedVariant?.text ?? latestNonRejectedVariant?.text ?? null;
+      const hasAcceptableVariant = Boolean(latestNonRejectedVariant?.text?.trim());
+      const workflowStatus: VariantStatus = acceptedVariant
+        ? "accepted"
+        : latestVariant?.status === "rejected"
+          ? "rejected"
+          : "draft";
+
       return {
         id: row.id,
         bookId: row.book_id,
@@ -116,9 +139,11 @@ export async function fetchBookDashboardData(
         chapterTitle: chapter.chapterTitle,
         blockIndex: row.block_index,
         originalText: row.original_text,
-        translatedText: acceptedVariant?.text ?? row.normalized_text ?? null,
+        translatedText,
         acceptedVariantId: acceptedVariant?.id ?? null,
         isAccepted: Boolean(acceptedVariant),
+        hasAcceptableVariant,
+        workflowStatus,
       } satisfies DashboardBlock;
     })
     .sort((a, b) => {
@@ -157,10 +182,24 @@ export type AcceptBlockArgs = {
 export async function acceptBlockVariant({ supabase, userId, block }: AcceptBlockArgs): Promise<void> {
   if (block.isAccepted) return;
 
-  const translatedText = block.translatedText?.trim();
-  if (!translatedText) {
+  const { data: sourceVariantRows, error: sourceVariantError } = await supabase
+    .from("variants")
+    .select("id,text,status")
+    .eq("block_id", block.id)
+    .neq("status", "rejected")
+    .order("updated_at", { ascending: false })
+    .order("variant_index", { ascending: false })
+    .limit(1);
+
+  if (sourceVariantError) throw new Error(errorMessage(sourceVariantError));
+
+  const sourceVariant = (sourceVariantRows as Array<{ id: string; text: string; status: VariantStatus }> | null)?.[0];
+  const translatedText = sourceVariant?.text?.trim();
+
+  if (!sourceVariant || !translatedText) {
     throw new Error("A blokkhoz nincs elfogadhato forditott szoveg.");
   }
+  if (sourceVariant.status === "accepted") return;
 
   const { error: demoteError } = await supabase
     .from("variants")
