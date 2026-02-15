@@ -13,6 +13,8 @@ import {
   ArrowLeft,
   ArrowLeftRight,
   Plus,
+  GraduationCap,
+  Bookmark,
 } from "lucide-react";
 
 export type IconName =
@@ -29,7 +31,9 @@ export type IconName =
   | "back"
   | "swap"
   | "add"
-  | "merge";
+  | "merge"
+  | "onboarding"
+  | "bookmark";
 
 const ICON_MAP = {
   generate: Sparkles,
@@ -46,6 +50,8 @@ const ICON_MAP = {
   swap: ArrowLeftRight,
   add: Plus,
   merge: GitMerge,
+  onboarding: GraduationCap,
+  bookmark: Bookmark,
 } as const;
 
 type Props = {

@@ -50,6 +50,10 @@ type GenerateErrorState = {
   blockId: string;
   message: string;
 };
+type ManualEditErrorState = {
+  blockId: string;
+  message: string;
+};
 type NoteErrorState = {
   blockId: string;
   message: string;
@@ -82,6 +86,7 @@ type BlockIndexRow = {
   id: string;
   block_index: number;
 };
+type MobileDashboardPage = "original" | "translated" | "toc" | "notes" | "bookmarks";
 
 /**
  * Store-like UI state for this dashboard.
@@ -98,7 +103,400 @@ type DashboardViewStore = {
   syncScroll: boolean;
 };
 
+type OnboardingRoute = "/book/[id]";
+type OnboardingPlacement = "top" | "bottom" | "left" | "right" | "center";
+type OnboardingCompleteOn =
+  | "next"
+  | "mode_toggled"
+  | "generate_success"
+  | "accept_success"
+  | "note_requested"
+  | "note_decided"
+  | "chapter_saved";
+
+type OnboardingStep = {
+  id: string;
+  route: OnboardingRoute;
+  anchorId: string;
+  title: string;
+  body: string;
+  placement: OnboardingPlacement;
+  completeOn?: OnboardingCompleteOn;
+  skippable: boolean;
+};
+
+type OnboardingPopupPosition = {
+  left: number;
+  top: number;
+  maxWidth: number;
+};
+
+type OnboardingStepCompletionReason = "next" | "skip" | OnboardingCompleteOn;
+type OnboardingTelemetryEventName =
+  | "onboarding_started"
+  | "onboarding_step_shown"
+  | "onboarding_step_completed"
+  | "onboarding_completed"
+  | "onboarding_skipped";
+
+type OnboardingProgressPayload = {
+  onboardingVersion: number;
+  completedStepIds: string[];
+};
+
+type DashboardBookmarkPayload = {
+  items: DashboardBookmarkEntry[];
+};
+
+type DashboardBookmarkKind = "progress" | "important";
+
+type DashboardBookmarkEntry = {
+  id: string;
+  markerId: string;
+  colorKey: string;
+  name: string;
+  kind: DashboardBookmarkKind;
+};
+
+type BookmarkColorOption = {
+  key: string;
+  label: string;
+  color: string;
+};
+
+const BOOK_EDITORIAL_ONBOARDING_STEPS: OnboardingStep[] = [
+  {
+    id: "step_dashboard_modes",
+    route: "/book/[id]",
+    anchorId: "onb-mode-controls",
+    title: "Workbench es Reader",
+    body: "A Workbench szerkeszteshez valo, a Reader csak teljesen elfogadott allapotban erheto el.",
+    placement: "left",
+    completeOn: "mode_toggled",
+    skippable: true,
+  },
+  {
+    id: "step_progress_meaning",
+    route: "/book/[id]",
+    anchorId: "onb-progress",
+    title: "Completion jelentes",
+    body: "A completion mutatja, hany blokk van elfogadva, es mikor nyilik meg a Reader.",
+    placement: "top",
+    completeOn: "next",
+    skippable: true,
+  },
+  {
+    id: "step_block_workflow",
+    route: "/book/[id]",
+    anchorId: "onb-block-actions",
+    title: "Blokk munkafolyamat",
+    body: "A folyamat: Generalas, atnezes, majd Elfogad.",
+    placement: "left",
+    completeOn: "next",
+    skippable: true,
+  },
+  {
+    id: "step_generate",
+    route: "/book/[id]",
+    anchorId: "onb-generate",
+    title: "Generalas",
+    body: "A Generalas uj szerkesztett valtozatot keszit az adott blokkhoz.",
+    placement: "left",
+    completeOn: "generate_success",
+    skippable: true,
+  },
+  {
+    id: "step_accept",
+    route: "/book/[id]",
+    anchorId: "onb-accept",
+    title: "Elfogadas",
+    body: "Az Elfogad gomb a megfelelo valtozatot rogzitett allapotba teszi.",
+    placement: "left",
+    completeOn: "accept_success",
+    skippable: true,
+  },
+  {
+    id: "step_note_request",
+    route: "/book/[id]",
+    anchorId: "onb-note-trigger",
+    title: "Jegyzet kerese",
+    body: "Kijelolt szovegreszre kerhetsz magyarazo jegyzetet.",
+    placement: "top",
+    completeOn: "note_requested",
+    skippable: true,
+  },
+  {
+    id: "step_note_decision",
+    route: "/book/[id]",
+    anchorId: "onb-note-suggestion",
+    title: "Javaslat elfogadasa vagy elvetese",
+    body: "A javaslatot elfogadhatod vagy elutasithatod a tooltipben.",
+    placement: "top",
+    completeOn: "note_decided",
+    skippable: true,
+  },
+  {
+    id: "step_chapter_edit",
+    route: "/book/[id]",
+    anchorId: "onb-chapter-header",
+    title: "Fejezet cim szerkesztese",
+    body: "A fejezetcim inline szerkesztheto es azonnal mentheto.",
+    placement: "bottom",
+    completeOn: "chapter_saved",
+    skippable: true,
+  },
+  {
+    id: "step_done",
+    route: "/book/[id]",
+    anchorId: "onb-replay",
+    title: "Onboarding kesz",
+    body: "Az onboarding barmikor ujraindithato az erre kijelolt gombbal.",
+    placement: "left",
+    completeOn: "next",
+    skippable: false,
+  },
+];
+
+const ONBOARDING_VERSION = 1;
+const BOOKMARK_COLOR_OPTIONS: BookmarkColorOption[] = [
+  { key: "amber", label: "Borostyan", color: "#F2B134" },
+  { key: "rose", label: "Rose", color: "#E06C75" },
+  { key: "vermilion", label: "Vermilion", color: "#D96C4A" },
+  { key: "gold", label: "Arany", color: "#C79A2E" },
+  { key: "olive", label: "Oliva", color: "#8A9A3A" },
+  { key: "emerald", label: "Smaragd", color: "#2E8B57" },
+  { key: "teal", label: "Teal", color: "#2D8C8A" },
+  { key: "azure", label: "Azur", color: "#3A7BD5" },
+  { key: "indigo", label: "Indigo", color: "#5865C3" },
+  { key: "slate", label: "Pala", color: "#637381" },
+];
+const DEFAULT_BOOKMARK_COLOR_KEY = BOOKMARK_COLOR_OPTIONS[0].key;
+const IMPORTANT_BOOKMARK_DEFAULT_COLOR_KEY = "rose";
+
+function normalizeBookmarkColorKey(value: string | null | undefined): string {
+  if (!value) return DEFAULT_BOOKMARK_COLOR_KEY;
+  return BOOKMARK_COLOR_OPTIONS.some((option) => option.key === value) ? value : DEFAULT_BOOKMARK_COLOR_KEY;
+}
+
+function normalizeBookmarkKind(value: string | null | undefined): DashboardBookmarkKind {
+  return value === "important" ? "important" : "progress";
+}
+
+function resolveLegacyBookmarkColorKey(legacyColor: string | null | undefined): string {
+  if (!legacyColor) return DEFAULT_BOOKMARK_COLOR_KEY;
+  const normalized = legacyColor.trim().toLowerCase();
+  const byExact = BOOKMARK_COLOR_OPTIONS.find((option) => option.color.toLowerCase() === normalized);
+  return byExact ? byExact.key : DEFAULT_BOOKMARK_COLOR_KEY;
+}
+
+function resolveCurrentOnboardingStep(args: {
+  route: OnboardingRoute;
+  completedStepIds: Set<string>;
+  isAnchorAvailable: (anchorId: string) => boolean;
+}): OnboardingStep | null {
+  const { route, completedStepIds, isAnchorAvailable } = args;
+  for (const step of BOOK_EDITORIAL_ONBOARDING_STEPS) {
+    if (step.route !== route) continue;
+    if (completedStepIds.has(step.id)) continue;
+    if (!isAnchorAvailable(step.anchorId)) return null;
+    return step;
+  }
+  return null;
+}
+
+function findOnboardingStepById(stepId: string | null): OnboardingStep | null {
+  if (!stepId) return null;
+  return BOOK_EDITORIAL_ONBOARDING_STEPS.find((step) => step.id === stepId) ?? null;
+}
+
+function findOnboardingStepIndex(stepId: string | null): number {
+  if (!stepId) return -1;
+  return BOOK_EDITORIAL_ONBOARDING_STEPS.findIndex((step) => step.id === stepId);
+}
+
+function onboardingProgressKey(args: { userId: string; bookId: string; route: OnboardingRoute }): string {
+  const { userId, bookId, route } = args;
+  return `novira:onboarding:${ONBOARDING_VERSION}:${route}:${userId}:${bookId}`;
+}
+
+function readOnboardingProgress(args: { userId: string; bookId: string; route: OnboardingRoute }): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  const storageKey = onboardingProgressKey(args);
+  const raw = window.localStorage.getItem(storageKey);
+  if (!raw) return new Set();
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<OnboardingProgressPayload> | null;
+    if (!parsed || parsed.onboardingVersion !== ONBOARDING_VERSION) {
+      window.localStorage.removeItem(storageKey);
+      return new Set();
+    }
+    if (!Array.isArray(parsed.completedStepIds)) return new Set();
+    return new Set(parsed.completedStepIds.filter((value): value is string => typeof value === "string"));
+  } catch {
+    window.localStorage.removeItem(storageKey);
+    return new Set();
+  }
+}
+
+function writeOnboardingProgress(args: {
+  userId: string;
+  bookId: string;
+  route: OnboardingRoute;
+  completedStepIds: Set<string>;
+}): void {
+  if (typeof window === "undefined") return;
+  const storageKey = onboardingProgressKey(args);
+  const payload: OnboardingProgressPayload = {
+    onboardingVersion: ONBOARDING_VERSION,
+    completedStepIds: Array.from(args.completedStepIds),
+  };
+  window.localStorage.setItem(storageKey, JSON.stringify(payload));
+}
+
+function bookmarkStorageKey(args: { userId: string; bookId: string }): string {
+  return `novira:bookmark:${args.userId}:${args.bookId}`;
+}
+
+function readDashboardBookmark(args: { userId: string; bookId: string }): DashboardBookmarkPayload {
+  if (typeof window === "undefined") {
+    return { items: [] };
+  }
+
+  const storageKey = bookmarkStorageKey(args);
+  const raw = window.localStorage.getItem(storageKey);
+  if (!raw) {
+    return { items: [] };
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<DashboardBookmarkPayload> | null;
+    if (Array.isArray(parsed?.items)) {
+      const items: DashboardBookmarkEntry[] = [];
+      for (const row of parsed.items) {
+        if (!row || typeof row !== "object") continue;
+        const r = row as Partial<DashboardBookmarkEntry>;
+        if (typeof r.id !== "string" || !r.id.trim()) continue;
+        if (typeof r.markerId !== "string" || !r.markerId.trim()) continue;
+        items.push({
+          id: r.id,
+          markerId: r.markerId,
+          colorKey: normalizeBookmarkColorKey(r.colorKey),
+          name: typeof r.name === "string" ? r.name : "",
+          kind: normalizeBookmarkKind(r.kind),
+        });
+      }
+      return { items };
+    }
+
+    const legacyMarkerId =
+      typeof (parsed as { markerId?: unknown } | null)?.markerId === "string"
+        ? ((parsed as { markerId: string }).markerId ?? null)
+        : typeof (parsed as { blockId?: unknown } | null)?.blockId === "string"
+          ? ((parsed as { blockId: string }).blockId ?? null)
+          : null;
+    if (!legacyMarkerId) return { items: [] };
+
+    const parsedColorKey =
+      typeof (parsed as { colorKey?: unknown } | null)?.colorKey === "string"
+        ? ((parsed as { colorKey: string }).colorKey ?? null)
+        : null;
+    const legacyColor =
+      typeof (parsed as { color?: unknown } | null)?.color === "string"
+        ? ((parsed as { color: string }).color ?? null)
+        : null;
+    const colorKey = parsedColorKey ? normalizeBookmarkColorKey(parsedColorKey) : resolveLegacyBookmarkColorKey(legacyColor);
+    const name = typeof (parsed as { name?: unknown } | null)?.name === "string" ? ((parsed as { name: string }).name ?? "") : "";
+
+    return {
+      items: [
+        {
+          id: `bm_${Date.now()}`,
+          markerId: legacyMarkerId,
+          colorKey,
+          name,
+          kind: "progress",
+        },
+      ],
+    };
+  } catch {
+    window.localStorage.removeItem(storageKey);
+    return { items: [] };
+  }
+}
+
+function writeDashboardBookmark(args: { userId: string; bookId: string; bookmark: DashboardBookmarkPayload }): void {
+  if (typeof window === "undefined") return;
+  const storageKey = bookmarkStorageKey(args);
+  window.localStorage.setItem(storageKey, JSON.stringify(args.bookmark));
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function findVisibleOnboardingAnchor(anchorId: string): HTMLElement | null {
+  if (typeof document === "undefined") return null;
+  const nodes = document.querySelectorAll<HTMLElement>(`[data-onboarding-id="${anchorId}"]`);
+  for (const node of nodes) {
+    const rect = node.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      return node;
+    }
+  }
+  return null;
+}
+
+function resolveOnboardingPopupPosition(args: {
+  anchorId: string;
+  placement: OnboardingPlacement;
+  allowCenterFallback?: boolean;
+}): OnboardingPopupPosition | null {
+  const { anchorId, placement, allowCenterFallback = false } = args;
+  if (typeof window === "undefined") return null;
+  const anchor = findVisibleOnboardingAnchor(anchorId);
+  if (!anchor) {
+    if (!allowCenterFallback) return null;
+    return {
+      left: window.innerWidth / 2,
+      top: window.innerHeight / 2,
+      maxWidth: Math.min(360, window.innerWidth - 24),
+    };
+  }
+
+  const rect = anchor.getBoundingClientRect();
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const edgePadding = 12;
+  const gap = 10;
+  const maxWidth = Math.min(360, viewportWidth - edgePadding * 2);
+  const popupHeightEstimate = 170;
+
+  let left = rect.left + rect.width / 2;
+  let top = rect.top - gap;
+
+  if (placement === "bottom") {
+    top = rect.bottom + gap;
+  } else if (placement === "left") {
+    left = rect.left - gap;
+    top = rect.top + rect.height / 2;
+  } else if (placement === "right") {
+    left = rect.right + gap;
+    top = rect.top + rect.height / 2;
+  } else if (placement === "center") {
+    left = viewportWidth / 2;
+    top = viewportHeight / 2;
+  }
+
+  const halfWidth = maxWidth / 2;
+  left = clamp(left, edgePadding + halfWidth, viewportWidth - edgePadding - halfWidth);
+  top = clamp(top, edgePadding + 8, viewportHeight - edgePadding - popupHeightEstimate);
+
+  return { left, top, maxWidth };
+}
+
 const MOBILE_BREAKPOINT = 960;
+const NOTE_PREVIEW_MAX_LENGTH = 180;
 
 function completionPercent(value: number): number {
   if (!Number.isFinite(value)) return 0;
@@ -492,7 +890,7 @@ function renderTextWithInlineNotes(args: {
           <sup className={styles.suggestedMarkerTag}>{displayIndex}</sup>
           <span className={styles.inlineTooltip}>
             <span>{suggestion.content || "Automatikus jegyzetjavaslat."}</span>
-            <span className={styles.suggestionActions}>
+            <span className={styles.suggestionActions} data-onboarding-id="onb-note-suggestion">
               <button
                 type="button"
                 className={styles.suggestionActionButton}
@@ -569,7 +967,17 @@ function ActionIcon({ type }: { type: "generate" | "accept" | "delete" | "edit" 
 function ToolIcon({
   type,
 }: {
-  type: "single" | "split" | "workbench" | "reader" | "admin" | "sync" | "back" | "swap";
+  type:
+    | "single"
+    | "split"
+    | "workbench"
+    | "reader"
+    | "admin"
+    | "sync"
+    | "back"
+    | "swap"
+    | "onboarding"
+    | "bookmark";
 }) {
   return <Icon name={type} />;
 }
@@ -584,8 +992,13 @@ function BlockControls({
   onAccept,
   onGenerate,
   onDelete,
+  onStartManualEdit,
+  onRejectToOriginal,
+  onSetBookmarkBefore,
   allowDelete,
   mobileExpanded,
+  hasProgressBookmarkAtThisBlock,
+  importantBookmarkCountAtThisBlock,
 }: {
   block: DashboardBlock;
   textMode: DashboardActivePanel;
@@ -596,29 +1009,30 @@ function BlockControls({
   onAccept: (block: DashboardBlock) => void;
   onGenerate: (block: DashboardBlock) => void;
   onDelete: (block: DashboardBlock) => void;
+  onStartManualEdit: (block: DashboardBlock) => void;
+  onRejectToOriginal: (block: DashboardBlock) => void;
+  onSetBookmarkBefore: (block: DashboardBlock, kind: DashboardBookmarkKind) => void;
   allowDelete: boolean;
   mobileExpanded: boolean;
+  hasProgressBookmarkAtThisBlock: boolean;
+  importantBookmarkCountAtThisBlock: number;
 }) {
   const canAccept = block.hasAcceptableVariant && !block.isAccepted;
   const translatedTrim = block.translatedText?.trim() ?? "";
   const hasGeneratedContent = translatedTrim.length > 0 && translatedTrim !== block.originalText.trim();
+  const showAcceptAction = textMode === "translated" && hasGeneratedContent;
+  const showRejectToOriginal = textMode === "translated" && hasGeneratedContent && !block.isAccepted;
 
   return (
-    <div className={styles.blockControls} role="group" aria-label="Blokk muveletek">
+    <div
+      className={styles.blockControls}
+      role="group"
+      aria-label="Blokk muveletek"
+      data-onboarding-id="onb-block-actions"
+    >
       {textMode === "translated" ? (
         <>
-          <button
-            className={styles.actionIconButton}
-            type="button"
-            onClick={() => onGenerate(block)}
-            disabled={generateInFlight || acceptInFlight || deleteInFlight}
-            data-tone="generate"
-            data-mobile-expanded={mobileExpanded ? "true" : "false"}
-          >
-            <span>{generateInFlight ? "Generalas..." : "Generalas"}</span>
-            <ActionIcon type="generate" />
-          </button>
-          {hasGeneratedContent ? (
+          {showAcceptAction ? (
             <button
               className={styles.actionIconButton}
               type="button"
@@ -626,11 +1040,72 @@ function BlockControls({
               disabled={!canAccept || acceptInFlight || generateInFlight || deleteInFlight}
               data-tone="accept"
               data-mobile-expanded={mobileExpanded ? "true" : "false"}
+              data-onboarding-id="onb-accept"
             >
               <span>{block.isAccepted ? "Elfogadva" : acceptInFlight ? "Mentese..." : "Elfogad"}</span>
               <ActionIcon type="accept" />
             </button>
           ) : null}
+          {showRejectToOriginal ? (
+            <button
+              className={styles.actionIconButton}
+              type="button"
+              onClick={() => onRejectToOriginal(block)}
+              disabled={acceptInFlight || generateInFlight || deleteInFlight}
+              data-tone="delete"
+              data-mobile-expanded={mobileExpanded ? "true" : "false"}
+              aria-label="Elutasitas"
+              title="Elutasitas"
+            >
+              <span>Elutasitas</span>
+              X
+            </button>
+          ) : null}
+          <button
+            className={styles.actionIconButton}
+            type="button"
+            onClick={() => onGenerate(block)}
+            disabled={generateInFlight || acceptInFlight || deleteInFlight}
+            data-tone="generate"
+            data-mobile-expanded={mobileExpanded ? "true" : "false"}
+            data-onboarding-id="onb-generate"
+          >
+            <span>{generateInFlight ? "Generalas..." : "Generalas"}</span>
+            <ActionIcon type="generate" />
+          </button>
+          <button
+            className={styles.actionIconButton}
+            type="button"
+            onClick={() => onStartManualEdit(block)}
+            disabled={generateInFlight || acceptInFlight || deleteInFlight}
+            data-tone="generate"
+            data-mobile-expanded={mobileExpanded ? "true" : "false"}
+          >
+            <span>Kezi javitas</span>
+            <ActionIcon type="edit" />
+          </button>
+          <button
+            className={styles.actionIconButton}
+            type="button"
+            onClick={() => onSetBookmarkBefore(block, "progress")}
+            disabled={generateInFlight || acceptInFlight || deleteInFlight}
+            data-tone="bookmark"
+            data-mobile-expanded={mobileExpanded ? "true" : "false"}
+          >
+            <span>{hasProgressBookmarkAtThisBlock ? "Haladas itt" : "Haladas jelzo"}</span>
+            <Icon name="bookmark" />
+          </button>
+          <button
+            className={styles.actionIconButton}
+            type="button"
+            onClick={() => onSetBookmarkBefore(block, "important")}
+            disabled={generateInFlight || acceptInFlight || deleteInFlight}
+            data-tone="bookmark-important"
+            data-mobile-expanded={mobileExpanded ? "true" : "false"}
+          >
+            <span>{importantBookmarkCountAtThisBlock > 0 ? "Fontos +" : "Fontos jelzes"}</span>
+            <Icon name="bookmark" />
+          </button>
         </>
       ) : null}
       {allowDelete ? (
@@ -659,6 +1134,19 @@ function BlockControls({
 
 function mergePairKey(leftBlockId: string, rightBlockId: string): string {
   return `${leftBlockId}::${rightBlockId}`;
+}
+
+function bookmarkBeforeKey(block: DashboardBlock): string {
+  return `before:${block.chapterId}:${block.id}`;
+}
+
+function parseBookmarkBeforeKey(markerId: string): { chapterId: string; blockId: string } | null {
+  const parts = markerId.split(":");
+  if (parts.length !== 3 || parts[0] !== "before") return null;
+  return {
+    chapterId: parts[1],
+    blockId: parts[2],
+  };
 }
 
 function BlockMergeHandle({
@@ -692,6 +1180,36 @@ function BlockMergeHandle({
   );
 }
 
+function BookmarkMarkerStripe({
+  markerId,
+  entries,
+  bookmarkColorByKey,
+}: {
+  markerId: string;
+  entries: DashboardBookmarkEntry[];
+  bookmarkColorByKey: Record<string, string>;
+}) {
+  return (
+    <div
+      className={styles.bookmarkGapSlot}
+      data-bookmarked="true"
+      data-bookmark-marker-id={markerId}
+      aria-hidden="true"
+    >
+      {entries.map((entry) => (
+        <div
+          key={entry.id}
+          className={styles.bookmarkGapEntry}
+          style={{ "--bookmark-color": bookmarkColorByKey[entry.colorKey] ?? BOOKMARK_COLOR_OPTIONS[0].color } as CSSProperties}
+        >
+          <span className={styles.bookmarkGapLine} />
+          {entry.name.trim() ? <span className={styles.bookmarkGapLabel}>{entry.name}</span> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ChapterHeader({
   group,
   showActions,
@@ -718,7 +1236,7 @@ function ChapterHeader({
   onDelete: (group: ChapterGroup) => void;
 }) {
   return (
-    <div className={styles.chapterSticky}>
+    <div className={styles.chapterSticky} data-onboarding-id="onb-chapter-header">
       <div className={styles.chapterTitle}>
         <span>Fejezet {group.chapterIndex}</span>
         {isEditing ? (
@@ -796,10 +1314,15 @@ function BlockCard({
   deleteInFlight,
   generateError,
   noteError,
+  manualEditError,
+  manualSaveInFlight,
   creatingNoteInFlight,
   onAccept,
   onGenerate,
   onDelete,
+  onSaveManualEdit,
+  onRejectToOriginal,
+  onSetBookmarkBefore,
   onCreateNote,
   onApproveSuggestion,
   onRejectSuggestion,
@@ -810,6 +1333,7 @@ function BlockCard({
   isMobile,
   mobileActionsVisible,
   onMobileActivate,
+  bookmarksBeforeBlock,
 }: {
   block: DashboardBlock;
   textMode: DashboardActivePanel;
@@ -818,10 +1342,15 @@ function BlockCard({
   deleteInFlight: boolean;
   generateError: string | null;
   noteError: string | null;
+  manualEditError: string | null;
+  manualSaveInFlight: boolean;
   creatingNoteInFlight: boolean;
   onAccept: (block: DashboardBlock) => void;
   onGenerate: (block: DashboardBlock) => void;
   onDelete: (block: DashboardBlock) => void;
+  onSaveManualEdit: (args: { block: DashboardBlock; text: string }) => Promise<boolean>;
+  onRejectToOriginal: (block: DashboardBlock) => void;
+  onSetBookmarkBefore: (block: DashboardBlock, kind: DashboardBookmarkKind) => void;
   onCreateNote: (args: { block: DashboardBlock; range: BlockSelectionRange }) => Promise<void>;
   onApproveSuggestion: (args: {
     block: DashboardBlock;
@@ -838,8 +1367,11 @@ function BlockCard({
   isMobile: boolean;
   mobileActionsVisible: boolean;
   onMobileActivate: (blockId: string) => void;
+  bookmarksBeforeBlock: DashboardBookmarkEntry[];
 }) {
   const [selectionRange, setSelectionRange] = useState<BlockSelectionRange | null>(null);
+  const [manualEditOpen, setManualEditOpen] = useState(false);
+  const [manualDraftText, setManualDraftText] = useState("");
   const textRef = useRef<HTMLParagraphElement | null>(null);
   const text =
     textMode === "original"
@@ -877,6 +1409,8 @@ function BlockCard({
     translatedTrim !== block.originalText.trim();
   const needsAttention = textMode === "translated" && (block.workflowStatus === "rejected" || generateError !== null);
   const tone = blockTone({ block, hasError: needsAttention });
+  const hasProgressBookmarkAtThisBlock = bookmarksBeforeBlock.some((entry) => entry.kind === "progress");
+  const importantBookmarkCountAtThisBlock = bookmarksBeforeBlock.filter((entry) => entry.kind === "important").length;
 
   const captureSelection = useCallback(() => {
     if (textMode !== "translated" || !textRef.current) return;
@@ -917,9 +1451,15 @@ function BlockCard({
     positionTooltipForMarker(marker);
   }, [positionTooltipForMarker]);
 
+  const openManualEdit = useCallback(() => {
+    setManualDraftText(textMode === "translated" ? (block.translatedText?.trim() || block.originalText) : block.originalText);
+    setManualEditOpen(true);
+  }, [block.originalText, block.translatedText, textMode]);
+
   return (
     <article
       className={styles.blockCard}
+      data-dashboard-block-id={block.id}
       data-status={block.workflowStatus}
       data-edited={hasEditedContent ? "true" : "false"}
       data-alert={needsAttention ? "true" : "false"}
@@ -951,30 +1491,6 @@ function BlockCard({
           ) : null}
         </div>
       ) : null}
-      <p
-        ref={textRef}
-        className={styles.blockText}
-        onMouseUp={captureSelection}
-        onMouseOver={handleTooltipPointer}
-        onKeyUp={captureSelection}
-        onFocusCapture={handleTooltipFocus}
-        onBlur={clearSelection}
-      >
-        {renderedText}
-      </p>
-      {textMode === "translated" && selectionRange ? (
-        <div className={styles.selectionActions}>
-          <button
-            type="button"
-            className={styles.inlineActionButton}
-            disabled={creatingNoteInFlight}
-            onClick={() => onCreateNote({ block, range: selectionRange })}
-          >
-            {creatingNoteInFlight ? "Jegyzet..." : "Jegyzet kerese"}
-          </button>
-        </div>
-      ) : null}
-      {noteError ? <div className={styles.inlineNoteError}>{noteError}</div> : null}
       {showControls ? (
         <BlockControls
           block={block}
@@ -986,10 +1502,74 @@ function BlockCard({
           onAccept={onAccept}
           onGenerate={onGenerate}
           onDelete={onDelete}
+          onStartManualEdit={openManualEdit}
+          onRejectToOriginal={onRejectToOriginal}
+          onSetBookmarkBefore={onSetBookmarkBefore}
           allowDelete={allowDelete}
           mobileExpanded={mobileActionsVisible}
+          hasProgressBookmarkAtThisBlock={hasProgressBookmarkAtThisBlock}
+          importantBookmarkCountAtThisBlock={importantBookmarkCountAtThisBlock}
         />
       ) : null}
+      <p
+        ref={textRef}
+        className={styles.blockText}
+        onMouseUp={captureSelection}
+        onMouseOver={handleTooltipPointer}
+        onKeyUp={captureSelection}
+        onFocusCapture={handleTooltipFocus}
+        onBlur={clearSelection}
+      >
+        {renderedText}
+      </p>
+      {textMode === "translated" && manualEditOpen ? (
+        <div className={styles.manualEditPanel}>
+          <textarea
+            className={styles.manualEditTextarea}
+            value={manualDraftText}
+            onChange={(event) => setManualDraftText(event.target.value)}
+            placeholder="Tisztitott blokk szoveg"
+          />
+          <div className={styles.manualEditActions}>
+            <button
+              type="button"
+              className="btn"
+              disabled={manualSaveInFlight}
+              onClick={async () => {
+                const ok = await onSaveManualEdit({ block, text: manualDraftText });
+                if (ok) {
+                  setManualEditOpen(false);
+                }
+              }}
+            >
+              {manualSaveInFlight ? "Mentes..." : "Mentes"}
+            </button>
+            <button
+              type="button"
+              className="btn"
+              disabled={manualSaveInFlight}
+              onClick={() => setManualEditOpen(false)}
+            >
+              Megse
+            </button>
+          </div>
+          {manualEditError ? <div className={styles.inlineNoteError}>{manualEditError}</div> : null}
+        </div>
+      ) : null}
+      {textMode === "translated" && selectionRange ? (
+        <div className={styles.selectionActions}>
+          <button
+            type="button"
+            className={styles.inlineActionButton}
+            disabled={creatingNoteInFlight}
+            onClick={() => onCreateNote({ block, range: selectionRange })}
+            data-onboarding-id="onb-note-trigger"
+          >
+            {creatingNoteInFlight ? "Jegyzet..." : "Jegyzet kerese"}
+          </button>
+        </div>
+      ) : null}
+      {noteError ? <div className={styles.inlineNoteError}>{noteError}</div> : null}
     </article>
   );
 }
@@ -1018,6 +1598,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const [generatingBlockId, setGeneratingBlockId] = useState<string | null>(null);
   const [deletingBlockId, setDeletingBlockId] = useState<string | null>(null);
   const [generateError, setGenerateError] = useState<GenerateErrorState | null>(null);
+  const [manualSavingBlockId, setManualSavingBlockId] = useState<string | null>(null);
+  const [manualEditError, setManualEditError] = useState<ManualEditErrorState | null>(null);
   const [creatingNoteBlockId, setCreatingNoteBlockId] = useState<string | null>(null);
   const [noteError, setNoteError] = useState<NoteErrorState | null>(null);
   const [dismissedSuggestions, setDismissedSuggestions] = useState<Record<string, Set<number>>>({});
@@ -1032,8 +1614,25 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const [mergingPairKey, setMergingPairKey] = useState<string | null>(null);
   const [mergeError, setMergeError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [mobilePage, setMobilePage] = useState<MobileDashboardPage>("translated");
   const [mobileToolPanelOpen, setMobileToolPanelOpen] = useState(false);
+  const [desktopEditPanelOpen, setDesktopEditPanelOpen] = useState(false);
   const [activeMobileBlockId, setActiveMobileBlockId] = useState<string | null>(null);
+  const [expandedNoteIds, setExpandedNoteIds] = useState<Set<string>>(() => new Set());
+  const [bookmarks, setBookmarks] = useState<DashboardBookmarkEntry[]>([]);
+  const [selectedBookmarkId, setSelectedBookmarkId] = useState<string | null>(null);
+  const [bookmarkReady, setBookmarkReady] = useState(false);
+  const [onboardingCompletedStepIds, setOnboardingCompletedStepIds] = useState<Set<string>>(() => new Set());
+  const [onboardingReplaySeed, setOnboardingReplaySeed] = useState(0);
+  const [onboardingPopupPosition, setOnboardingPopupPosition] = useState<OnboardingPopupPosition | null>(null);
+  const [onboardingProgressReady, setOnboardingProgressReady] = useState(false);
+  const [onboardingGuideOpen, setOnboardingGuideOpen] = useState(false);
+  const [onboardingSelectedStepId, setOnboardingSelectedStepId] = useState<string | null>(null);
+  const currentOnboardingStepRef = useRef<OnboardingStep | null>(null);
+  const onboardingStartedRef = useRef(false);
+  const onboardingCompletedRef = useRef(false);
+  const onboardingLastShownStepIdRef = useRef<string | null>(null);
+  const onboardingLastNavigatedStepIdRef = useRef<string | null>(null);
   const initializedView = useRef(false);
   const originalPanelRef = useRef<HTMLDivElement | null>(null);
   const translatedPanelRef = useRef<HTMLDivElement | null>(null);
@@ -1107,6 +1706,140 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     }
   }, [isMobile]);
 
+  useEffect(() => {
+    if (state.status !== "ready") {
+      setBookmarkReady(false);
+      return;
+    }
+    const restored = readDashboardBookmark({ userId: state.userId, bookId });
+    setBookmarks(restored.items);
+    setSelectedBookmarkId(restored.items[0]?.id ?? null);
+    setBookmarkReady(true);
+  }, [bookId, state.status, state.status === "ready" ? state.userId : null]);
+
+  useEffect(() => {
+    if (state.status !== "ready" || !bookmarkReady) return;
+    writeDashboardBookmark({
+      userId: state.userId,
+      bookId,
+      bookmark: {
+        items: bookmarks,
+      },
+    });
+  }, [
+    bookmarks,
+    bookmarkReady,
+    bookId,
+    state.status,
+    state.status === "ready" ? state.userId : null,
+  ]);
+
+  const emitOnboardingTelemetry = useCallback(
+    (
+      name: OnboardingTelemetryEventName,
+      payload?: { step_id?: string; reason?: OnboardingStepCompletionReason },
+    ) => {
+      if (typeof window === "undefined") return;
+      window.dispatchEvent(
+        new CustomEvent("onboarding:telemetry", {
+          detail: {
+            name,
+            route: "/book/[id]",
+            book_id: bookId,
+            onboarding_version: ONBOARDING_VERSION,
+            timestamp: Date.now(),
+            ...(payload ?? {}),
+          },
+        }),
+      );
+    },
+    [bookId],
+  );
+
+  useEffect(() => {
+    if (state.status !== "ready") {
+      setOnboardingProgressReady(false);
+      return;
+    }
+    const restored = readOnboardingProgress({
+      userId: state.userId,
+      bookId,
+      route: "/book/[id]",
+    });
+    setOnboardingCompletedStepIds(restored);
+    setOnboardingProgressReady(true);
+  }, [bookId, state.status, state.status === "ready" ? state.userId : null]);
+
+  useEffect(() => {
+    if (state.status !== "ready" || !onboardingProgressReady) return;
+    writeOnboardingProgress({
+      userId: state.userId,
+      bookId,
+      route: "/book/[id]",
+      completedStepIds: onboardingCompletedStepIds,
+    });
+  }, [
+    bookId,
+    onboardingCompletedStepIds,
+    onboardingProgressReady,
+    state.status,
+    state.status === "ready" ? state.userId : null,
+  ]);
+
+  const resetOnboardingTrackingRefs = useCallback(() => {
+    onboardingStartedRef.current = false;
+    onboardingCompletedRef.current = false;
+    onboardingLastShownStepIdRef.current = null;
+    onboardingLastNavigatedStepIdRef.current = null;
+  }, []);
+
+  const handleOnboardingReplay = useCallback(() => {
+    resetOnboardingTrackingRefs();
+    setOnboardingSelectedStepId(null);
+    setOnboardingCompletedStepIds(new Set());
+    setOnboardingReplaySeed((prev) => prev + 1);
+    setStore((prev) => ({
+      ...prev,
+      viewState: "workbench",
+      activePanel: prev.activePanel ?? "translated",
+    }));
+    if (isMobile) {
+      setMobileToolPanelOpen(true);
+    }
+  }, [isMobile, resetOnboardingTrackingRefs]);
+
+  const stopOnboardingFlow = useCallback((stepId?: string) => {
+    setOnboardingSelectedStepId(null);
+    setOnboardingGuideOpen(false);
+    setOnboardingCompletedStepIds(new Set(BOOK_EDITORIAL_ONBOARDING_STEPS.map((step) => step.id)));
+    if (stepId) {
+      emitOnboardingTelemetry("onboarding_step_completed", { step_id: stepId, reason: "skip" });
+      emitOnboardingTelemetry("onboarding_skipped", { step_id: stepId, reason: "skip" });
+    }
+  }, [emitOnboardingTelemetry]);
+
+  useEffect(() => {
+    window.addEventListener("onboarding:replay-request", handleOnboardingReplay as EventListener);
+    return () => {
+      window.removeEventListener("onboarding:replay-request", handleOnboardingReplay as EventListener);
+    };
+  }, [handleOnboardingReplay]);
+
+  const completeOnboardingByEvent = useCallback((event: OnboardingCompleteOn) => {
+    setOnboardingCompletedStepIds((prev) => {
+      const step = currentOnboardingStepRef.current;
+      if (!step || step.completeOn !== event) return prev;
+      if (prev.has(step.id)) return prev;
+      emitOnboardingTelemetry("onboarding_step_completed", {
+        step_id: step.id,
+        reason: event,
+      });
+      const next = new Set(prev);
+      next.add(step.id);
+      return next;
+    });
+  }, [emitOnboardingTelemetry]);
+
   const handleAccept = useCallback(
     async (block: DashboardBlock) => {
       if (state.status !== "ready") return;
@@ -1118,6 +1851,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           block,
         });
         await loadDashboard({ keepCurrentView: true });
+        completeOnboardingByEvent("accept_success");
       } catch (error) {
         const message = error instanceof Error ? error.message : "Sikertelen mentes.";
         setState({ status: "error", message });
@@ -1125,7 +1859,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         setAcceptingBlockId(null);
       }
     },
-    [loadDashboard, state, supabase],
+    [completeOnboardingByEvent, loadDashboard, state, supabase],
   );
 
   const handleGenerate = useCallback(
@@ -1140,6 +1874,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           blockId: block.id,
         });
         await loadDashboard({ keepCurrentView: true });
+        completeOnboardingByEvent("generate_success");
       } catch (error) {
         const message = error instanceof Error ? error.message : "Sikertelen generalas.";
         setGenerateError({ blockId: block.id, message });
@@ -1147,7 +1882,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         setGeneratingBlockId(null);
       }
     },
-    [bookId, loadDashboard, state.status, supabase],
+    [bookId, completeOnboardingByEvent, loadDashboard, state.status, supabase],
   );
 
   const handleCreateNote = useCallback(
@@ -1185,6 +1920,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         }
 
         await loadDashboard({ keepCurrentView: true });
+        completeOnboardingByEvent("note_requested");
       } catch (error) {
         const message = error instanceof Error ? error.message : "Sikertelen jegyzetgeneralas.";
         setNoteError({ blockId: block.id, message });
@@ -1192,7 +1928,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         setCreatingNoteBlockId(null);
       }
     },
-    [bookId, loadDashboard, state, supabase],
+    [bookId, completeOnboardingByEvent, loadDashboard, state, supabase],
   );
 
   const markSuggestionDismissed = useCallback((blockId: string, number: number) => {
@@ -1227,6 +1963,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
         markSuggestionDismissed(block.id, number);
         await loadDashboard({ keepCurrentView: true });
+        completeOnboardingByEvent("note_decided");
       } catch (error) {
         const message = error instanceof Error ? error.message : "Sikertelen jegyzetmentes.";
         setNoteError({ blockId: block.id, message });
@@ -1234,14 +1971,15 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         setCreatingNoteBlockId(null);
       }
     },
-    [loadDashboard, markSuggestionDismissed, state, supabase],
+    [completeOnboardingByEvent, loadDashboard, markSuggestionDismissed, state, supabase],
   );
 
   const handleRejectSuggestion = useCallback(
     ({ block, number }: { block: DashboardBlock; number: number }) => {
       markSuggestionDismissed(block.id, number);
+      completeOnboardingByEvent("note_decided");
     },
-    [markSuggestionDismissed],
+    [completeOnboardingByEvent, markSuggestionDismissed],
   );
 
   const handleDeleteBlock = useCallback(
@@ -1276,6 +2014,156 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     },
     [loadDashboard, state.status, supabase],
   );
+
+  const handleRejectToOriginal = useCallback(
+    async (block: DashboardBlock) => {
+      if (state.status !== "ready") return;
+      if (!block.editedVariantId) return;
+      const confirmed = window.confirm(
+        "Biztosan elutasitod ezt a valtozatot? A blokk visszaall az eredeti szovegre.",
+      );
+      if (!confirmed) return;
+
+      setDeletingBlockId(block.id);
+      try {
+        await deleteEditedBlockVariant({ supabase, block });
+        await loadDashboard({ keepCurrentView: true });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Sikertelen elutasitas.";
+        setState({ status: "error", message });
+      } finally {
+        setDeletingBlockId(null);
+      }
+    },
+    [loadDashboard, state.status, supabase],
+  );
+
+  const handleSaveManualEdit = useCallback(
+    async ({ block, text }: { block: DashboardBlock; text: string }): Promise<boolean> => {
+      if (state.status !== "ready") return false;
+      const cleaned = text.trim();
+      if (!cleaned) {
+        setManualEditError({ blockId: block.id, message: "A blokk szovege nem lehet ures." });
+        return false;
+      }
+
+      setManualEditError(null);
+      setManualSavingBlockId(block.id);
+      try {
+        const variantsTable = supabase.from("variants") as any;
+        const { data: latestVariantRows, error: latestVariantError } = await variantsTable
+          .select("variant_index")
+          .eq("block_id", block.id)
+          .order("variant_index", { ascending: false })
+          .limit(1);
+        if (latestVariantError) {
+          throw new Error(latestVariantError.message || "Sikertelen varians lekerdezes.");
+        }
+
+        const nextIndex = ((latestVariantRows as Array<{ variant_index: number }> | null)?.[0]?.variant_index ?? 0) + 1;
+        const payload = {
+          owner_id: state.userId,
+          book_id: block.bookId,
+          chapter_id: block.chapterId,
+          block_id: block.id,
+          variant_index: nextIndex,
+          status: "draft",
+          text: cleaned,
+        };
+        const { error: insertError } = await variantsTable.insert(payload);
+        if (insertError) {
+          throw new Error(insertError.message || "Sikertelen kezi javitas mentes.");
+        }
+
+        await loadDashboard({ keepCurrentView: true });
+        return true;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Sikertelen kezi javitas mentes.";
+        setManualEditError({ blockId: block.id, message });
+        return false;
+      } finally {
+        setManualSavingBlockId(null);
+      }
+    },
+    [loadDashboard, state, supabase],
+  );
+
+  const handleSetBookmarkBeforeBlock = useCallback((block: DashboardBlock, kind: DashboardBookmarkKind) => {
+    const markerId = bookmarkBeforeKey(block);
+    if (kind === "progress") {
+      setBookmarks((prev) => {
+        const existing = prev.find((entry) => entry.kind === "progress");
+        if (existing) {
+          return prev.map((entry) =>
+            entry.id === existing.id
+              ? { ...entry, markerId, name: entry.name.trim() ? entry.name : "Haladas jelzo" }
+              : entry,
+          );
+        }
+        const created: DashboardBookmarkEntry = {
+          id: `bm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          markerId,
+          kind: "progress",
+          colorKey: DEFAULT_BOOKMARK_COLOR_KEY,
+          name: "Haladas jelzo",
+        };
+        setSelectedBookmarkId(created.id);
+        return [...prev, created];
+      });
+      return;
+    }
+
+    const created: DashboardBookmarkEntry = {
+      id: `bm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      markerId,
+      kind: "important",
+      colorKey: IMPORTANT_BOOKMARK_DEFAULT_COLOR_KEY,
+      name: "Fontos jeloles",
+    };
+    setBookmarks((prev) => [...prev, created]);
+    setSelectedBookmarkId(created.id);
+  }, []);
+
+  const handleJumpToBookmark = useCallback((bookmarkId?: string) => {
+    if (typeof document === "undefined") return;
+    const targetBookmark = bookmarkId
+      ? bookmarks.find((entry) => entry.id === bookmarkId)
+      : selectedBookmarkId
+        ? bookmarks.find((entry) => entry.id === selectedBookmarkId)
+        : null;
+    if (!targetBookmark?.markerId) return;
+    const target = document.querySelector<HTMLElement>(`[data-bookmark-marker-id="${targetBookmark.markerId}"]`);
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (isMobile) {
+      setMobilePage("translated");
+      setStore((prev) => ({ ...prev, activePanel: "translated", panelMode: "single" }));
+    }
+  }, [bookmarks, isMobile, selectedBookmarkId]);
+
+  const handleJumpToChapter = useCallback((chapterId: string) => {
+    if (typeof document === "undefined") return;
+    const target = document.querySelector<HTMLElement>(
+      `[data-panel-kind="translated"] [data-dashboard-chapter-id="${chapterId}"]`,
+    );
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (isMobile) {
+      setMobilePage("translated");
+      setStore((prev) => ({ ...prev, activePanel: "translated", panelMode: "single" }));
+    }
+  }, [isMobile]);
+
+  const handleJumpToBlock = useCallback((blockId: string) => {
+    if (typeof document === "undefined") return;
+    const translatedTarget = document.querySelector<HTMLElement>(
+      `[data-panel-kind="translated"] [data-dashboard-block-id="${blockId}"]`,
+    );
+    const fallbackTarget = document.querySelector<HTMLElement>(`[data-dashboard-block-id="${blockId}"]`);
+    (translatedTarget ?? fallbackTarget)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (isMobile) {
+      setMobilePage("translated");
+      setStore((prev) => ({ ...prev, activePanel: "translated", panelMode: "single" }));
+    }
+  }, [isMobile]);
 
   const handleEditSubmit = useCallback(async () => {
     if (state.status !== "ready") return;
@@ -1403,7 +2291,6 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const completion = isReady ? state.data.completion : { accepted: 0, total: 0, ratio: 0, isComplete: false };
   const progress = completionPercent(completion.ratio);
   const canReader = completion.isComplete;
-  const isReaderPrimary = completion.isComplete;
   const readerDisabledReason =
     completion.accepted === 0
       ? "Reader mod 0%-nal nem erheto el."
@@ -1414,6 +2301,288 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     ? `url('/covers/SVG/${iconPreviewSlug}.svg'), url('/covers/${iconPreviewSlug}.png')`
     : null;
   const chapterGroups = useMemo(() => groupBlocksByChapter(blocks), [blocks]);
+  const bookmarkColorByKey = useMemo(
+    () =>
+      BOOKMARK_COLOR_OPTIONS.reduce<Record<string, string>>((acc, option) => {
+        acc[option.key] = option.color;
+        return acc;
+      }, {}),
+    [],
+  );
+  const selectedBookmark = useMemo(
+    () => bookmarks.find((entry) => entry.id === selectedBookmarkId) ?? null,
+    [bookmarks, selectedBookmarkId],
+  );
+  const activeBookmarkColorKey = selectedBookmark?.colorKey ?? DEFAULT_BOOKMARK_COLOR_KEY;
+  const bookmarksByMarkerId = useMemo(() => {
+    const grouped = new Map<string, DashboardBookmarkEntry[]>();
+    for (const entry of bookmarks) {
+      const bucket = grouped.get(entry.markerId);
+      if (bucket) {
+        bucket.push(entry);
+      } else {
+        grouped.set(entry.markerId, [entry]);
+      }
+    }
+    return grouped;
+  }, [bookmarks]);
+  const bookmarkedPlacements = useMemo(() => {
+    const result = new Map<string, { chapterIndex: number; block: DashboardBlock }>();
+    for (const group of chapterGroups) {
+      for (const block of group.blocks) {
+        const markerId = bookmarkBeforeKey(block);
+        if (!bookmarksByMarkerId.has(markerId)) continue;
+        result.set(markerId, { chapterIndex: group.chapterIndex, block });
+      }
+    }
+    return result;
+  }, [bookmarksByMarkerId, chapterGroups]);
+  const hasBookmarks = bookmarks.length > 0;
+  const chapterProgressItems = useMemo(
+    () =>
+      chapterGroups.map((group) => {
+        const total = group.blocks.length;
+        const translated = group.blocks.filter((block) => Boolean(block.translatedText?.trim())).length;
+        const ratio = total > 0 ? translated / total : 0;
+        return {
+          chapterId: group.chapterId,
+          chapterIndex: group.chapterIndex,
+          chapterTitle: group.chapterTitle,
+          total,
+          translated,
+          ratio,
+        };
+      }),
+    [chapterGroups],
+  );
+  const noteNavigatorItems = useMemo(() => {
+    const items: Array<{
+      id: string;
+      blockId: string;
+      chapterIndex: number;
+      blockIndex: number;
+      expression: string;
+      description: string;
+    }> = [];
+    for (const group of chapterGroups) {
+      for (const block of group.blocks) {
+        if (block.inlineNotes.length === 0) continue;
+        const sourceText = block.translatedText?.trim() || block.originalText;
+        for (const note of block.inlineNotes) {
+          const safeStart = Math.max(0, Math.min(sourceText.length, note.anchorStart));
+          const safeEnd = Math.max(safeStart, Math.min(sourceText.length, note.anchorEnd));
+          const expression = sourceText.slice(safeStart, safeEnd).trim() || "Jelolt kifejezes";
+          items.push({
+            id: note.id,
+            blockId: block.id,
+            chapterIndex: group.chapterIndex,
+            blockIndex: block.blockIndex,
+            expression,
+            description: note.content,
+          });
+        }
+      }
+    }
+    return items;
+  }, [chapterGroups]);
+  const bookmarkNavigatorItems = useMemo(() => {
+    return bookmarks.map((entry) => {
+      const placement = bookmarkedPlacements.get(entry.markerId);
+      return {
+        entry,
+        placement,
+      };
+    });
+  }, [bookmarkedPlacements, bookmarks]);
+  const selectedOnboardingStep = useMemo(
+    () => findOnboardingStepById(onboardingSelectedStepId),
+    [onboardingSelectedStepId],
+  );
+  const currentOnboardingStep = useMemo(() => {
+    if (state.status !== "ready") return null;
+    if (!onboardingProgressReady) return null;
+    if (!onboardingGuideOpen && !onboardingSelectedStepId) return null;
+    if (selectedOnboardingStep) return selectedOnboardingStep;
+    if (typeof document === "undefined") return null;
+
+    return resolveCurrentOnboardingStep({
+      route: "/book/[id]",
+      completedStepIds: onboardingCompletedStepIds,
+      isAnchorAvailable: (anchorId) =>
+        document.querySelector(`[data-onboarding-id="${anchorId}"]`) !== null,
+    });
+  }, [
+    state.status,
+    onboardingProgressReady,
+    onboardingGuideOpen,
+    selectedOnboardingStep,
+    onboardingCompletedStepIds,
+    store.viewState,
+    store.desktopLayout,
+    store.activePanel,
+    store.panelMode,
+    isMobile,
+    progress,
+    blocks.length,
+    chapterEdit,
+    generatingBlockId,
+    acceptingBlockId,
+    creatingNoteBlockId,
+    onboardingReplaySeed,
+  ]);
+
+  useEffect(() => {
+    const validIds = new Set<string>(bookmarkedPlacements.keys());
+    if (validIds.size === bookmarks.length) return;
+    setBookmarks((prev) => prev.filter((entry) => validIds.has(entry.markerId)));
+  }, [bookmarkedPlacements, bookmarks.length]);
+
+  useEffect(() => {
+    if (!selectedBookmarkId && bookmarks.length > 0) {
+      setSelectedBookmarkId(bookmarks[0].id);
+      return;
+    }
+    if (!selectedBookmarkId) return;
+    if (bookmarks.some((entry) => entry.id === selectedBookmarkId)) return;
+    setSelectedBookmarkId(bookmarks[0]?.id ?? null);
+  }, [bookmarks, selectedBookmarkId]);
+
+  useEffect(() => {
+    currentOnboardingStepRef.current = currentOnboardingStep;
+  }, [currentOnboardingStep]);
+
+  useEffect(() => {
+    if (state.status !== "ready" || !onboardingProgressReady) return;
+
+    if (currentOnboardingStep) {
+      if (!onboardingStartedRef.current) {
+        emitOnboardingTelemetry("onboarding_started");
+        onboardingStartedRef.current = true;
+      }
+      if (onboardingLastShownStepIdRef.current !== currentOnboardingStep.id) {
+        emitOnboardingTelemetry("onboarding_step_shown", { step_id: currentOnboardingStep.id });
+        onboardingLastShownStepIdRef.current = currentOnboardingStep.id;
+      }
+      return;
+    }
+
+    if (
+      onboardingCompletedStepIds.size >= BOOK_EDITORIAL_ONBOARDING_STEPS.length &&
+      !onboardingCompletedRef.current
+    ) {
+      emitOnboardingTelemetry("onboarding_completed");
+      onboardingCompletedRef.current = true;
+    }
+  }, [
+    currentOnboardingStep,
+    emitOnboardingTelemetry,
+    onboardingCompletedStepIds.size,
+    onboardingProgressReady,
+    state.status,
+  ]);
+
+  useEffect(() => {
+    if (!currentOnboardingStep) {
+      setOnboardingPopupPosition(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      const next = resolveOnboardingPopupPosition({
+        anchorId: currentOnboardingStep.anchorId,
+        placement: currentOnboardingStep.placement,
+        allowCenterFallback: Boolean(onboardingSelectedStepId),
+      });
+      setOnboardingPopupPosition(next);
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [currentOnboardingStep, onboardingSelectedStepId]);
+
+  useEffect(() => {
+    if (!currentOnboardingStep) return;
+    if (onboardingLastNavigatedStepIdRef.current === currentOnboardingStep.id) return;
+    const anchor = findVisibleOnboardingAnchor(currentOnboardingStep.anchorId);
+    if (!anchor) return;
+    anchor.scrollIntoView({ block: "center", behavior: "smooth" });
+    onboardingLastNavigatedStepIdRef.current = currentOnboardingStep.id;
+  }, [currentOnboardingStep]);
+
+  const markOnboardingStepCompleted = useCallback((stepId: string, reason: OnboardingStepCompletionReason) => {
+    setOnboardingCompletedStepIds((prev) => {
+      if (prev.has(stepId)) return prev;
+      emitOnboardingTelemetry("onboarding_step_completed", { step_id: stepId, reason });
+      if (reason === "skip") {
+        emitOnboardingTelemetry("onboarding_skipped", { step_id: stepId, reason });
+      }
+      const next = new Set(prev);
+      next.add(stepId);
+      return next;
+    });
+  }, [emitOnboardingTelemetry]);
+
+  const handleOnboardingNext = useCallback(() => {
+    if (!currentOnboardingStep) return;
+    if (onboardingSelectedStepId) {
+      const currentIndex = findOnboardingStepIndex(onboardingSelectedStepId);
+      const nextIndex =
+        currentIndex >= 0
+          ? (currentIndex + 1) % BOOK_EDITORIAL_ONBOARDING_STEPS.length
+          : 0;
+      setOnboardingSelectedStepId(BOOK_EDITORIAL_ONBOARDING_STEPS[nextIndex]?.id ?? null);
+      return;
+    }
+    markOnboardingStepCompleted(currentOnboardingStep.id, "next");
+  }, [currentOnboardingStep, markOnboardingStepCompleted, onboardingSelectedStepId]);
+
+  const handleOnboardingSkip = useCallback(() => {
+    if (!currentOnboardingStep || !currentOnboardingStep.skippable) return;
+    stopOnboardingFlow(currentOnboardingStep.id);
+  }, [currentOnboardingStep, stopOnboardingFlow]);
+
+  const handleModeToggle = useCallback((nextViewState: DashboardViewState) => {
+    if (store.viewState !== nextViewState) {
+      completeOnboardingByEvent("mode_toggled");
+    }
+    if (nextViewState === "reader") {
+      if (isMobile) setMobilePage("translated");
+      setStore((prev) => ({ ...prev, viewState: "reader", activePanel: "translated" }));
+      return;
+    }
+    setStore((prev) => ({ ...prev, viewState: "workbench" }));
+  }, [completeOnboardingByEvent, isMobile, store.viewState]);
+
+  const handleOpenOnboardingGuide = useCallback(() => {
+    setOnboardingGuideOpen((prev) => {
+      const nextOpen = !prev;
+      if (!nextOpen) {
+        setOnboardingSelectedStepId(null);
+        return nextOpen;
+      }
+      setOnboardingSelectedStepId((current) => {
+        if (current) return current;
+        return currentOnboardingStep?.id ?? BOOK_EDITORIAL_ONBOARDING_STEPS[0]?.id ?? null;
+      });
+      return nextOpen;
+    });
+  }, [currentOnboardingStep]);
+
+  const handleSelectOnboardingGuideStep = useCallback((stepId: string) => {
+    setOnboardingGuideOpen(true);
+    setOnboardingSelectedStepId(stepId);
+    setStore((prev) => ({ ...prev, viewState: "workbench", activePanel: "translated" }));
+    if (isMobile) {
+      const step = findOnboardingStepById(stepId);
+      const needsToolPanel = step?.anchorId === "onb-mode-controls" || step?.anchorId === "onb-replay";
+      setMobileToolPanelOpen(Boolean(needsToolPanel));
+    }
+  }, [isMobile]);
 
   const handleChapterEditOpen = useCallback((group: ChapterGroup) => {
     setChapterEdit({
@@ -1449,7 +2618,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     setChapterEditSaving(false);
     setChapterEdit(null);
     await loadDashboard({ keepCurrentView: true });
-  }, [bookId, chapterEdit, loadDashboard, state.status, supabase]);
+    completeOnboardingByEvent("chapter_saved");
+  }, [bookId, chapterEdit, completeOnboardingByEvent, loadDashboard, state.status, supabase]);
 
   const handleChapterDelete = useCallback(async (group: ChapterGroup) => {
     if (state.status !== "ready" || chapterEditSaving || chapterDeleteSaving) return;
@@ -1607,7 +2777,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   }, [bookId, chapterDeleteSaving, chapterEditSaving, loadDashboard, state.status, supabase]);
 
   const renderOriginalPanel = (showControls: boolean, showSwap: boolean) => (
-    <section className={styles.panel}>
+    <section className={styles.panel} data-panel-kind="original">
       <div className={styles.panelTitle}>
         <span>Eredeti</span>
         {showSwap ? (
@@ -1632,7 +2802,11 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         }}
       >
         {chapterGroups.map((group) => (
-          <section key={`original-chapter-${group.chapterId}`} className={styles.chapterGroup}>
+          <section
+            key={`original-chapter-${group.chapterId}`}
+            className={styles.chapterGroup}
+            data-dashboard-chapter-id={group.chapterId}
+          >
             <ChapterHeader
               group={group}
               showActions={showControls}
@@ -1648,32 +2822,52 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               onCancelEdit={() => setChapterEdit(null)}
               onDelete={handleChapterDelete}
             />
-            {group.blocks.map((block) => (
-              <BlockCard
-                key={`original-${block.id}`}
-                block={block}
-                textMode="original"
-                acceptInFlight={acceptingBlockId === block.id}
-                generateInFlight={generatingBlockId === block.id}
-                deleteInFlight={deletingBlockId === block.id}
-                generateError={generateError?.blockId === block.id ? generateError.message : null}
-                noteError={noteError?.blockId === block.id ? noteError.message : null}
-                creatingNoteInFlight={creatingNoteBlockId === block.id}
-                onAccept={handleAccept}
-                onGenerate={handleGenerate}
-                onDelete={handleDeleteBlock}
-                onCreateNote={handleCreateNote}
-                onApproveSuggestion={handleApproveSuggestion}
-                onRejectSuggestion={handleRejectSuggestion}
-                dismissedSuggestionNumbers={dismissedSuggestions[block.id] ?? new Set<number>()}
-                allowDelete={showControls}
-                showControls={showControls}
-                accentColor={panelAccentColor}
-                isMobile={isMobile}
-                mobileActionsVisible={isMobile && showControls && activeMobileBlockId === block.id}
-                onMobileActivate={setActiveMobileBlockId}
-              />
-            ))}
+            {group.blocks.map((block) => {
+              const currentMarkerId = bookmarkBeforeKey(block);
+              const markerEntries = bookmarksByMarkerId.get(currentMarkerId) ?? [];
+
+              return (
+                <Fragment key={`original-row-${block.id}`}>
+                  {markerEntries.length > 0 ? (
+                    <BookmarkMarkerStripe
+                      markerId={currentMarkerId}
+                      entries={markerEntries}
+                      bookmarkColorByKey={bookmarkColorByKey}
+                    />
+                  ) : null}
+                  <BlockCard
+                    key={`original-${block.id}`}
+                    block={block}
+                    textMode="original"
+                    acceptInFlight={acceptingBlockId === block.id}
+                    generateInFlight={generatingBlockId === block.id}
+                    deleteInFlight={deletingBlockId === block.id}
+                    generateError={generateError?.blockId === block.id ? generateError.message : null}
+                    noteError={noteError?.blockId === block.id ? noteError.message : null}
+                    manualEditError={manualEditError?.blockId === block.id ? manualEditError.message : null}
+                    manualSaveInFlight={manualSavingBlockId === block.id}
+                    creatingNoteInFlight={creatingNoteBlockId === block.id}
+                    onAccept={handleAccept}
+                    onGenerate={handleGenerate}
+                    onDelete={handleDeleteBlock}
+                    onSaveManualEdit={handleSaveManualEdit}
+                    onRejectToOriginal={handleRejectToOriginal}
+                    onSetBookmarkBefore={handleSetBookmarkBeforeBlock}
+                    onCreateNote={handleCreateNote}
+                    onApproveSuggestion={handleApproveSuggestion}
+                    onRejectSuggestion={handleRejectSuggestion}
+                    dismissedSuggestionNumbers={dismissedSuggestions[block.id] ?? new Set<number>()}
+                    allowDelete={showControls}
+                    showControls={showControls}
+                    accentColor={panelAccentColor}
+                    isMobile={isMobile}
+                    mobileActionsVisible={isMobile && showControls && activeMobileBlockId === block.id}
+                    onMobileActivate={setActiveMobileBlockId}
+                    bookmarksBeforeBlock={markerEntries}
+                  />
+                </Fragment>
+              );
+            })}
           </section>
         ))}
       </div>
@@ -1681,7 +2875,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   );
 
   const renderTranslatedPanel = (showControls: boolean, showSwap: boolean) => (
-    <section className={styles.panel}>
+    <section className={styles.panel} data-panel-kind="translated">
       <div className={styles.panelTitle}>
         <span>Szerkesztett</span>
         {showSwap ? (
@@ -1707,7 +2901,11 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       >
         {mergeError ? <div className={styles.panelInlineError}>{mergeError}</div> : null}
         {chapterGroups.map((group) => (
-          <section key={`translated-chapter-${group.chapterId}`} className={styles.chapterGroup}>
+          <section
+            key={`translated-chapter-${group.chapterId}`}
+            className={styles.chapterGroup}
+            data-dashboard-chapter-id={group.chapterId}
+          >
             <ChapterHeader
               group={group}
               showActions={showControls}
@@ -1726,6 +2924,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             {group.blocks.map((block, index) => {
               const nextBlock = group.blocks[index + 1];
               const currentMergeKey = nextBlock ? mergePairKey(block.id, nextBlock.id) : null;
+              const currentMarkerId = bookmarkBeforeKey(block);
+              const markerEntries = bookmarksByMarkerId.get(currentMarkerId) ?? [];
               const mergeBusy =
                 Boolean(currentMergeKey) && mergingPairKey !== null && currentMergeKey === mergingPairKey;
               const mergeDisabled =
@@ -1738,6 +2938,13 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
               return (
                 <Fragment key={`translated-row-${block.id}`}>
+                  {markerEntries.length > 0 ? (
+                    <BookmarkMarkerStripe
+                      markerId={currentMarkerId}
+                      entries={markerEntries}
+                      bookmarkColorByKey={bookmarkColorByKey}
+                    />
+                  ) : null}
                   <BlockCard
                     key={`translated-${block.id}`}
                     block={block}
@@ -1747,10 +2954,15 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                     deleteInFlight={deletingBlockId === block.id}
                     generateError={generateError?.blockId === block.id ? generateError.message : null}
                     noteError={noteError?.blockId === block.id ? noteError.message : null}
+                    manualEditError={manualEditError?.blockId === block.id ? manualEditError.message : null}
+                    manualSaveInFlight={manualSavingBlockId === block.id}
                     creatingNoteInFlight={creatingNoteBlockId === block.id}
                     onAccept={handleAccept}
                     onGenerate={handleGenerate}
                     onDelete={handleDeleteBlock}
+                    onSaveManualEdit={handleSaveManualEdit}
+                    onRejectToOriginal={handleRejectToOriginal}
+                    onSetBookmarkBefore={handleSetBookmarkBeforeBlock}
                     onCreateNote={handleCreateNote}
                     onApproveSuggestion={handleApproveSuggestion}
                     onRejectSuggestion={handleRejectSuggestion}
@@ -1761,6 +2973,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                     isMobile={isMobile}
                     mobileActionsVisible={isMobile && showControls && activeMobileBlockId === block.id}
                     onMobileActivate={setActiveMobileBlockId}
+                    bookmarksBeforeBlock={markerEntries}
                   />
                   {showControls && nextBlock ? (
                     <BlockMergeHandle
@@ -1801,7 +3014,213 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     </div>
   );
 
+  const renderChapterNavigator = (mobile: boolean) => (
+    <section className={mobile ? styles.mobileInfoBlock : styles.infoColumn}>
+      <header className={styles.infoColumnHeader}>
+        <strong>Tartalomjegyzek</strong>
+        <span>Fejezet progress</span>
+      </header>
+      <div className={styles.infoColumnBody}>
+        {chapterProgressItems.length === 0 ? (
+          <div className={styles.infoEmptyState}>Nincs fejezet.</div>
+        ) : (
+          chapterProgressItems.map((item) => (
+            <button
+              key={item.chapterId}
+              type="button"
+              className={styles.infoListButton}
+              onClick={() => handleJumpToChapter(item.chapterId)}
+            >
+              <span className={styles.infoListTitle}>
+                {item.chapterIndex}. fejezet: {item.chapterTitle}
+              </span>
+              <span className={styles.infoListMeta}>
+                {item.translated}/{item.total} blokk leforditva
+              </span>
+              <span className={styles.infoMiniTrack} aria-hidden="true">
+                <span className={styles.infoMiniFill} style={{ width: `${completionPercent(item.ratio)}%` }} />
+              </span>
+            </button>
+          ))
+        )}
+      </div>
+    </section>
+  );
+
+  const renderNoteNavigator = (mobile: boolean) => (
+    <section className={mobile ? styles.mobileInfoBlock : styles.infoColumn}>
+      <header className={styles.infoColumnHeader}>
+        <strong>Jegyzetek</strong>
+        <span>Kifejezes + leiras</span>
+      </header>
+      <div className={styles.infoColumnBody}>
+        {noteNavigatorItems.length === 0 ? (
+          <div className={styles.infoEmptyState}>Nincs tarolt jegyzet.</div>
+        ) : (
+          noteNavigatorItems.map((item) => {
+            const isExpanded = expandedNoteIds.has(item.id);
+            const fullDescription = item.description.trim();
+            const shouldCollapse = fullDescription.length > NOTE_PREVIEW_MAX_LENGTH;
+            const previewDescription =
+              shouldCollapse && !isExpanded
+                ? `${fullDescription.slice(0, NOTE_PREVIEW_MAX_LENGTH).trimEnd()}...`
+                : fullDescription;
+
+            return (
+              <article key={item.id} className={styles.infoListCard}>
+                <button
+                  type="button"
+                  className={styles.infoListButton}
+                  onClick={() => handleJumpToBlock(item.blockId)}
+                >
+                  <span className={styles.infoListTitle}>{item.expression}</span>
+                  <span className={styles.infoListDescription}>
+                    {previewDescription}
+                    {shouldCollapse ? (
+                      <>
+                        {" "}
+                        <button
+                          type="button"
+                          className={styles.infoInlineExpandButton}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setExpandedNoteIds((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(item.id)) {
+                                next.delete(item.id);
+                              } else {
+                                next.add(item.id);
+                              }
+                              return next;
+                            });
+                          }}
+                        >
+                          {isExpanded ? "Kevesebb" : "Tovabbiak..."}
+                        </button>
+                      </>
+                    ) : null}
+                  </span>
+                  <span className={styles.infoListMeta}>
+                    {item.chapterIndex}.f / {item.blockIndex}.b
+                  </span>
+                </button>
+              </article>
+            );
+          })
+        )}
+      </div>
+    </section>
+  );
+
+  const renderBookmarkNavigator = (mobile: boolean) => (
+    <section className={mobile ? styles.mobileInfoBlock : styles.infoColumn}>
+      <header className={styles.infoColumnHeader}>
+        <strong>Konyvjelzok</strong>
+        <span>Tarolt poziciok</span>
+      </header>
+      <div className={styles.infoColumnBody}>
+        {bookmarkNavigatorItems.length === 0 ? (
+          <div className={styles.infoEmptyState}>Nincs tarolt konyvjelzo.</div>
+        ) : (
+          bookmarkNavigatorItems.map(({ entry, placement }) => (
+            <button
+              key={entry.id}
+              type="button"
+              className={styles.infoListButton}
+              onClick={() => handleJumpToBookmark(entry.id)}
+            >
+              <span className={styles.infoListTitle}>
+                <span
+                  className={styles.infoBookmarkSwatch}
+                  style={{ "--bookmark-color": bookmarkColorByKey[entry.colorKey] ?? BOOKMARK_COLOR_OPTIONS[0].color } as CSSProperties}
+                  aria-hidden="true"
+                />
+                {entry.name || "Nev nelkul"}
+              </span>
+              <span className={styles.infoListDescription}>
+                {entry.kind === "progress" ? "Haladas jelzo" : "Fontos jeloles"}
+              </span>
+              <span className={styles.infoListMeta}>
+                {placement ? `${placement.chapterIndex}.f / ${placement.block.blockIndex}.b` : "n/a"}
+              </span>
+            </button>
+          ))
+        )}
+      </div>
+    </section>
+  );
+
+  const renderDesktopInformationPanel = () => (
+    <section className={`card ${styles.progressCard} ${styles.infoPanelCard}`}>
+      <div className={styles.infoPanelGrid}>
+        {renderChapterNavigator(false)}
+        {renderNoteNavigator(false)}
+        {renderBookmarkNavigator(false)}
+      </div>
+    </section>
+  );
+
+  const renderMobileInfoPage = (page: Exclude<MobileDashboardPage, "original" | "translated">) => {
+    if (page === "toc") {
+      return <section className={`card ${styles.mobileInfoCard}`}>{renderChapterNavigator(true)}</section>;
+    }
+    if (page === "notes") {
+      return <section className={`card ${styles.mobileInfoCard}`}>{renderNoteNavigator(true)}</section>;
+    }
+    return <section className={`card ${styles.mobileInfoCard}`}>{renderBookmarkNavigator(true)}</section>;
+  };
+
+  const renderMobilePageTabs = () => (
+    <nav className={styles.mobilePageTabs} aria-label="Mobil oldalak">
+      <button
+        type="button"
+        className={`${styles.mobilePageTab} ${mobilePage === "original" ? styles.mobilePageTabActive : ""}`}
+        onClick={() => {
+          setMobilePage("original");
+          setStore((prev) => ({ ...prev, activePanel: "original", panelMode: "single" }));
+        }}
+      >
+        Eredeti
+      </button>
+      <button
+        type="button"
+        className={`${styles.mobilePageTab} ${mobilePage === "translated" ? styles.mobilePageTabActive : ""}`}
+        onClick={() => {
+          setMobilePage("translated");
+          setStore((prev) => ({ ...prev, activePanel: "translated", panelMode: "single" }));
+        }}
+      >
+        Szerkesztett
+      </button>
+      <button
+        type="button"
+        className={`${styles.mobilePageTab} ${mobilePage === "toc" ? styles.mobilePageTabActive : ""}`}
+        onClick={() => setMobilePage("toc")}
+      >
+        Tartalom
+      </button>
+      <button
+        type="button"
+        className={`${styles.mobilePageTab} ${mobilePage === "notes" ? styles.mobilePageTabActive : ""}`}
+        onClick={() => setMobilePage("notes")}
+      >
+        Jegyzetek
+      </button>
+      <button
+        type="button"
+        className={`${styles.mobilePageTab} ${mobilePage === "bookmarks" ? styles.mobilePageTabActive : ""}`}
+        onClick={() => setMobilePage("bookmarks")}
+      >
+        Konyvjelzok
+      </button>
+    </nav>
+  );
+
   const renderMobileContent = () => {
+    if (mobilePage === "toc" || mobilePage === "notes" || mobilePage === "bookmarks") {
+      return renderMobileInfoPage(mobilePage);
+    }
+
     const panels =
       store.viewState === "reader"
         ? { primary: "translated" as DashboardActivePanel, secondary: "original" as DashboardActivePanel }
@@ -1824,10 +3243,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       );
     }
 
-    if (store.activePanel === "original") {
+    if (mobilePage === "original" || store.activePanel === "original") {
       return renderOriginalPanel(store.viewState === "workbench", false);
     }
-    if (store.activePanel === "translated") {
+    if (mobilePage === "translated" || store.activePanel === "translated") {
       return renderTranslatedPanel(store.viewState === "workbench", false);
     }
     return panels.primary === "original"
@@ -1928,6 +3347,30 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     );
   };
 
+  const renderBookmarkPalette = (size: "desktop" | "mobile") => (
+    <div className={size === "desktop" ? styles.bookmarkPalette : styles.mobileBookmarkPalette} role="radiogroup" aria-label="Konyvjelzo szinkategoria">
+      {BOOKMARK_COLOR_OPTIONS.map((option) => (
+        <button
+          key={option.key}
+          type="button"
+          role="radio"
+          aria-checked={activeBookmarkColorKey === option.key}
+          className={`${styles.bookmarkPaletteSwatch} ${activeBookmarkColorKey === option.key ? styles.bookmarkPaletteSwatchActive : ""}`}
+          title={option.label}
+          disabled={!selectedBookmark}
+          onClick={() =>
+            setBookmarks((prev) =>
+              prev.map((entry) =>
+                entry.id === selectedBookmarkId ? { ...entry, colorKey: option.key } : entry,
+              ),
+            )
+          }
+          style={{ "--bookmark-color": option.color } as CSSProperties}
+        />
+      ))}
+    </div>
+  );
+
   const renderMobileToolPanel = () => {
     if (!isMobile || state.status !== "ready") return null;
 
@@ -1982,8 +3425,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                 <button
                   className={`${styles.mobileToolRow} ${store.viewState === "workbench" ? styles.mobileToolRowActive : ""}`}
                   type="button"
+                  data-onboarding-id="onb-mode-controls"
                   onClick={() => {
-                    setStore((prev) => ({ ...prev, viewState: "workbench" }));
+                    handleModeToggle("workbench");
                     setMobileToolPanelOpen(false);
                   }}
                 >
@@ -1996,7 +3440,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   disabled={!canReader}
                   title={!canReader ? readerDisabledReason : undefined}
                   onClick={() => {
-                    setStore((prev) => ({ ...prev, viewState: "reader", activePanel: "translated" }));
+                    handleModeToggle("reader");
                     setMobileToolPanelOpen(false);
                   }}
                 >
@@ -2007,6 +3451,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   className={`${styles.mobileToolRow} ${store.activePanel === "original" ? styles.mobileToolRowActive : ""}`}
                   type="button"
                   onClick={() => {
+                    setMobilePage("original");
                     setStore((prev) => ({ ...prev, activePanel: "original", panelMode: "single" }));
                     setMobileToolPanelOpen(false);
                   }}
@@ -2018,6 +3463,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   className={`${styles.mobileToolRow} ${store.activePanel === "translated" ? styles.mobileToolRowActive : ""}`}
                   type="button"
                   onClick={() => {
+                    setMobilePage("translated");
                     setStore((prev) => ({ ...prev, activePanel: "translated", panelMode: "single" }));
                     setMobileToolPanelOpen(false);
                   }}
@@ -2035,6 +3481,76 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   <span>Szinkron gorgetes: {store.syncScroll ? "ON" : "OFF"}</span>
                   <ToolIcon type="sync" />
                 </button>
+                <button
+                  className={`${styles.mobileToolRow} ${onboardingGuideOpen ? styles.mobileToolRowActive : ""}`}
+                  type="button"
+                  data-onboarding-id="onb-replay"
+                  onClick={handleOpenOnboardingGuide}
+                >
+                  <span>Onboarding sugo</span>
+                  <ToolIcon type="onboarding" />
+                </button>
+                <div className={styles.mobileBookmarkColorControl}>
+                  <span>Kategoria</span>
+                  {renderBookmarkPalette("mobile")}
+                </div>
+                {hasBookmarks ? (
+                  <>
+                    <div className={styles.mobileBookmarkList}>
+                      {bookmarks.map((entry) => (
+                        <button
+                          key={entry.id}
+                          type="button"
+                          className={`${styles.mobileToolRow} ${selectedBookmarkId === entry.id ? styles.mobileToolRowActive : ""}`}
+                          onClick={() => setSelectedBookmarkId(entry.id)}
+                        >
+                          <span>{entry.kind === "progress" ? "Haladas" : "Fontos"}: {entry.name || "Nev nelkul"}</span>
+                          <ToolIcon type="bookmark" />
+                        </button>
+                      ))}
+                    </div>
+                    <label className={styles.mobileBookmarkNameControl}>
+                      <span>Label</span>
+                      <input
+                        className={`input ${styles.mobileBookmarkNameInput}`}
+                        value={selectedBookmark?.name ?? ""}
+                        onChange={(event) =>
+                          setBookmarks((prev) =>
+                            prev.map((entry) =>
+                              entry.id === selectedBookmarkId ? { ...entry, name: event.target.value } : entry,
+                            ),
+                          )
+                        }
+                        placeholder="Konyvjelzo label"
+                        aria-label="Konyvjelzo label"
+                        disabled={!selectedBookmark}
+                      />
+                    </label>
+                    <button
+                      className={`${styles.mobileToolRow} ${styles.mobileToolRowActive}`}
+                      type="button"
+                      disabled={!selectedBookmark}
+                      onClick={() => {
+                        handleJumpToBookmark();
+                        setMobileToolPanelOpen(false);
+                      }}
+                    >
+                      <span>Ugras a konyvjelzohoz</span>
+                      <ToolIcon type="bookmark" />
+                    </button>
+                    <button
+                      className={styles.mobileToolRow}
+                      type="button"
+                      onClick={() => {
+                        if (!selectedBookmarkId) return;
+                        setBookmarks((prev) => prev.filter((entry) => entry.id !== selectedBookmarkId));
+                      }}
+                    >
+                      <span>Konyvjelzo torlese</span>
+                      X
+                    </button>
+                  </>
+                ) : null}
               </div>
             </section>
           </>
@@ -2043,8 +3559,115 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     );
   };
 
+  const renderOnboardingPopup = () => {
+    if (!currentOnboardingStep || !onboardingPopupPosition) return null;
+    const stepIndex = findOnboardingStepIndex(currentOnboardingStep.id);
+    const positionStyle = {
+      "--onb-popup-left": `${Math.round(onboardingPopupPosition.left)}px`,
+      "--onb-popup-top": `${Math.round(onboardingPopupPosition.top)}px`,
+      "--onb-popup-max-width": `${Math.round(onboardingPopupPosition.maxWidth)}px`,
+    } as CSSProperties;
+    const isGuidePreview = Boolean(onboardingSelectedStepId);
+    const anchorAvailable = findVisibleOnboardingAnchor(currentOnboardingStep.anchorId) !== null;
+
+    return (
+      <section
+        className={styles.onboardingPopup}
+        style={positionStyle}
+        data-placement={currentOnboardingStep.placement}
+        aria-live="polite"
+      >
+        <div className={styles.onboardingPopupHeader}>
+          <strong>{currentOnboardingStep.title}</strong>
+          <span>
+            {stepIndex + 1}/{BOOK_EDITORIAL_ONBOARDING_STEPS.length}
+          </span>
+        </div>
+        <p className={styles.onboardingPopupBody}>{currentOnboardingStep.body}</p>
+        {!anchorAvailable ? (
+          <p className={styles.onboardingPopupHint}>Ehhez a lepeshez most nincs aktiv horgonypont a nezetben.</p>
+        ) : null}
+        {isGuidePreview ? (
+          <p className={styles.onboardingPopupHint}>Sugo nezet: valassz masik lepest az onboarding panelen.</p>
+        ) : null}
+        <div className={styles.onboardingPopupActions}>
+          <button type="button" className="btn" onClick={handleOnboardingNext}>
+            {currentOnboardingStep.id === "step_done" ? "Kesz" : "Kovetkezo"}
+          </button>
+          {isGuidePreview ? (
+            <button type="button" className="btn" onClick={() => setOnboardingSelectedStepId(null)}>
+              Flow folytatasa
+            </button>
+          ) : currentOnboardingStep.skippable ? (
+            <button type="button" className="btn" onClick={handleOnboardingSkip}>
+              Kihagyas
+            </button>
+          ) : null}
+        </div>
+      </section>
+    );
+  };
+
+  const renderOnboardingGuide = () => {
+    if (state.status !== "ready" || !onboardingGuideOpen) return null;
+    const highlightedStepId = onboardingSelectedStepId ?? currentOnboardingStep?.id ?? null;
+
+    return (
+      <section className={styles.onboardingGuidePanel} aria-label="Onboarding sugo lepesek">
+        <div className={styles.onboardingGuideHeader}>
+          <strong>Onboarding sugo</strong>
+          <button
+            type="button"
+            className={styles.onboardingGuideClose}
+            onClick={() => {
+              setOnboardingGuideOpen(false);
+              setOnboardingSelectedStepId(null);
+            }}
+          >
+            X
+          </button>
+        </div>
+        <div className={styles.onboardingGuideList}>
+          {BOOK_EDITORIAL_ONBOARDING_STEPS.map((step) => (
+            <button
+              key={step.id}
+              type="button"
+              className={`${styles.onboardingGuideItem} ${highlightedStepId === step.id ? styles.onboardingGuideItemActive : ""}`}
+              onClick={() => handleSelectOnboardingGuideStep(step.id)}
+            >
+              {step.title}
+            </button>
+          ))}
+        </div>
+        <div className={styles.onboardingGuideActions}>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              setOnboardingSelectedStepId(null);
+              handleOnboardingReplay();
+            }}
+          >
+            Ujrainditas
+          </button>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => setOnboardingSelectedStepId(null)}
+          >
+            Flow nezet
+          </button>
+        </div>
+      </section>
+    );
+  };
+
   return (
-    <div className={`book-page-shell ${styles.pageShell}`} style={pageStyle}>
+    <div
+      className={`book-page-shell ${styles.pageShell}`}
+      style={pageStyle}
+      data-onboarding-step-id={currentOnboardingStep?.id ?? ""}
+    >
       <header className={styles.header}>
         <ShellTopBar
           className={styles.topBar}
@@ -2086,8 +3709,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         <div className="card">Ehhez a konyvhoz meg nincs blokk.</div>
       ) : isMobile ? (
         <div className={styles.mobileStage}>
+          {renderMobilePageTabs()}
           {renderMobileContent()}
-          <section className={`card ${styles.progressCard}`}>
+          <section className={`card ${styles.progressCard}`} data-onboarding-id="onb-progress">
             <div className={styles.progressSummary}>
               <div className={styles.progressPercent}>{progress}%</div>
               <div className={styles.progressLabel}>
@@ -2107,7 +3731,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           <div className={styles.desktopViewport}>
             {store.viewState === "workbench" ? renderWorkbenchDesktop() : renderReaderDesktop()}
           </div>
-          <section className={`card ${styles.progressCard} ${styles.desktopProgress}`}>
+          <section
+            className={`card ${styles.progressCard} ${styles.desktopProgress}`}
+            data-onboarding-id="onb-progress"
+          >
             <div className={styles.progressSummary}>
               <div className={styles.progressPercent}>{progress}%</div>
               <div className={styles.progressLabel}>
@@ -2121,7 +3748,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               <div className={styles.progressFill} style={{ width: `${progress}%` }} />
             </div>
           </section>
-          {renderBookMetaSection()}
+          {renderDesktopInformationPanel()}
+          {desktopEditPanelOpen ? renderBookMetaSection() : null}
         </div>
       )}
     </main>
@@ -2160,47 +3788,104 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             </div>
 
             <div className={styles.activityGroup}>
-              <div className={styles.activityGroupTitle}>Munkafolyamat</div>
+              <div className={styles.activityGroupTitle}>Onboarding</div>
               <div className={styles.activityOptions}>
                 <button
-                  className={`${styles.activityIconButton} ${store.viewState === "workbench" ? styles.activeToggle : ""}`}
+                  className={`${styles.activityIconButton} ${onboardingGuideOpen ? styles.activeToggle : ""}`}
                   type="button"
-                  onClick={() => setStore((prev) => ({ ...prev, viewState: "workbench" }))}
-                  aria-label="Workbench nezet"
-                  title="Workbench nezet"
+                  data-onboarding-id="onb-replay"
+                  aria-label="Onboarding sugo"
+                  title="Onboarding sugo"
+                  onClick={handleOpenOnboardingGuide}
                 >
-                  <ToolIcon type="workbench" />
-                </button>
-                <button
-                  className={`${styles.activityIconButton} ${store.viewState === "reader" ? styles.activeToggle : ""} ${isReaderPrimary ? styles.primaryAction : ""}`}
-                  type="button"
-                  disabled={!canReader}
-                  title={!canReader ? readerDisabledReason : undefined}
-                  onClick={() => setStore((prev) => ({ ...prev, viewState: "reader", activePanel: "translated" }))}
-                  aria-label="Reader nezet"
-                >
-                  <ToolIcon type="reader" />
+                  <ToolIcon type="onboarding" />
                 </button>
               </div>
             </div>
 
             <div className={styles.activityGroup}>
-              <div className={styles.activityGroupTitle}>Szinkron</div>
+              <div className={styles.activityGroupTitle}>Konyvjelzo</div>
+              <div className={styles.activityOptions}>
+                <label className={styles.bookmarkColorControl}>
+                  <span>Kategoria</span>
+                  {renderBookmarkPalette("desktop")}
+                </label>
+                {hasBookmarks ? (
+                  <>
+                    <div className={styles.bookmarkList}>
+                      {bookmarks.map((entry) => {
+                        const placement = bookmarkedPlacements.get(entry.markerId);
+                        return (
+                          <button
+                            key={entry.id}
+                            type="button"
+                            className={`${styles.bookmarkListItem} ${selectedBookmarkId === entry.id ? styles.bookmarkListItemActive : ""}`}
+                            onClick={() => setSelectedBookmarkId(entry.id)}
+                          >
+                            <span className={styles.bookmarkListMeta}>
+                              {entry.kind === "progress" ? "Haladas" : "Fontos"}
+                            </span>
+                            <span>{entry.name || "Nev nelkul"}</span>
+                            <span className={styles.bookmarkListMeta}>
+                              {placement ? `${placement.chapterIndex}.f / ${placement.block.blockIndex}.b` : "n/a"}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <label className={styles.bookmarkNameControl}>
+                      <span>Label</span>
+                      <input
+                        className={`input ${styles.bookmarkNameInput}`}
+                        value={selectedBookmark?.name ?? ""}
+                        onChange={(event) =>
+                          setBookmarks((prev) =>
+                            prev.map((entry) =>
+                              entry.id === selectedBookmarkId ? { ...entry, name: event.target.value } : entry,
+                            ),
+                          )
+                        }
+                        placeholder="Konyvjelzo label"
+                        aria-label="Konyvjelzo label"
+                        disabled={!selectedBookmark}
+                      />
+                    </label>
+                    <button
+                      className={styles.activityIconButton}
+                      type="button"
+                      disabled={!selectedBookmark}
+                      onClick={() => handleJumpToBookmark()}
+                      aria-label="Ugras a konyvjelzohoz"
+                      title="Ugras a konyvjelzohoz"
+                    >
+                      <ToolIcon type="bookmark" />
+                    </button>
+                    <button
+                      className={styles.bookmarkClearButton}
+                      type="button"
+                      onClick={() => {
+                        if (!selectedBookmarkId) return;
+                        setBookmarks((prev) => prev.filter((entry) => entry.id !== selectedBookmarkId));
+                      }}
+                    >
+                      Konyvjelzo torlese
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            </div>
+
+            <div className={styles.activityGroup}>
+              <div className={styles.activityGroupTitle}>Szerkesztes</div>
               <div className={styles.activityOptions}>
                 <button
-                  className={`${styles.syncToggle} ${store.syncScroll ? styles.syncToggleOn : ""}`}
+                  className={`${styles.activityIconButton} ${desktopEditPanelOpen ? styles.activeToggle : ""}`}
                   type="button"
-                  role="switch"
-                  aria-checked={store.syncScroll}
-                  aria-label={`Szinkron gorgetes: ${store.syncScroll ? "ON" : "OFF"}`}
-                  title={`Szinkron gorgetes: ${store.syncScroll ? "ON" : "OFF"}`}
-                  onClick={() => setStore((prev) => ({ ...prev, syncScroll: !prev.syncScroll }))}
+                  aria-label={desktopEditPanelOpen ? "Book edit panel elrejtese" : "Book edit panel megjelenitese"}
+                  title={desktopEditPanelOpen ? "Book edit panel elrejtese" : "Book edit panel megjelenitese"}
+                  onClick={() => setDesktopEditPanelOpen((prev) => !prev)}
                 >
-                  <span className={styles.syncToggleIcon}>
-                    <ToolIcon type="sync" />
-                  </span>
-                  <span className={styles.syncToggleLabel}>{store.syncScroll ? "ON" : "OFF"}</span>
-                  <span className={styles.syncToggleKnob} aria-hidden="true" />
+                  <ToolIcon type="admin" />
                 </button>
               </div>
             </div>
@@ -2208,6 +3893,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           </section>
         </aside>
       ) : null}
+      {renderOnboardingGuide()}
+      {renderOnboardingPopup()}
       {renderMobileToolPanel()}
   </div>
 );

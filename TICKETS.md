@@ -61,6 +61,46 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-BOOK-REJECT-X-ONLY-WHEN-UNACCEPTED-GENERATED-AND-RIGHT-ALIGNED-ROW
+- Goal: Render reject action as `X`, show it only for non-accepted generated state, and keep block action controls in one right-aligned row on hover.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `5d9942f72a24d64abf2526a6e4e34144271b969a` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-BLOCK-HOVER-RIGHT-ACTIONS-ACCEPT-FIRST-REJECT
+- Goal: Show block actions only on block hover as right-edge z-index overlay, keep `Elfogad/Elfogadva` first, and add adjacent `Elutasitas` action that restores original text by removing edited variant.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `5d9942f72a24d64abf2526a6e4e34144271b969a` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-BLOCK-ACTIONS-TOP-ROW-LAYOUT
+- Goal: Move block action controls from floating side overlay to a single horizontal row at the top of each block card.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `5d9942f72a24d64abf2526a6e4e34144271b969a` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-BLOCK-MANUAL-CLEAN-EDIT-IN-EDITED-PANEL
+- Goal: Add per-block `Kezi javitas` action in edited panel so user can manually clean unwanted text and save as a new draft variant.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `docs/ONBOARDING_FUNCTIONS.md`, `TICKETS.md`
+- Commit hash: `5d9942f72a24d64abf2526a6e4e34144271b969a` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-ACTIVITY-HIDE-WORKFLOW-SYNC-EDIT-LAST
+- Goal: On desktop activity panel hide `Munkafolyamat` and `Szinkron` groups, and place `Szerkesztes` group at the end.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `5d9942f72a24d64abf2526a6e4e34144271b969a` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-DASHBOARD-EDIT-PANEL-TOGGLE-IN-ACTIVITY
+- Goal: Hide desktop book edit/meta panel by default and show it only when toggled from the activity panel gear button.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `5d9942f72a24d64abf2526a6e4e34144271b969a` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-PROGRESS-UNDERPANEL-TOC-NOTES-BOOKMARKS-MOBILE-PAGES
+- Goal: Add a new navigation panel below book progress with 3 side-by-side scrollable blocks (chapter TOC with per-chapter mini progress, navigable notes with selected expression + description, and navigable stored bookmarks), plus mobile page tabs for `Eredeti`, `Szerkesztett`, `Tartalom`, `Jegyzetek`, `Konyvjelzok`.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `docs/ONBOARDING_FUNCTIONS.md`, `TICKETS.md`
+- Commit hash: `5d9942f72a24d64abf2526a6e4e34144271b969a` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-DASHBOARD-BLOCK-BOOKMARK-COLOR-RIBBON
+- Goal: Add multi-bookmark support (single progress + multiple important markers) set from edited block actions, with per-marker label, 10 predefined color categories, activity-panel/mobile list management, and no top bookmark bar.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `src/ui/icons/Icon.tsx`, `docs/ONBOARDING_FUNCTIONS.md`, `TICKETS.md`
+- Commit hash: `5d9942f72a24d64abf2526a6e4e34144271b969a` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-BOOK-TOPBAR-ICON-SCALE-AND-SPINE-LIKE-FRAME
 - Goal: Style `/book/[id]` topbar cover icon with spine-like frame treatment and increased SVG scale to match home spine icon visual language.
 - Files modified: `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
@@ -526,3 +566,56 @@ Rate limiting, file size limits, error states.
 - Goal: Restrict onboarding scope to editorial functions only; explicitly exclude file upload and admin/tool functions from onboarding route and coverage.
 - Files modified: `docs/ONBOARDING_FUNCTIONS.md`, `TICKETS.md`
 - Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-ONBOARDING-EDITORIAL-ANCHOR-STEP-BLUEPRINT
+- Goal: Add implementation-ready editorial onboarding blueprint with `data-onboarding-id` anchors, concrete step IDs, completion events, and runtime rules for `/book/[id]`.
+- Files modified: `docs/ONBOARDING_FUNCTIONS.md`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-DASHBOARD-ONBOARDING-ANCHOR-WIRING
+- Goal: Wire editorial onboarding anchors in Book Dashboard via `data-onboarding-id` attributes and add replay trigger controls for desktop/mobile.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+## Onboarding Development Queue (Active)
+
+Ticket: ONB-DEV-000 - Editorial Onboarding Incremental Delivery
+Type: Frontend + UX
+Status: In Progress
+
+Execution rule:
+- When user says: "kovetkezo on-boarding fejlesztes", always implement the `Current active step` below.
+- After finishing one step: mark it `done`, set completion date, and move `Current active step` to the next `pending` step.
+- Do not skip steps unless explicitly requested.
+
+Current active step: `none (queue complete)`
+
+Step board:
+- `ONB-DEV-001` | Onboarding function inventory + editorial-only scope | `done` | 2026-02-15
+- `ONB-DEV-002` | UI anchor wiring (`data-onboarding-id`) + replay trigger event | `done` | 2026-02-15
+- `ONB-DEV-003` | Onboarding step config source in code (`/book/[id]`) + step resolver | `done` | 2026-02-15
+- `ONB-DEV-004` | Onboarding popup component (single visible step, anchor positioning, next/skip) | `done` | 2026-02-15
+- `ONB-DEV-005` | Completion event integration (`mode_toggled`, `generate_success`, `accept_success`, `note_requested`, `note_decided`, `chapter_saved`) | `done` | 2026-02-15
+- `ONB-DEV-006` | Progress persistence + versioning (`onboarding_version`) | `done` | 2026-02-15
+- `ONB-DEV-007` | First-visit autostart + replay behavior finalization | `done` | 2026-02-15
+- `ONB-DEV-008` | Optional telemetry events | `done` | 2026-02-15
+
+- Ticket: ADHOC-ONBOARDING-DEV-QUEUE-TRACKER
+- Goal: Add a sequential onboarding development queue with explicit current step pointer and execution rule for "next onboarding development" requests.
+- Files modified: `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-ONBOARDING-UX-NAVIGATION-GUIDE-ICON-AND-FLOW-TUNING
+- Goal: Improve onboarding popup anchor navigation, add dedicated Lucide onboarding icon, change flow so `Kovetkezo` is always active and `Kihagyas` stops onboarding, and add onboarding guide column with selectable step titles.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `src/ui/icons/Icon.tsx`, `docs/ONBOARDING_FUNCTIONS.md`, `TICKETS.md`
+- Commit hash: `5d9942f72a24d64abf2526a6e4e34144271b969a` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-ONBOARDING-MANUAL-ONLY-ACTIVATION-AND-CONFIRMATION-GATE
+- Goal: Disable automatic onboarding popup activation so onboarding appears only when manually opened, and document that new feature onboarding integration is evaluated first and implemented only after explicit confirmation.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/ONBOARDING_FUNCTIONS.md`, `TICKETS.md`
+- Commit hash: `5d9942f72a24d64abf2526a6e4e34144271b969a` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-AUDIT-TRACKER-MANUAL-GOVERNANCE
+- Goal: Create a large, onboarding-style efficiency audit tracker in one markdown document for manual (non-continuous) progress tracking of refactor opportunities.
+- Files modified: `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `5d9942f72a24d64abf2526a6e4e34144271b969a` (workspace base head; no new commit created in this session)

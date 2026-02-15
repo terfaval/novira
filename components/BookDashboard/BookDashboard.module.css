@@ -135,7 +135,7 @@
   overflow: auto;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   padding: 4px 4px 12px 16px;
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -160,10 +160,6 @@
 .panelBody::-webkit-scrollbar-thumb {
   background: transparent;
   border-radius: 999px;
-}
-
-.panelBody:hover::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 22%, transparent);
 }
 
 .panelInlineError {
@@ -253,7 +249,7 @@
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
   background: color-mix(in srgb, var(--brand-paper) 96%, transparent);
-  padding: 4px 4px 12px 14px;
+  padding: 30px 4px 2px 14px;
   box-shadow: none;
 }
 
@@ -325,6 +321,48 @@
 .blockMergeButton:disabled {
   opacity: 0.55;
   pointer-events: none;
+}
+
+.bookmarkGapSlot {
+  min-height: 22px;
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  align-items: center;
+}
+
+.bookmarkGapEntry {
+  display: grid;
+  gap: 4px;
+}
+
+.bookmarkGapLine {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  border: 1px dashed color-mix(in srgb, var(--line) 72%, transparent);
+  background: color-mix(in srgb, var(--brand-paper) 90%, transparent);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.bookmarkGapSlot[data-bookmarked="true"] .bookmarkGapLine {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--bookmark-color, #f2b134) 82%, transparent);
+  background: color-mix(in srgb, var(--bookmark-color, #f2b134) 46%, var(--brand-paper));
+}
+
+.bookmarkGapLabel {
+  display: inline-flex;
+  width: fit-content;
+  max-width: min(100%, 360px);
+  border: 1px solid color-mix(in srgb, var(--bookmark-color, #f2b134) 60%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bookmark-color, #f2b134) 18%, var(--brand-paper));
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .blockSubtitle {
@@ -417,6 +455,29 @@
   justify-content: flex-start;
 }
 
+.manualEditPanel {
+  margin-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.manualEditTextarea {
+  min-height: 120px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-paper) 96%, transparent);
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.manualEditActions {
+  display: flex;
+  gap: 8px;
+}
+
 .inlineActionButton {
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--brand-paper) 94%, transparent);
@@ -471,11 +532,13 @@
 
 .blockControls {
   position: absolute;
-  top: 10px;
+  top: 6px;
   right: 10px;
   z-index: 30;
-  display: grid;
-  justify-items: end;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
   gap: 6px;
   opacity: 0;
   transform: translateX(6px);
@@ -622,6 +685,109 @@
   box-shadow: 0 4px 12px var(--shadow);
 }
 
+.actionIconButton[data-tone="bookmark"] {
+  --tone: #8a5a1e;
+}
+
+.actionIconButton[data-tone="bookmark-important"] {
+  --tone: #7b3f7a;
+}
+
+.bookmarkColorControl {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
+  color: var(--text);
+  display: grid;
+  gap: 6px;
+  padding: 7px 10px;
+  box-shadow: 0 4px 12px var(--shadow);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.bookmarkPalette {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.mobileBookmarkPalette {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.bookmarkPaletteSwatch {
+  width: 100%;
+  height: 20px;
+  border: 1px solid color-mix(in srgb, var(--bookmark-color, #f2b134) 38%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bookmark-color, #f2b134) 88%, white 12%);
+  cursor: pointer;
+}
+
+.bookmarkPaletteSwatchActive {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, white 86%, transparent);
+}
+
+.bookmarkNameControl {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
+  color: var(--text);
+  display: grid;
+  gap: 6px;
+  padding: 7px 10px;
+  box-shadow: 0 4px 12px var(--shadow);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.bookmarkClearButton {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid color-mix(in srgb, #aa3a32 48%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, #aa3a32 12%, var(--brand-paper));
+  color: color-mix(in srgb, #aa3a32 88%, var(--text));
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bookmarkList {
+  display: grid;
+  gap: 6px;
+}
+
+.bookmarkListItem {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
+  color: var(--text);
+  padding: 6px 10px;
+  text-align: left;
+  display: grid;
+  gap: 2px;
+}
+
+.bookmarkListItemActive {
+  border-color: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 70%, var(--line));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 30%, transparent);
+}
+
+.bookmarkListMeta {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .syncToggle {
   grid-column: span 1;
   width: 100%;
@@ -751,8 +917,50 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 35%, transparent);
 }
 
+.mobileBookmarkColorControl {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
+  color: var(--text);
+  padding: 8px 10px;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.mobileBookmarkNameControl {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
+  color: var(--text);
+  padding: 8px 10px;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.mobileBookmarkList {
+  display: grid;
+  gap: 6px;
+}
+
+.mobileBookmarkNameInput {
+  height: 34px;
+}
+
 .mobileToolRow:disabled {
   opacity: 0.5;
+}
+
+.bookmarkNameInput {
+  width: 100%;
+  height: 34px;
 }
 
 .progressCard {
@@ -767,6 +975,179 @@
 
 .desktopMetaCard {
   margin-top: 0;
+}
+
+.infoPanelCard {
+  margin-top: 0;
+  height: clamp(520px, calc(100dvh - 210px), 760px);
+  min-height: 70dvh;
+  overflow: hidden;
+}
+
+.infoPanelGrid {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.infoColumn,
+.mobileInfoBlock {
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.infoColumnHeader {
+  padding: 9px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  display: grid;
+  gap: 2px;
+}
+
+.infoColumnHeader strong {
+  font-size: 12px;
+}
+
+.infoColumnHeader span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.infoColumnBody {
+  min-height: 0;
+  overflow: auto;
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  grid-auto-rows: max-content;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.infoColumnBody::-webkit-scrollbar {
+  width: 10px;
+}
+
+.infoColumnBody::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.infoColumnBody::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.infoListButton {
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-paper) 96%, transparent);
+  color: var(--text);
+  text-align: left;
+  padding: 7px 9px;
+  display: grid;
+  gap: 5px;
+}
+
+.infoListCard {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+
+.infoListTitle {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.infoListDescription {
+  font-size: 11px;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.infoListMeta {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.infoMiniTrack {
+  height: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--progress-track);
+  overflow: hidden;
+}
+
+.infoMiniFill {
+  height: 100%;
+  background: var(--progress-fill);
+}
+
+.infoBookmarkSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--bookmark-color, #f2b134) 55%, var(--line));
+  background: color-mix(in srgb, var(--bookmark-color, #f2b134) 86%, white 14%);
+  flex: 0 0 auto;
+}
+
+.infoEmptyState {
+  border: 1px dashed color-mix(in srgb, var(--line) 80%, transparent);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.infoInlineExpandButton {
+  display: inline;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.mobilePageTabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.mobilePageTab {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 8px;
+}
+
+.mobilePageTabActive {
+  border-color: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 70%, var(--line));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 34%, transparent);
+}
+
+.mobileInfoCard {
+  overflow: hidden;
 }
 
 .progressSummary {
@@ -871,6 +1252,139 @@
   gap: 10px;
 }
 
+.onboardingPopup {
+  position: fixed;
+  left: var(--onb-popup-left, 50vw);
+  top: var(--onb-popup-top, 24px);
+  transform: translate(-50%, -100%);
+  z-index: 220;
+  width: min(92vw, var(--onb-popup-max-width, 360px));
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--brand-paper) 97%, transparent);
+  box-shadow: 0 16px 32px var(--shadow);
+}
+
+.onboardingPopup[data-placement="bottom"] {
+  transform: translate(-50%, 0);
+}
+
+.onboardingPopup[data-placement="left"] {
+  transform: translate(-100%, -50%);
+}
+
+.onboardingPopup[data-placement="right"] {
+  transform: translate(0, -50%);
+}
+
+.onboardingPopup[data-placement="center"] {
+  transform: translate(-50%, -50%);
+}
+
+.onboardingPopupHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.onboardingPopupHeader strong {
+  font-size: 13px;
+}
+
+.onboardingPopupHeader span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.onboardingPopupBody {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.onboardingPopupHint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.onboardingPopupActions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.onboardingGuidePanel {
+  position: fixed;
+  top: 112px;
+  right: max(0px, calc((100vw - min(100vw, 980px)) / 2 + 8px));
+  z-index: 205;
+  width: min(320px, calc(100vw - 24px));
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--brand-paper) 97%, transparent);
+  box-shadow: 0 16px 32px var(--shadow);
+  display: grid;
+  gap: 8px;
+}
+
+.onboardingGuideHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.onboardingGuideHeader strong {
+  font-size: 13px;
+}
+
+.onboardingGuideClose {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-paper) 94%, transparent);
+}
+
+.onboardingGuideList {
+  display: grid;
+  gap: 6px;
+  max-height: 42vh;
+  overflow: auto;
+}
+
+.onboardingGuideItem {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--brand-paper) 94%, transparent);
+  color: var(--text);
+  padding: 6px 10px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.onboardingGuideItemActive {
+  border-color: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 70%, var(--line));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 30%, transparent);
+}
+
+.onboardingGuideActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 @media (max-width: 960px) {
   .pageShell {
     width: 100%;
@@ -931,6 +1445,39 @@
   .mobileToolBackdrop,
   .mobileToolSheet {
     display: block;
+  }
+
+  .mobilePageTabs {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: color-mix(in srgb, var(--brand-paper) 94%, transparent);
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+
+  .mobileInfoCard {
+    max-height: 52dvh;
+  }
+
+  .mobileInfoBlock {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .onboardingPopup {
+    z-index: 205;
+  }
+
+  .onboardingGuidePanel {
+    left: 12px;
+    right: 12px;
+    top: auto;
+    bottom: 86px;
+    width: auto;
+    max-height: 52vh;
+    z-index: 204;
   }
 
 }
