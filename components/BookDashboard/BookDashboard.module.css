@@ -1,19 +1,19 @@
 .pageShell {
   position: relative;
   width: min(100%, 980px);
-  height: 100dvh;
+  min-height: 100dvh;
   margin: 0 auto;
   padding: 14px 0 16px;
 }
 
 .header {
-  position: fixed;
-  top: 16px;
-  left: 50%;
+  position: static;
+  top: auto;
+  left: auto;
   z-index: 100;
   width: min(100%, 980px);
-  transform: translateX(-50%);
-  padding: 0 12px;
+  transform: none;
+  padding: 0;
 }
 
 .topBar {
@@ -21,29 +21,74 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 0;
+}
+
+.topBarRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topBarBookIcon {
+  width: clamp(38px, 4.4vw, 46px);
+  aspect-ratio: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-ink);
+  border: 2px solid var(--brand-ink);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--brand-paper) 95%, transparent);
+  overflow: hidden;
+}
+
+.topBarBookIcon :global(.cover-svg) {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.topBarBookIcon :global(.cover-svg svg) {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform: scale(1.35);
+  transform-origin: center;
+}
+
+.topBarBackButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
   border: 1px solid var(--line);
-  border-radius: 16px;
   background: color-mix(in srgb, var(--brand-paper) 92%, transparent);
-  box-shadow: 0 10px 26px var(--shadow);
+  color: var(--brand-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px var(--shadow);
 }
 
 .main {
-  height: calc(100dvh - 98px);
-  margin-top: 74px;
-  overflow: auto;
+  min-height: calc(100dvh - 98px);
+  margin-top: 12px;
+  overflow: visible;
   padding: 0 12px 26px;
 }
 
 .desktopStage {
-  min-height: 100%;
+  height: auto;
+  min-height: 0;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
   gap: 14px;
 }
 
 .desktopViewport {
-  min-height: 70dvh;
+  height: clamp(520px, calc(100dvh - 210px), 760px);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .desktopSplit {
@@ -90,24 +135,45 @@
   overflow: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 12px 12px 12px 16px;
+  gap: 4px;
+  padding: 4px 4px 12px 16px;
   border: 1px solid var(--line);
   border-radius: 16px;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
   background: color-mix(in srgb, var(--brand-paper) 94%, transparent);
-  box-shadow: 0 10px 28px var(--shadow);
+  box-shadow:
+    inset 9px 0 0 var(--panel-accent-color, var(--brand-ink)),
+    0 10px 28px var(--shadow);
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
 }
 
-.panelBody::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 9px;
-  background: var(--panel-accent-color, var(--brand-ink));
+.panelBody::-webkit-scrollbar {
+  width: 10px;
+}
+
+.panelBody::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panelBody::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.panelBody:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 22%, transparent);
+}
+
+.panelInlineError {
+  border: 1px solid color-mix(in srgb, #aa3a32 45%, var(--line));
+  background: color-mix(in srgb, #aa3a32 10%, var(--brand-paper));
+  color: color-mix(in srgb, #aa3a32 88%, var(--text));
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .chapterGroup {
@@ -160,12 +226,6 @@
   color: var(--panel-accent-color, var(--brand-ink));
 }
 
-.chapterEditButton svg {
-  width: 16px;
-  height: 16px;
-  fill: currentColor;
-}
-
 .chapterHeaderActions {
   display: flex;
   align-items: center;
@@ -193,7 +253,7 @@
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
   background: color-mix(in srgb, var(--brand-paper) 96%, transparent);
-  padding: 12px 12px 12px 14px;
+  padding: 4px 4px 12px 14px;
   box-shadow: none;
 }
 
@@ -218,6 +278,53 @@
 .blockCard:hover,
 .blockCard:focus-within {
   z-index: 8;
+}
+
+.blockMergeSlot {
+  min-height: 26px;
+  margin: -3px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.blockMergeButton {
+  border: 1px dashed color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 42%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-paper) 95%, transparent);
+  color: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 86%, var(--text));
+  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  transform: translateY(-2px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.blockMergeSlot:hover .blockMergeButton,
+.blockMergeSlot:focus-within .blockMergeButton,
+.blockMergeButton:focus-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.blockMergeLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.blockMergeButton > svg {
+  width: 14px;
+  height: 14px;
+}
+
+.blockMergeButton:disabled {
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .blockSubtitle {
@@ -273,17 +380,19 @@
 .inlineNoteMark,
 .suggestedNoteMark {
   position: static;
+  display: inline;
   cursor: help;
 }
 
 .inlineTooltip {
   display: none;
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(100% + 6px);
+  position: fixed;
+  left: var(--inline-tooltip-x, 50vw);
+  top: var(--inline-tooltip-y, 30vh);
+  transform: translate(-50%, -100%);
   z-index: 50;
-  width: auto;
+  width: var(--inline-tooltip-width, min(640px, calc(100vw - 40px)));
+  max-width: min(96vw, var(--inline-tooltip-width, min(640px, calc(100vw - 40px))));
   padding: 8px 10px;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -391,11 +500,11 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 0;
   color: white;
   background: color-mix(in srgb, var(--tone, #3969a8) 88%, black 12%);
   box-shadow: 0 4px 14px color-mix(in srgb, var(--tone, #3969a8) 35%, transparent);
-  transition: width 150ms ease;
+  transition: width 150ms ease, gap 150ms ease;
 }
 
 .actionIconButton[data-tone="generate"] {
@@ -410,34 +519,32 @@
   --tone: #AA3A32;
 }
 
-.actionIconButton svg {
-  width: 15px;
-  height: 15px;
-  fill: currentColor;
-  flex: 0 0 auto;
-}
-
 .actionIconButton span {
   order: 1;
+  max-width: 0;
+  overflow: hidden;
   opacity: 0;
   white-space: nowrap;
   font-size: 12px;
   font-weight: 600;
-  transition: opacity 120ms ease;
+  transition: max-width 150ms ease, opacity 120ms ease;
   text-align: right;
 }
 
-.actionIconButton svg {
+.actionIconButton > svg {
   order: 2;
+  flex: 0 0 auto;
 }
 
 .actionIconButton:hover,
 .actionIconButton:focus-visible {
   width: 156px;
+  gap: 8px;
 }
 
 .actionIconButton:hover span,
 .actionIconButton:focus-visible span {
+  max-width: 108px;
   opacity: 1;
 }
 
@@ -456,27 +563,18 @@
 .sidebar {
   position: fixed;
   top: 112px;
-  right: 8px;
+  right: max(0px, calc((100vw - min(100vw, 980px)) / 2 - 120px));
   z-index: 95;
-  width: 178px;
+  width: 108px;
 }
 
 .activityPanel {
   position: relative;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  background: color-mix(in srgb, var(--brand-paper) 96%, transparent);
-  padding: 10px;
-}
-
-.activityPanel::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 9px;
-  background: var(--panel-accent-color, var(--brand-ink));
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
 }
 
 .activityGroup {
@@ -492,7 +590,7 @@
 
 .activityOptions {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 7px;
 }
 
@@ -511,12 +609,150 @@
   font-weight: 800;
 }
 
+.activityIconButton {
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
 .syncToggle {
+  grid-column: span 1;
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 0 8px;
+  position: relative;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.syncToggleOn {
+  border-color: color-mix(in srgb, #2b7a44 60%, var(--line));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #2b7a44 30%, transparent), 0 4px 12px var(--shadow);
+}
+
+.syncToggleIcon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.syncToggleLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.syncToggleKnob {
+  margin-left: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-ink) 82%, white);
+  transform: translateX(0);
+  transition: transform 140ms ease, background-color 140ms ease;
+}
+
+.syncToggleOn .syncToggleKnob {
+  transform: translateX(-2px);
+  background: #2b7a44;
+}
+
+.mobileToolFab,
+.mobileToolBackdrop,
+.mobileToolSheet {
+  display: none;
+}
+
+.mobileToolFab {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--brand-paper) 94%, transparent);
+  color: var(--text);
+  z-index: 200;
+  box-shadow: 0 14px 28px var(--shadow);
+  align-items: center;
+  justify-content: center;
+}
+
+.mobileToolBackdrop {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  background: rgba(24, 28, 43, 0.35);
+  z-index: 195;
+}
+
+.mobileToolSheet {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 201;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--brand-paper) 96%, transparent);
+  box-shadow: 0 18px 36px var(--shadow);
+}
+
+.mobileToolSheetTitle {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mobileToolRows {
+  display: grid;
   gap: 8px;
-  color: var(--muted);
-  font-size: 12px;
+}
+
+.mobileToolRow {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
+  color: var(--text);
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.mobileToolRowActive {
+  border-color: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 70%, var(--line));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 35%, transparent);
+}
+
+.mobileToolRow:disabled {
+  opacity: 0.5;
 }
 
 .progressCard {
@@ -527,6 +763,10 @@
 
 .desktopProgress {
   margin-top: 4px;
+}
+
+.desktopMetaCard {
+  margin-top: 0;
 }
 
 .progressSummary {
@@ -576,7 +816,7 @@
 
 .editGrid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -588,7 +828,7 @@
 }
 
 .editTextarea {
-  min-height: 82px;
+  min-height: 140px;
   resize: vertical;
 }
 
@@ -621,8 +861,6 @@
   background-size: contain;
 }
 
-.iconSwap {}
-
 .mobileStage {
   display: grid;
   gap: 10px;
@@ -631,33 +869,6 @@
 .mobileStack {
   display: grid;
   gap: 10px;
-}
-
-.layerBottomMobile {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 14px;
-  z-index: 95;
-  pointer-events: none;
-}
-
-.bottomStack {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  padding: 0 14px;
-  pointer-events: auto;
-}
-
-.adminButton {
-  pointer-events: auto;
-}
-
-.adminSheetMobile {
-  max-width: min(86vw, 340px);
-  max-height: 62vh;
-  overflow: auto;
 }
 
 @media (max-width: 960px) {
@@ -690,4 +901,42 @@
     max-height: 58dvh;
   }
 
+  .blockCard[data-mobile-active="true"] .blockControls {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .actionIconButton[data-mobile-expanded="true"] {
+    width: auto;
+    min-height: 34px;
+    padding: 0 12px;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .actionIconButton[data-mobile-expanded="true"] span {
+    max-width: 160px;
+    opacity: 1;
+  }
+
+  .topBarBookIcon {
+    width: clamp(34px, 8.8vw, 40px);
+  }
+
+  .mobileToolFab {
+    display: inline-flex;
+  }
+
+  .mobileToolBackdrop,
+  .mobileToolSheet {
+    display: block;
+  }
+
+}
+
+@media (max-width: 720px) {
+  .editGrid {
+    grid-template-columns: 1fr;
+  }
 }

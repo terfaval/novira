@@ -1,4 +1,4 @@
-export type LlmAction = "translate_block" | "generate_note";
+export type LlmAction = "translate_block" | "generate_note" | "generate_book_summary";
 
 export type LlmErrorCode =
   | "BAD_REQUEST"
@@ -37,6 +37,10 @@ export type LlmRequest =
       blockId: string;
       selectedText: string;
       options?: GenerateNoteOptions;
+    }
+  | {
+      action: "generate_book_summary";
+      bookId: string;
     };
 
 export type VariantStatus = "draft" | "accepted" | "rejected";
@@ -58,9 +62,18 @@ export type LlmNoteSuccessResponse = {
   noteText: string;
 };
 
+export type LlmBookSummarySuccessResponse = {
+  ok: true;
+  summaryText: string;
+};
+
 export type LlmErrorResponse = {
   ok: false;
   error: LlmError;
 };
 
-export type LlmResponse = LlmSuccessResponse | LlmNoteSuccessResponse | LlmErrorResponse;
+export type LlmResponse =
+  | LlmSuccessResponse
+  | LlmNoteSuccessResponse
+  | LlmBookSummarySuccessResponse
+  | LlmErrorResponse;

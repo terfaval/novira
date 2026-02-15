@@ -40,7 +40,14 @@ This folder contains the Ticket 4A' Book Dashboard UI.
   - `500+`: user-friendly HU temporary-service message
 
 ## Inline note behavior (Ad-hoc)
-- Edited block can display imported footnote-based note suggestions directly on the referenced word/phrase (with small index marker) and tooltip.
+- Edited block can display imported footnote-based note suggestions directly on the referenced word/phrase with a system-generated inline marker and tooltip.
 - User can select any edited text span and trigger note generation.
 - Generated note is saved as anchored record in `notes` and rendered as dotted underline + tooltip.
-- Suggested note tooltip supports `✓` approval (save as inline note) and `X` dismissal.
+- Suggested note tooltip supports `approve` (save as inline note) and `dismiss`.
+- Tooltip opens above the highlighted word, while remaining horizontally centered to the panel and near full panel width.
+- Imported footnote numbering prefixes are stripped from suggestion text before display and save.
+
+## Block merge behavior (Ad-hoc)
+- Edited panel renders an inline hover action between neighboring blocks: `Blokkok osszevonasa`.
+- Merge action concatenates neighboring blocks' `original_text`, deletes the second block, then re-numbers `block_index` within the chapter.
+- `Elfogad` action button is rendered only when the block already has an acceptable generated variant (`hasAcceptableVariant`).

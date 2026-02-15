@@ -6,6 +6,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { BookRow } from "@/lib/types";
 import { BookCard } from "@/components/BookCard";
 import { LibraryEmpty } from "@/components/LibraryEmpty";
+import { Icon } from "@/src/ui/icons/Icon";
 
 type LoadState =
   | { status: "booting" }
@@ -41,6 +42,7 @@ export function LibraryClient() {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortMode, setSortMode] = useState<SortMode>("author_asc");
+  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   useEffect(() => {
@@ -155,6 +157,17 @@ export function LibraryClient() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [effectiveActiveIndex, hasNext, hasPrev, filteredBooks]);
 
+  useEffect(() => {
+    function onResize() {
+      if (window.innerWidth > 720) {
+        setMobileToolsOpen(false);
+      }
+    }
+
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   if (state.status === "booting") {
     return <div className="card">Betoltes...</div>;
   }
@@ -177,8 +190,65 @@ export function LibraryClient() {
     a.localeCompare(b, "hu")
   );
 
+  const renderToolsContent = () => (
+    <div className="library-tools-grid">
+      <label className="library-tool-field">
+        <span className="library-tool-label">Szures</span>
+        <input
+          className="input"
+          type="text"
+          placeholder="Cim, szerzo, leiras..."
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+        />
+      </label>
+
+      <label className="library-tool-field">
+        <span className="library-tool-label">Statusz</span>
+        <select
+          className="input"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+        >
+          <option value="all">Minden</option>
+          {allStatuses.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="library-tool-field">
+        <span className="library-tool-label">Sorbarendezes</span>
+        <select
+          className="input"
+          value={sortMode}
+          onChange={(event) => setSortMode(event.target.value as SortMode)}
+        >
+          <option value="updated_desc">Frissites (uj -&gt; regi)</option>
+          <option value="updated_asc">Frissites (regi -&gt; uj)</option>
+          <option value="title_asc">Cim (A-Z)</option>
+          <option value="author_asc">Szerzo (A-Z)</option>
+          <option value="year_desc">Ev (uj -&gt; regi)</option>
+        </select>
+      </label>
+    </div>
+  );
+
   return (
-    <>
+    <div className="library-layout">
+      <section
+        className="library-prototype-tools library-toolbar-desktop"
+        aria-label="Konyvespolc szures es sorbarendezes prototipus"
+      >
+        <div className="mobile-tools-sheet-title">
+          <span>Tool panel</span>
+          <Icon name="admin" size={16} />
+        </div>
+        {renderToolsContent()}
+      </section>
+
       <section className="library-carousel-shell" aria-label="Konyvlista">
         <button
           type="button"
@@ -233,52 +303,34 @@ export function LibraryClient() {
         ))}
       </div>
 
-      <section className="library-prototype-tools" aria-label="Konyvespolc szures es sorbarendezes prototipus">
-        <div className="library-tools-grid">
-          <label className="library-tool-field">
-            <span className="library-tool-label">Szures</span>
-            <input
-              className="input"
-              type="text"
-              placeholder="Cim, szerzo, leiras..."
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-            />
-          </label>
+      <button
+        type="button"
+        className="mobile-tools-fab"
+        aria-label="Tool panel megnyitasa"
+        aria-expanded={mobileToolsOpen}
+        onClick={() => setMobileToolsOpen(true)}
+      >
+        <Icon name="admin" size={20} />
+      </button>
 
-          <label className="library-tool-field">
-            <span className="library-tool-label">Statusz</span>
-            <select
-              className="input"
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-            >
-              <option value="all">Minden</option>
-              {allStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="library-tool-field">
-            <span className="library-tool-label">Sorbarendezes</span>
-            <select
-              className="input"
-              value={sortMode}
-              onChange={(event) => setSortMode(event.target.value as SortMode)}
-            >
-              <option value="updated_desc">Frissites (uj -&gt; regi)</option>
-              <option value="updated_asc">Frissites (regi -&gt; uj)</option>
-              <option value="title_asc">Cim (A-Z)</option>
-              <option value="author_asc">Szerzo (A-Z)</option>
-              <option value="year_desc">Ev (uj -&gt; regi)</option>
-            </select>
-          </label>
-        </div>
-      </section>
-    </>
+      {mobileToolsOpen ? (
+        <>
+          <button
+            type="button"
+            className="mobile-tools-backdrop"
+            aria-label="Tool panel bezarasa"
+            onClick={() => setMobileToolsOpen(false)}
+          />
+          <section className="mobile-tools-sheet" aria-label="Mobil tool panel">
+            <div className="mobile-tools-sheet-title">
+              <span>Tool panel</span>
+              <Icon name="admin" size={16} />
+            </div>
+            {renderToolsContent()}
+          </section>
+        </>
+      ) : null}
+    </div>
   );
 }
 

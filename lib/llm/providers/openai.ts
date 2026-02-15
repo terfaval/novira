@@ -6,6 +6,8 @@
  * - Reads API key from env
  */
 import type {
+  GenerateBookSummaryInput,
+  GenerateBookSummaryOutput,
   GenerateNoteInput,
   GenerateNoteOutput,
   LlmProvider,
@@ -71,5 +73,52 @@ export class OpenAiProvider implements LlmProvider {
     const noteText = (resp?.choices?.[0]?.message?.content ?? "").trim();
     if (!noteText) throw new Error("Empty model output");
     return { noteText };
+  }
+
+  async generateBookSummary(input: GenerateBookSummaryInput): Promise<GenerateBookSummaryOutput> {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const OpenAI = require("openai");
+    const client = new OpenAI({ apiKey });
+
+    const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+    const chapterList =
+      input.chapterTitles && input.chapterTitles.length > 0
+        ? input.chapterTitles.slice(0, 8).map((title, index) => `${index + 1}. ${title}`).join("\n")
+        : "Nincs fejezetcim adat.";
+
+    const sampleText = (input.sampleText ?? "").trim();
+    const sampleSnippet = sampleText ? sampleText.slice(0, 1200) : "Nincs szovegreszlet.";
+
+    const resp = await client.chat.completions.create({
+      model,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Magyar irodalmi szerkeszto vagy. Feladatod: rovid, semleges, ketmondatos osszefoglalo keszitese.",
+        },
+        {
+          role: "user",
+          content: [
+            `Cim: ${input.bookTitle ?? "Ismeretlen cim"}`,
+            `Szerzo: ${input.author ?? "Ismeretlen szerzo"}`,
+            "Fejezetcimek (ha vannak):",
+            chapterList,
+            "Reszlet a szovegbol:",
+            sampleSnippet,
+            "Irj pontosan 2 mondatot magyarul. Ne hasznalj felsorolast.",
+          ].join("\n\n"),
+        },
+      ],
+      temperature: 0.2,
+      max_tokens: 180,
+    });
+
+    const summaryText = (resp?.choices?.[0]?.message?.content ?? "").trim();
+    if (!summaryText) throw new Error("Empty model output");
+    return { summaryText };
   }
 }

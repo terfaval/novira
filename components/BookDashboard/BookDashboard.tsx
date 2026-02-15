@@ -1,6 +1,16 @@
 "use client";
 
-import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  Fragment,
+  type FocusEvent,
+  type MouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import { ensureAnonIdentity } from "@/lib/auth/anon";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -18,7 +28,9 @@ import type {
   DashboardPanelMode,
   DashboardViewState,
 } from "@/components/BookDashboard/types";
+import { BookCoverIcon } from "@/components/BookCoverIcon";
 import { ShellTopBar } from "@/components/ShellTopBar";
+import { Icon } from "@/src/ui/icons/Icon";
 import styles from "@/components/BookDashboard/BookDashboard.module.css";
 
 type LoadState =
@@ -32,7 +44,6 @@ type BookEditForm = {
   year: string;
   description: string;
   icon: string;
-  background: string;
 };
 
 type GenerateErrorState = {
@@ -66,6 +77,10 @@ type ChapterGroup = {
 type ChapterRow = {
   id: string;
   chapter_index: number;
+};
+type BlockIndexRow = {
+  id: string;
+  block_index: number;
 };
 
 /**
@@ -150,9 +165,14 @@ function toBookEditForm(data: BookDashboardData): BookEditForm {
           ? String(legacyYear)
           : "",
     description: data.book.description ?? "",
-    icon: data.book.cover_slug ?? "",
-    background: data.book.background_slug ?? data.book.cover_slug ?? "",
+    icon: data.book.cover_slug ?? data.book.background_slug ?? "",
   };
+}
+
+function resolveTopbarIconSlug(book: BookDashboardData["book"]): string {
+  const fromCover = normalizeIconSlug(book.cover_slug ?? "");
+  if (fromCover) return fromCover;
+  return normalizeIconSlug(book.title ?? "");
 }
 
 function mapGenerateError(status: number, fallbackMessage?: string): string {
@@ -185,6 +205,22 @@ function mapNoteError(status: number, fallbackMessage?: string): string {
     return fallbackMessage;
   }
   return "Sikertelen jegyzetgeneralas.";
+}
+
+function mapSummaryError(status: number, fallbackMessage?: string): string {
+  if (status === 429) {
+    return "Tul sok leirasgeneralasi keres erkezett. Varj egy kicsit, majd probald ujra.";
+  }
+  if (status === 400) {
+    return "A leiras most nem generalhato ehhez a konyvhoz.";
+  }
+  if (status >= 500) {
+    return "A leirasgeneralas most nem elerheto. Probald meg par perc mulva.";
+  }
+  if (fallbackMessage && fallbackMessage.trim()) {
+    return fallbackMessage;
+  }
+  return "Sikertelen leirasgeneralas.";
 }
 
 async function requestDraftGeneration(args: {
@@ -254,6 +290,37 @@ async function requestSelectionNote(args: {
   return payload.noteText.trim();
 }
 
+async function requestBookSummary(args: {
+  supabase: ReturnType<typeof getSupabaseBrowserClient>;
+  bookId: string;
+}): Promise<string> {
+  const { supabase, bookId } = args;
+  const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (sessionErr || !accessToken) {
+    throw new Error(sessionErr?.message ?? "Nem talalhato ervenyes munkamenet.");
+  }
+
+  const response = await fetch("/api/llm", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      action: "generate_book_summary",
+      bookId,
+    }),
+  });
+
+  const payload = (await response.json().catch(() => null)) as LlmResponse | null;
+  if (!response.ok || !payload?.ok || !("summaryText" in payload)) {
+    const fallbackMessage = payload && !payload.ok ? payload.error.message : undefined;
+    throw new Error(mapSummaryError(response.status, fallbackMessage));
+  }
+  return payload.summaryText.trim();
+}
+
 function getSelectionRangeWithin(container: HTMLElement): BlockSelectionRange | null {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
@@ -272,6 +339,22 @@ function getSelectionRangeWithin(container: HTMLElement): BlockSelectionRange | 
   if (end <= start) return null;
 
   return { start, end, text: selectedText };
+}
+
+function stripLeadingFootnoteNumber(content: string, number: number): string {
+  const trimmed = content.trim();
+  if (!trimmed) return "";
+
+  const escapedNumber = String(number).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const specificNumberPattern = new RegExp(
+    `^(?:\\[\\s*${escapedNumber}\\s*\\]|${escapedNumber})[\\.)\\]:-]?\\s*`,
+    "i",
+  );
+  const genericNumberPattern = /^(?:\[\s*\d+\s*\]|\d+)[\.)\]:-]?\s*/;
+
+  const withoutSpecific = trimmed.replace(specificNumberPattern, "");
+  const withoutGeneric = withoutSpecific.replace(genericNumberPattern, "");
+  return withoutGeneric.trim();
 }
 
 function findSuggestedRanges(
@@ -316,7 +399,7 @@ function findSuggestedRanges(
         markerStart,
         markerEnd,
         number: rawNumber,
-        content: byNumber.get(rawNumber) ?? "",
+        content: stripLeadingFootnoteNumber(byNumber.get(rawNumber) ?? "", rawNumber),
       });
     }
     match = re.exec(text);
@@ -343,6 +426,10 @@ function renderTextWithInlineNotes(args: {
   const sortedSuggestions = [...suggestions].sort(
     (a, b) => a.anchorStart - b.anchorStart || a.markerStart - b.markerStart,
   );
+  const suggestionDisplayIndexByMarkerStart = new Map<number, number>();
+  sortedSuggestions.forEach((item, index) => {
+    suggestionDisplayIndexByMarkerStart.set(item.markerStart, index + 1);
+  });
   const nodes: JSX.Element[] = [];
   let cursor = 0;
   let noteIdx = 0;
@@ -394,15 +481,17 @@ function renderTextWithInlineNotes(args: {
       if (suggestion.anchorStart > cursor) {
         nodes.push(<span key={`pre-sugg-${cursor}`}>{text.slice(cursor, suggestion.anchorStart)}</span>);
       }
+      const displayIndex =
+        suggestionDisplayIndexByMarkerStart.get(suggestion.markerStart) ?? suggestionIdx + 1;
       nodes.push(
         <span
           key={`sugg-${blockId}-${suggestion.markerStart}-${suggestion.number}`}
           className={styles.suggestedNoteMark}
         >
           {text.slice(suggestion.anchorStart, suggestion.anchorEnd)}
-          <sup className={styles.suggestedMarkerTag}>{suggestion.number}</sup>
+          <sup className={styles.suggestedMarkerTag}>{displayIndex}</sup>
           <span className={styles.inlineTooltip}>
-            <span>{suggestion.content || `Labjegyzet ${suggestion.number}`}</span>
+            <span>{suggestion.content || "Automatikus jegyzetjavaslat."}</span>
             <span className={styles.suggestionActions}>
               <button
                 type="button"
@@ -417,7 +506,7 @@ function renderTextWithInlineNotes(args: {
                   })
                 }
               >
-                ✓
+                âś“
               </button>
               <button
                 type="button"
@@ -473,33 +562,16 @@ function blockTone(args: { block: DashboardBlock; hasError: boolean }): "generat
   return "generate";
 }
 
-function ActionIcon({ type }: { type: "generate" | "accept" | "delete" | "edit" }) {
-  if (type === "generate") {
-    return (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <path d="M10 2.5 11.7 8.3 17.5 10l-5.8 1.7L10 17.5 8.3 11.7 2.5 10l5.8-1.7L10 2.5Z" />
-      </svg>
-    );
-  }
-  if (type === "accept") {
-    return (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <path d="m7.8 14.1-3.9-3.9 1.4-1.4 2.5 2.5 6.9-6.9 1.4 1.4-8.3 8.3Z" />
-      </svg>
-    );
-  }
-  if (type === "delete") {
-    return (
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <path d="M6.1 16.7c-.5 0-1-.2-1.3-.6-.4-.3-.6-.8-.6-1.3V5.4H3V3.6h4.2V2.5h5.6v1.1H17v1.8h-1.2v9.4c0 .5-.2 1-.6 1.3-.3.4-.8.6-1.3.6H6.1Zm7.9-11.3H6v9.4h8V5.4Zm-6.1 8h1.8V6.8H7.9v6.6Zm2.4 0h1.8V6.8h-1.8v6.6Z" />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true">
-      <path d="m14.5 2.7 2.8 2.8-9.8 9.8-3.5.7.7-3.5 9.8-9.8Zm-10 10.4-.3 1.5 1.5-.3 8.8-8.8-1.2-1.2-8.8 8.8Z" />
-    </svg>
-  );
+function ActionIcon({ type }: { type: "generate" | "accept" | "delete" | "edit" | "merge" }) {
+  return <Icon name={type} />;
+}
+
+function ToolIcon({
+  type,
+}: {
+  type: "single" | "split" | "workbench" | "reader" | "admin" | "sync" | "back" | "swap";
+}) {
+  return <Icon name={type} />;
 }
 
 function BlockControls({
@@ -513,6 +585,7 @@ function BlockControls({
   onGenerate,
   onDelete,
   allowDelete,
+  mobileExpanded,
 }: {
   block: DashboardBlock;
   textMode: DashboardActivePanel;
@@ -524,8 +597,11 @@ function BlockControls({
   onGenerate: (block: DashboardBlock) => void;
   onDelete: (block: DashboardBlock) => void;
   allowDelete: boolean;
+  mobileExpanded: boolean;
 }) {
   const canAccept = block.hasAcceptableVariant && !block.isAccepted;
+  const translatedTrim = block.translatedText?.trim() ?? "";
+  const hasGeneratedContent = translatedTrim.length > 0 && translatedTrim !== block.originalText.trim();
 
   return (
     <div className={styles.blockControls} role="group" aria-label="Blokk muveletek">
@@ -537,20 +613,24 @@ function BlockControls({
             onClick={() => onGenerate(block)}
             disabled={generateInFlight || acceptInFlight || deleteInFlight}
             data-tone="generate"
+            data-mobile-expanded={mobileExpanded ? "true" : "false"}
           >
             <span>{generateInFlight ? "Generalas..." : "Generalas"}</span>
             <ActionIcon type="generate" />
           </button>
-          <button
-            className={styles.actionIconButton}
-            type="button"
-            onClick={() => onAccept(block)}
-            disabled={!canAccept || acceptInFlight || generateInFlight || deleteInFlight}
-            data-tone="accept"
-          >
-            <span>{block.isAccepted ? "Elfogadva" : acceptInFlight ? "Mentese..." : "Elfogad"}</span>
-            <ActionIcon type="accept" />
-          </button>
+          {hasGeneratedContent ? (
+            <button
+              className={styles.actionIconButton}
+              type="button"
+              onClick={() => onAccept(block)}
+              disabled={!canAccept || acceptInFlight || generateInFlight || deleteInFlight}
+              data-tone="accept"
+              data-mobile-expanded={mobileExpanded ? "true" : "false"}
+            >
+              <span>{block.isAccepted ? "Elfogadva" : acceptInFlight ? "Mentese..." : "Elfogad"}</span>
+              <ActionIcon type="accept" />
+            </button>
+          ) : null}
         </>
       ) : null}
       {allowDelete ? (
@@ -560,6 +640,7 @@ function BlockControls({
           onClick={() => onDelete(block)}
           disabled={deleteInFlight || acceptInFlight || generateInFlight}
           data-tone="delete"
+          data-mobile-expanded={mobileExpanded ? "true" : "false"}
         >
           <span>
             {deleteInFlight
@@ -572,6 +653,41 @@ function BlockControls({
         </button>
       ) : null}
       {generateError ? <div className={styles.blockError}>{generateError}</div> : null}
+    </div>
+  );
+}
+
+function mergePairKey(leftBlockId: string, rightBlockId: string): string {
+  return `${leftBlockId}::${rightBlockId}`;
+}
+
+function BlockMergeHandle({
+  leftBlock,
+  rightBlock,
+  mergeInFlight,
+  disabled,
+  onMerge,
+}: {
+  leftBlock: DashboardBlock;
+  rightBlock: DashboardBlock;
+  mergeInFlight: boolean;
+  disabled: boolean;
+  onMerge: (leftBlock: DashboardBlock, rightBlock: DashboardBlock) => void;
+}) {
+  return (
+    <div className={styles.blockMergeSlot}>
+      <button
+        className={styles.blockMergeButton}
+        type="button"
+        onClick={() => onMerge(leftBlock, rightBlock)}
+        disabled={disabled || mergeInFlight}
+        aria-label={`Blokkok osszevonasa: ${leftBlock.blockIndex}. es ${rightBlock.blockIndex}. blokk`}
+      >
+        <ActionIcon type="merge" />
+        <span className={styles.blockMergeLabel}>
+          {mergeInFlight ? "Osszevonas..." : "Blokkok osszevonasa"}
+        </span>
+      </button>
     </div>
   );
 }
@@ -691,6 +807,9 @@ function BlockCard({
   allowDelete,
   showControls,
   accentColor,
+  isMobile,
+  mobileActionsVisible,
+  onMobileActivate,
 }: {
   block: DashboardBlock;
   textMode: DashboardActivePanel;
@@ -716,6 +835,9 @@ function BlockCard({
   allowDelete: boolean;
   showControls: boolean;
   accentColor: string;
+  isMobile: boolean;
+  mobileActionsVisible: boolean;
+  onMobileActivate: (blockId: string) => void;
 }) {
   const [selectionRange, setSelectionRange] = useState<BlockSelectionRange | null>(null);
   const textRef = useRef<HTMLParagraphElement | null>(null);
@@ -766,6 +888,35 @@ function BlockCard({
     setSelectionRange(null);
   }, []);
 
+  const positionTooltipForMarker = useCallback((marker: HTMLElement | null) => {
+    const textNode = textRef.current;
+    if (!textNode || !marker) return;
+
+    const panelNode = textNode.closest(`.${styles.panelBody}`) as HTMLElement | null;
+    const markerRect = marker.getBoundingClientRect();
+    const panelRect = (panelNode ?? textNode).getBoundingClientRect();
+
+    const tooltipX = panelRect.left + panelRect.width / 2;
+    const tooltipY = markerRect.top - 8;
+    const tooltipWidth = Math.max(220, panelRect.width - 10);
+
+    textNode.style.setProperty("--inline-tooltip-x", `${Math.round(tooltipX)}px`);
+    textNode.style.setProperty("--inline-tooltip-y", `${Math.round(tooltipY)}px`);
+    textNode.style.setProperty("--inline-tooltip-width", `${Math.round(tooltipWidth)}px`);
+  }, []);
+
+  const handleTooltipPointer = useCallback((event: MouseEvent<HTMLParagraphElement>) => {
+    const target = event.target as HTMLElement | null;
+    const marker = target?.closest(`.${styles.inlineNoteMark}, .${styles.suggestedNoteMark}`) as HTMLElement | null;
+    positionTooltipForMarker(marker);
+  }, [positionTooltipForMarker]);
+
+  const handleTooltipFocus = useCallback((event: FocusEvent<HTMLParagraphElement>) => {
+    const target = event.target as HTMLElement | null;
+    const marker = target?.closest(`.${styles.inlineNoteMark}, .${styles.suggestedNoteMark}`) as HTMLElement | null;
+    positionTooltipForMarker(marker);
+  }, [positionTooltipForMarker]);
+
   return (
     <article
       className={styles.blockCard}
@@ -774,6 +925,12 @@ function BlockCard({
       data-alert={needsAttention ? "true" : "false"}
       data-mode={textMode}
       data-note-signal={explanationSignalCount > 0 ? "true" : "false"}
+      data-mobile-active={mobileActionsVisible ? "true" : "false"}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (!isMobile || !showControls) return;
+        onMobileActivate(block.id);
+      }}
       style={
         {
           "--panel-accent-color": accentColor,
@@ -798,7 +955,9 @@ function BlockCard({
         ref={textRef}
         className={styles.blockText}
         onMouseUp={captureSelection}
+        onMouseOver={handleTooltipPointer}
         onKeyUp={captureSelection}
+        onFocusCapture={handleTooltipFocus}
         onBlur={clearSelection}
       >
         {renderedText}
@@ -828,6 +987,7 @@ function BlockCard({
           onGenerate={onGenerate}
           onDelete={onDelete}
           allowDelete={allowDelete}
+          mobileExpanded={mobileActionsVisible}
         />
       ) : null}
     </article>
@@ -837,22 +997,20 @@ function BlockCard({
 export function BookDashboard({ bookId }: { bookId: string }) {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [state, setState] = useState<LoadState>({ status: "booting" });
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const [editForm, setEditForm] = useState<BookEditForm>({
     title: "",
     author: "",
     year: "",
     description: "",
     icon: "",
-    background: "",
   });
   const [isEditSaving, setIsEditSaving] = useState(false);
+  const [isSummaryGenerating, setIsSummaryGenerating] = useState(false);
   const [editFeedback, setEditFeedback] = useState<string | null>(null);
   const [store, setStore] = useState<DashboardViewStore>({
     viewState: "workbench",
     panelMode: "single",
-    desktopLayout: "split",
+    desktopLayout: "single",
     activePanel: "translated",
     syncScroll: true,
   });
@@ -871,7 +1029,11 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const [chapterEditSaving, setChapterEditSaving] = useState(false);
   const [chapterDeleteSaving, setChapterDeleteSaving] = useState(false);
   const [chapterEditError, setChapterEditError] = useState<string | null>(null);
+  const [mergingPairKey, setMergingPairKey] = useState<string | null>(null);
+  const [mergeError, setMergeError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [mobileToolPanelOpen, setMobileToolPanelOpen] = useState(false);
+  const [activeMobileBlockId, setActiveMobileBlockId] = useState<string | null>(null);
   const initializedView = useRef(false);
   const originalPanelRef = useRef<HTMLDivElement | null>(null);
   const translatedPanelRef = useRef<HTMLDivElement | null>(null);
@@ -937,6 +1099,13 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     window.addEventListener("resize", updateViewport);
     return () => window.removeEventListener("resize", updateViewport);
   }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setActiveMobileBlockId(null);
+      setMobileToolPanelOpen(false);
+    }
+  }, [isMobile]);
 
   const handleAccept = useCallback(
     async (block: DashboardBlock) => {
@@ -1051,7 +1220,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           anchor_start: start,
           anchor_end: end,
           kind: "historical",
-          content: content || `Labjegyzet ${number}`,
+          content: content || "Automatikus jegyzetjavaslat.",
         };
         const { error } = await notesTable.insert(payload);
         if (error) throw new Error(error.message || "Sikertelen jegyzetmentes.");
@@ -1115,7 +1284,6 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     const author = editForm.author.trim();
     const description = editForm.description.trim();
     const icon = normalizeIconSlug(editForm.icon);
-    const background = normalizeIconSlug(editForm.background);
     const yearRaw = editForm.year.trim();
 
     if (!title) {
@@ -1141,7 +1309,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       publication_year: yearValue,
       description: description || null,
       cover_slug: icon || null,
-      background_slug: background || null,
+      background_slug: icon || null,
     };
 
     const basePayload = {
@@ -1172,7 +1340,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         }
 
         setEditFeedback(
-          "A cim/szerzo/leiras mentve. Az ev, ikon vagy hatter oszlop hianyzik az adatbazisban.",
+          "A cim/szerzo/leiras mentve. Az ev vagy ikon oszlop hianyzik az adatbazisban.",
         );
         setIsEditSaving(false);
         await loadDashboard({ keepCurrentView: true });
@@ -1186,9 +1354,24 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
     setEditFeedback("Konyv adatai mentve.");
     setIsEditSaving(false);
-    setIsEditOpen(false);
     await loadDashboard({ keepCurrentView: true });
   }, [bookId, editForm, loadDashboard, state, supabase]);
+
+  const handleGenerateSummary = useCallback(async () => {
+    if (state.status !== "ready") return;
+    setEditFeedback(null);
+    setIsSummaryGenerating(true);
+    try {
+      const summary = await requestBookSummary({ supabase, bookId });
+      setEditForm((prev) => ({ ...prev, description: summary }));
+      setEditFeedback("Leiras generalva. Ellenorizd, majd mentsd.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Sikertelen leirasgeneralas.";
+      setEditFeedback(message);
+    } finally {
+      setIsSummaryGenerating(false);
+    }
+  }, [bookId, state.status, supabase]);
 
   const syncPanels = useCallback(
     (source: "original" | "translated") => {
@@ -1226,6 +1409,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       ? "Reader mod 0%-nal nem erheto el."
       : "Reader mod csak 100%-os completionnel erheto el.";
   const iconPreviewSlug = normalizeIconSlug(editForm.icon);
+  const topbarIconSlug = isReady ? resolveTopbarIconSlug(state.data.book) : "";
   const iconPreviewPath = iconPreviewSlug
     ? `url('/covers/SVG/${iconPreviewSlug}.svg'), url('/covers/${iconPreviewSlug}.png')`
     : null;
@@ -1334,6 +1518,94 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     await loadDashboard({ keepCurrentView: true });
   }, [bookId, chapterDeleteSaving, chapterEditSaving, loadDashboard, state.status, supabase]);
 
+  const handleMergeBlocks = useCallback(async (leftBlock: DashboardBlock, rightBlock: DashboardBlock) => {
+    if (state.status !== "ready" || chapterEditSaving || chapterDeleteSaving) return;
+    if (leftBlock.chapterId !== rightBlock.chapterId) return;
+    setMergeError(null);
+
+    const confirmed = window.confirm(
+      `Biztosan osszevonjuk a ${leftBlock.blockIndex}. es ${rightBlock.blockIndex}. blokkot? A masodik blokk torlodik.`,
+    );
+    if (!confirmed) return;
+
+    const pairKey = mergePairKey(leftBlock.id, rightBlock.id);
+    setMergingPairKey(pairKey);
+
+    try {
+      const blocksTable = supabase.from("blocks") as any;
+      const { data: selectedRows, error: selectError } = await blocksTable
+        .select("id,original_text")
+        .eq("book_id", bookId)
+        .eq("chapter_id", leftBlock.chapterId)
+        .in("id", [leftBlock.id, rightBlock.id]);
+      if (selectError) throw new Error(selectError.message || "Sikertelen blokk-osszevonas.");
+
+      const mergeRows = (selectedRows ?? []) as Array<{ id: string; original_text: string | null }>;
+      const leftRow = mergeRows.find((row) => row.id === leftBlock.id);
+      const rightRow = mergeRows.find((row) => row.id === rightBlock.id);
+      if (!leftRow || !rightRow) {
+        throw new Error("A blokkok mar nem talalhatok. Frissitsd az oldalt, majd probald ujra.");
+      }
+
+      const leftText = `${leftRow.original_text ?? ""}`.trim();
+      const rightText = `${rightRow.original_text ?? ""}`.trim();
+      const mergedOriginalText = [leftText, rightText].filter(Boolean).join(" ");
+      if (!mergedOriginalText) {
+        throw new Error("Az osszevonas ures szoveget eredmenyezne, ezert megszakitottuk.");
+      }
+
+      const { error: mergeError } = await blocksTable
+        .update({ original_text: mergedOriginalText })
+        .eq("id", leftBlock.id)
+        .eq("book_id", bookId);
+      if (mergeError) throw new Error(mergeError.message || "Sikertelen blokk-osszevonas.");
+
+      const { error: deleteError } = await blocksTable
+        .delete()
+        .eq("id", rightBlock.id)
+        .eq("book_id", bookId);
+      if (deleteError) throw new Error(deleteError.message || "Sikertelen blokk-osszevonas.");
+
+      const { data: blockRows, error: fetchError } = await blocksTable
+        .select("id,block_index")
+        .eq("book_id", bookId)
+        .eq("chapter_id", leftBlock.chapterId)
+        .order("block_index", { ascending: true });
+      if (fetchError) throw new Error(fetchError.message || "Sikertelen blokk ujraszamozas.");
+
+      const rows = ((blockRows ?? []) as BlockIndexRow[]).sort((a, b) => a.block_index - b.block_index);
+      for (let index = 0; index < rows.length; index += 1) {
+        const row = rows[index];
+        const tempIndex = 10000 + index + 1;
+        const { error } = await blocksTable
+          .update({ block_index: tempIndex })
+          .eq("id", row.id)
+          .eq("book_id", bookId)
+          .eq("chapter_id", leftBlock.chapterId);
+        if (error) throw new Error(error.message || "Sikertelen blokk ujraszamozas.");
+      }
+
+      for (let index = 0; index < rows.length; index += 1) {
+        const row = rows[index];
+        const finalIndex = index + 1;
+        const { error } = await blocksTable
+          .update({ block_index: finalIndex })
+          .eq("id", row.id)
+          .eq("book_id", bookId)
+          .eq("chapter_id", leftBlock.chapterId);
+        if (error) throw new Error(error.message || "Sikertelen blokk ujraszamozas.");
+      }
+
+      await loadDashboard({ keepCurrentView: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Sikertelen blokk-osszevonas.";
+      setMergeError(message);
+      await loadDashboard({ keepCurrentView: true });
+    } finally {
+      setMergingPairKey(null);
+    }
+  }, [bookId, chapterDeleteSaving, chapterEditSaving, loadDashboard, state.status, supabase]);
+
   const renderOriginalPanel = (showControls: boolean, showSwap: boolean) => (
     <section className={styles.panel}>
       <div className={styles.panelTitle}>
@@ -1346,7 +1618,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             aria-label="Valtas a szerkesztett panelre"
             title="Valtas a szerkesztett panelre"
           >
-            <span className={styles.iconSwap} aria-hidden="true" />
+            <Icon name="swap" size={16} />
           </button>
         ) : null}
       </div>
@@ -1354,6 +1626,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         className={styles.panelBody}
         ref={originalPanelRef}
         onScroll={() => syncPanels("original")}
+        onClick={() => {
+          if (!isMobile) return;
+          setActiveMobileBlockId(null);
+        }}
       >
         {chapterGroups.map((group) => (
           <section key={`original-chapter-${group.chapterId}`} className={styles.chapterGroup}>
@@ -1393,6 +1669,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                 allowDelete={showControls}
                 showControls={showControls}
                 accentColor={panelAccentColor}
+                isMobile={isMobile}
+                mobileActionsVisible={isMobile && showControls && activeMobileBlockId === block.id}
+                onMobileActivate={setActiveMobileBlockId}
               />
             ))}
           </section>
@@ -1413,7 +1692,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             aria-label="Valtas az eredeti panelre"
             title="Valtas az eredeti panelre"
           >
-            <span className={styles.iconSwap} aria-hidden="true" />
+            <Icon name="swap" size={16} />
           </button>
         ) : null}
       </div>
@@ -1421,7 +1700,12 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         className={styles.panelBody}
         ref={translatedPanelRef}
         onScroll={() => syncPanels("translated")}
+        onClick={() => {
+          if (!isMobile) return;
+          setActiveMobileBlockId(null);
+        }}
       >
+        {mergeError ? <div className={styles.panelInlineError}>{mergeError}</div> : null}
         {chapterGroups.map((group) => (
           <section key={`translated-chapter-${group.chapterId}`} className={styles.chapterGroup}>
             <ChapterHeader
@@ -1439,29 +1723,57 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               onCancelEdit={() => setChapterEdit(null)}
               onDelete={handleChapterDelete}
             />
-            {group.blocks.map((block) => (
-              <BlockCard
-                key={`translated-${block.id}`}
-                block={block}
-                textMode="translated"
-                acceptInFlight={acceptingBlockId === block.id}
-                generateInFlight={generatingBlockId === block.id}
-                deleteInFlight={deletingBlockId === block.id}
-                generateError={generateError?.blockId === block.id ? generateError.message : null}
-                noteError={noteError?.blockId === block.id ? noteError.message : null}
-                creatingNoteInFlight={creatingNoteBlockId === block.id}
-                onAccept={handleAccept}
-                onGenerate={handleGenerate}
-                onDelete={handleDeleteBlock}
-                onCreateNote={handleCreateNote}
-                onApproveSuggestion={handleApproveSuggestion}
-                onRejectSuggestion={handleRejectSuggestion}
-                dismissedSuggestionNumbers={dismissedSuggestions[block.id] ?? new Set<number>()}
-                allowDelete={showControls}
-                showControls={showControls}
-                accentColor={panelAccentColor}
-              />
-            ))}
+            {group.blocks.map((block, index) => {
+              const nextBlock = group.blocks[index + 1];
+              const currentMergeKey = nextBlock ? mergePairKey(block.id, nextBlock.id) : null;
+              const mergeBusy =
+                Boolean(currentMergeKey) && mergingPairKey !== null && currentMergeKey === mergingPairKey;
+              const mergeDisabled =
+                mergingPairKey !== null ||
+                chapterEditSaving ||
+                chapterDeleteSaving ||
+                acceptingBlockId !== null ||
+                generatingBlockId !== null ||
+                deletingBlockId !== null;
+
+              return (
+                <Fragment key={`translated-row-${block.id}`}>
+                  <BlockCard
+                    key={`translated-${block.id}`}
+                    block={block}
+                    textMode="translated"
+                    acceptInFlight={acceptingBlockId === block.id}
+                    generateInFlight={generatingBlockId === block.id}
+                    deleteInFlight={deletingBlockId === block.id}
+                    generateError={generateError?.blockId === block.id ? generateError.message : null}
+                    noteError={noteError?.blockId === block.id ? noteError.message : null}
+                    creatingNoteInFlight={creatingNoteBlockId === block.id}
+                    onAccept={handleAccept}
+                    onGenerate={handleGenerate}
+                    onDelete={handleDeleteBlock}
+                    onCreateNote={handleCreateNote}
+                    onApproveSuggestion={handleApproveSuggestion}
+                    onRejectSuggestion={handleRejectSuggestion}
+                    dismissedSuggestionNumbers={dismissedSuggestions[block.id] ?? new Set<number>()}
+                    allowDelete={showControls}
+                    showControls={showControls}
+                    accentColor={panelAccentColor}
+                    isMobile={isMobile}
+                    mobileActionsVisible={isMobile && showControls && activeMobileBlockId === block.id}
+                    onMobileActivate={setActiveMobileBlockId}
+                  />
+                  {showControls && nextBlock ? (
+                    <BlockMergeHandle
+                      leftBlock={block}
+                      rightBlock={nextBlock}
+                      mergeInFlight={mergeBusy}
+                      disabled={mergeDisabled}
+                      onMerge={handleMergeBlocks}
+                    />
+                  ) : null}
+                </Fragment>
+              );
+            })}
           </section>
         ))}
       </div>
@@ -1524,6 +1836,212 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   };
 
   const pageStyle = { "--panel-accent-color": panelAccentColor } as CSSProperties;
+  const renderBookMetaSection = () => {
+    if (!isReady) return null;
+
+    return (
+      <section className={`card ${styles.progressCard} ${styles.desktopMetaCard}`}>
+        <section className={styles.editPanel}>
+          <div className={styles.editGrid}>
+            <label className={styles.editField}>
+              <span>Cim</span>
+              <input
+                className="input"
+                value={editForm.title}
+                onChange={(event) => setEditForm((prev) => ({ ...prev, title: event.target.value }))}
+                placeholder="pl. A jo palocok"
+              />
+            </label>
+            <label className={styles.editField}>
+              <span>Szerzo</span>
+              <input
+                className="input"
+                value={editForm.author}
+                onChange={(event) => setEditForm((prev) => ({ ...prev, author: event.target.value }))}
+                placeholder="pl. Mikszath Kalman"
+              />
+            </label>
+            <label className={styles.editField}>
+              <span>Ev</span>
+              <input
+                className="input"
+                value={editForm.year}
+                onChange={(event) => setEditForm((prev) => ({ ...prev, year: event.target.value }))}
+                placeholder="pl. 1901"
+                inputMode="numeric"
+              />
+            </label>
+            <label className={styles.editField}>
+              <span>Ikon (slug)</span>
+              <input
+                className="input"
+                value={editForm.icon}
+                onChange={(event) => setEditForm((prev) => ({ ...prev, icon: event.target.value }))}
+                placeholder="pl. golyakalifa"
+              />
+            </label>
+          </div>
+
+          <label className={styles.editField}>
+            <span>Rovid leiras</span>
+            <textarea
+              className={styles.editTextarea}
+              value={editForm.description}
+              onChange={(event) => setEditForm((prev) => ({ ...prev, description: event.target.value }))}
+              placeholder="2 mondatos osszefoglalo."
+            />
+          </label>
+
+          <div className={styles.editActions}>
+            <button className="btn" type="button" onClick={handleGenerateSummary} disabled={isSummaryGenerating}>
+              {isSummaryGenerating ? "Generalas..." : "Leiras generalasa"}
+            </button>
+          </div>
+
+          {iconPreviewPath ? (
+            <div className={styles.iconPreview}>
+              <div className={styles.iconPreviewImage} style={{ backgroundImage: iconPreviewPath }} />
+              <span>{iconPreviewSlug}</span>
+            </div>
+          ) : null}
+
+          {editFeedback ? <div className={styles.editFeedback}>{editFeedback}</div> : null}
+
+          <div className={styles.editActions}>
+            <button className="btn" type="button" onClick={handleEditSubmit} disabled={isEditSaving}>
+              {isEditSaving ? "Mentese..." : "Mentes"}
+            </button>
+            <button
+              className="btn"
+              type="button"
+              onClick={() => {
+                setEditFeedback(null);
+                setEditForm(toBookEditForm(state.data));
+              }}
+              disabled={isEditSaving}
+            >
+              Visszaallitas
+            </button>
+          </div>
+        </section>
+      </section>
+    );
+  };
+
+  const renderMobileToolPanel = () => {
+    if (!isMobile || state.status !== "ready") return null;
+
+    return (
+      <>
+        <button
+          type="button"
+          className={styles.mobileToolFab}
+          aria-label="Tool panel megnyitasa"
+          aria-expanded={mobileToolPanelOpen}
+          onClick={() => setMobileToolPanelOpen(true)}
+        >
+          <ToolIcon type="admin" />
+        </button>
+
+        {mobileToolPanelOpen ? (
+          <>
+            <button
+              type="button"
+              className={styles.mobileToolBackdrop}
+              aria-label="Tool panel bezarasa"
+              onClick={() => setMobileToolPanelOpen(false)}
+            />
+            <section className={styles.mobileToolSheet} aria-label="Dashboard tool panel">
+              <div className={styles.mobileToolSheetTitle}>
+                <span>Tool panel</span>
+                <ToolIcon type="admin" />
+              </div>
+              <div className={styles.mobileToolRows}>
+                <button
+                  className={`${styles.mobileToolRow} ${store.desktopLayout === "single" ? styles.mobileToolRowActive : ""}`}
+                  type="button"
+                  onClick={() => {
+                    setStore((prev) => ({ ...prev, desktopLayout: "single" }));
+                    setMobileToolPanelOpen(false);
+                  }}
+                >
+                  <span>Egy oldalas nezet</span>
+                  <ToolIcon type="single" />
+                </button>
+                <button
+                  className={`${styles.mobileToolRow} ${store.desktopLayout === "split" ? styles.mobileToolRowActive : ""}`}
+                  type="button"
+                  onClick={() => {
+                    setStore((prev) => ({ ...prev, desktopLayout: "split" }));
+                    setMobileToolPanelOpen(false);
+                  }}
+                >
+                  <span>Osztott nezet</span>
+                  <ToolIcon type="split" />
+                </button>
+                <button
+                  className={`${styles.mobileToolRow} ${store.viewState === "workbench" ? styles.mobileToolRowActive : ""}`}
+                  type="button"
+                  onClick={() => {
+                    setStore((prev) => ({ ...prev, viewState: "workbench" }));
+                    setMobileToolPanelOpen(false);
+                  }}
+                >
+                  <span>Workbench</span>
+                  <ToolIcon type="workbench" />
+                </button>
+                <button
+                  className={`${styles.mobileToolRow} ${store.viewState === "reader" ? styles.mobileToolRowActive : ""}`}
+                  type="button"
+                  disabled={!canReader}
+                  title={!canReader ? readerDisabledReason : undefined}
+                  onClick={() => {
+                    setStore((prev) => ({ ...prev, viewState: "reader", activePanel: "translated" }));
+                    setMobileToolPanelOpen(false);
+                  }}
+                >
+                  <span>Reader</span>
+                  <ToolIcon type="reader" />
+                </button>
+                <button
+                  className={`${styles.mobileToolRow} ${store.activePanel === "original" ? styles.mobileToolRowActive : ""}`}
+                  type="button"
+                  onClick={() => {
+                    setStore((prev) => ({ ...prev, activePanel: "original", panelMode: "single" }));
+                    setMobileToolPanelOpen(false);
+                  }}
+                >
+                  <span>Eredeti panel</span>
+                  <ToolIcon type="swap" />
+                </button>
+                <button
+                  className={`${styles.mobileToolRow} ${store.activePanel === "translated" ? styles.mobileToolRowActive : ""}`}
+                  type="button"
+                  onClick={() => {
+                    setStore((prev) => ({ ...prev, activePanel: "translated", panelMode: "single" }));
+                    setMobileToolPanelOpen(false);
+                  }}
+                >
+                  <span>Szerkesztett panel</span>
+                  <ToolIcon type="swap" />
+                </button>
+                <button
+                  className={`${styles.mobileToolRow} ${store.syncScroll ? styles.mobileToolRowActive : ""}`}
+                  type="button"
+                  role="switch"
+                  aria-checked={store.syncScroll}
+                  onClick={() => setStore((prev) => ({ ...prev, syncScroll: !prev.syncScroll }))}
+                >
+                  <span>Szinkron gorgetes: {store.syncScroll ? "ON" : "OFF"}</span>
+                  <ToolIcon type="sync" />
+                </button>
+              </div>
+            </section>
+          </>
+        ) : null}
+      </>
+    );
+  };
 
   return (
     <div className={`book-page-shell ${styles.pageShell}`} style={pageStyle}>
@@ -1534,10 +2052,19 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           title={bookTitle}
           subtitle={bookAuthor}
           ariaLabel="Konyv oldal"
+          middleSlot={
+            topbarIconSlug ? (
+              <span className={styles.topBarBookIcon} aria-hidden="true">
+                <BookCoverIcon slug={topbarIconSlug} title={`${bookTitle} borito ikon`} />
+              </span>
+            ) : null
+          }
           rightSlot={
-            <Link className="btn" href="/">
-              Vissza a konyvtarba
-            </Link>
+            <div className={styles.topBarRight}>
+              <Link className={styles.topBarBackButton} href="/" aria-label="Vissza a konyvtarba" title="Vissza a konyvtarba">
+                <ToolIcon type="back" />
+              </Link>
+            </div>
           }
         />
       </header>
@@ -1594,6 +2121,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               <div className={styles.progressFill} style={{ width: `${progress}%` }} />
             </div>
           </section>
+          {renderBookMetaSection()}
         </div>
       )}
     </main>
@@ -1605,7 +2133,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               <div className={styles.activityGroupTitle}>Nezet</div>
               <div className={styles.activityOptions}>
                 <button
-                  className={`btn ${store.desktopLayout === "single" ? styles.activeToggle : ""}`}
+                  className={`${styles.activityIconButton} ${store.desktopLayout === "single" ? styles.activeToggle : ""}`}
                   type="button"
                   onClick={() =>
                     setStore((prev) => ({
@@ -1614,15 +2142,19 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       activePanel: prev.activePanel ?? "translated",
                     }))
                   }
+                  aria-label="Egy oldalas nezet"
+                  title="Egy oldalas nezet"
                 >
-                  Egy oldalas
+                  <ToolIcon type="single" />
                 </button>
                 <button
-                  className={`btn ${store.desktopLayout === "split" ? styles.activeToggle : ""}`}
+                  className={`${styles.activityIconButton} ${store.desktopLayout === "split" ? styles.activeToggle : ""}`}
                   type="button"
                   onClick={() => setStore((prev) => ({ ...prev, desktopLayout: "split" }))}
+                  aria-label="Osztott nezet"
+                  title="Osztott nezet"
                 >
-                  Osztott
+                  <ToolIcon type="split" />
                 </button>
               </div>
             </div>
@@ -1630,178 +2162,54 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             <div className={styles.activityGroup}>
               <div className={styles.activityGroupTitle}>Munkafolyamat</div>
               <div className={styles.activityOptions}>
-                <button className="btn" type="button" onClick={() => setStore((prev) => ({ ...prev, viewState: "workbench" }))}>
-                  Workbench
+                <button
+                  className={`${styles.activityIconButton} ${store.viewState === "workbench" ? styles.activeToggle : ""}`}
+                  type="button"
+                  onClick={() => setStore((prev) => ({ ...prev, viewState: "workbench" }))}
+                  aria-label="Workbench nezet"
+                  title="Workbench nezet"
+                >
+                  <ToolIcon type="workbench" />
                 </button>
                 <button
-                  className={`btn ${isReaderPrimary ? styles.primaryAction : ""}`}
+                  className={`${styles.activityIconButton} ${store.viewState === "reader" ? styles.activeToggle : ""} ${isReaderPrimary ? styles.primaryAction : ""}`}
                   type="button"
                   disabled={!canReader}
                   title={!canReader ? readerDisabledReason : undefined}
                   onClick={() => setStore((prev) => ({ ...prev, viewState: "reader", activePanel: "translated" }))}
+                  aria-label="Reader nezet"
                 >
-                  Reader
+                  <ToolIcon type="reader" />
                 </button>
               </div>
             </div>
 
             <div className={styles.activityGroup}>
-              <div className={styles.activityGroupTitle}>Szerkesztes</div>
+              <div className={styles.activityGroupTitle}>Szinkron</div>
               <div className={styles.activityOptions}>
                 <button
-                  className="btn"
+                  className={`${styles.syncToggle} ${store.syncScroll ? styles.syncToggleOn : ""}`}
                   type="button"
-                  onClick={() => setIsAdminOpen((prev) => !prev)}
-                  aria-expanded={isAdminOpen}
+                  role="switch"
+                  aria-checked={store.syncScroll}
+                  aria-label={`Szinkron gorgetes: ${store.syncScroll ? "ON" : "OFF"}`}
+                  title={`Szinkron gorgetes: ${store.syncScroll ? "ON" : "OFF"}`}
+                  onClick={() => setStore((prev) => ({ ...prev, syncScroll: !prev.syncScroll }))}
                 >
-                  {isAdminOpen ? "Admin bezarasa" : "Admin nyitasa"}
+                  <span className={styles.syncToggleIcon}>
+                    <ToolIcon type="sync" />
+                  </span>
+                  <span className={styles.syncToggleLabel}>{store.syncScroll ? "ON" : "OFF"}</span>
+                  <span className={styles.syncToggleKnob} aria-hidden="true" />
                 </button>
-                <label className={styles.syncToggle}>
-                  <input
-                    type="checkbox"
-                    checked={store.syncScroll}
-                    onChange={(event) => setStore((prev) => ({ ...prev, syncScroll: event.target.checked }))}
-                  />
-                  Szinkron gorgetes
-                </label>
               </div>
             </div>
 
-            {isAdminOpen && isReady ? (
-              <section className={styles.editPanel}>
-                <button
-                  className="btn"
-                  type="button"
-                  onClick={() => {
-                    setEditFeedback(null);
-                    setEditForm(toBookEditForm(state.data));
-                    setIsEditOpen((prev) => !prev);
-                  }}
-                >
-                  {isEditOpen ? "Meta bezarasa" : "Konyv metadata"}
-                </button>
-
-                {isEditOpen ? (
-                  <>
-                    <div className={styles.editGrid}>
-                      <label className={styles.editField}>
-                        <span>Cim</span>
-                        <input
-                          className="input"
-                          value={editForm.title}
-                          onChange={(event) => setEditForm((prev) => ({ ...prev, title: event.target.value }))}
-                          placeholder="pl. A jo palocok"
-                        />
-                      </label>
-                      <label className={styles.editField}>
-                        <span>Szerzo</span>
-                        <input
-                          className="input"
-                          value={editForm.author}
-                          onChange={(event) => setEditForm((prev) => ({ ...prev, author: event.target.value }))}
-                          placeholder="pl. Mikszath Kalman"
-                        />
-                      </label>
-                      <label className={styles.editField}>
-                        <span>Ev</span>
-                        <input
-                          className="input"
-                          value={editForm.year}
-                          onChange={(event) => setEditForm((prev) => ({ ...prev, year: event.target.value }))}
-                          placeholder="pl. 1901"
-                          inputMode="numeric"
-                        />
-                      </label>
-                      <label className={styles.editField}>
-                        <span>Ikon (slug)</span>
-                        <input
-                          className="input"
-                          value={editForm.icon}
-                          onChange={(event) => setEditForm((prev) => ({ ...prev, icon: event.target.value }))}
-                          placeholder="pl. golyakalifa"
-                        />
-                      </label>
-                      <label className={styles.editField}>
-                        <span>Hatter (slug)</span>
-                        <input
-                          className="input"
-                          value={editForm.background}
-                          onChange={(event) => setEditForm((prev) => ({ ...prev, background: event.target.value }))}
-                          placeholder="pl. golyakalifa"
-                        />
-                      </label>
-                    </div>
-
-                    <label className={styles.editField}>
-                      <span>Rovid leiras</span>
-                      <textarea
-                        className={styles.editTextarea}
-                        value={editForm.description}
-                        onChange={(event) => setEditForm((prev) => ({ ...prev, description: event.target.value }))}
-                        placeholder="1-2 mondat."
-                      />
-                    </label>
-
-                    {iconPreviewPath ? (
-                      <div className={styles.iconPreview}>
-                        <div className={styles.iconPreviewImage} style={{ backgroundImage: iconPreviewPath }} />
-                        <span>{iconPreviewSlug}</span>
-                      </div>
-                    ) : null}
-
-                    {editFeedback ? <div className={styles.editFeedback}>{editFeedback}</div> : null}
-
-                    <div className={styles.editActions}>
-                      <button className="btn" type="button" onClick={handleEditSubmit} disabled={isEditSaving}>
-                        {isEditSaving ? "Mentese..." : "Mentes"}
-                      </button>
-                      <button
-                        className="btn"
-                        type="button"
-                        onClick={() => {
-                          setEditFeedback(null);
-                          setEditForm(toBookEditForm(state.data));
-                        }}
-                        disabled={isEditSaving}
-                      >
-                        Visszaallitas
-                      </button>
-                    </div>
-                  </>
-                ) : null}
-              </section>
-            ) : null}
           </section>
         </aside>
       ) : null}
-
-    {/* Mobile admin stays as before (optional) */}
-    {isMobile ? (
-      <div className={styles.layerBottomMobile}>
-        <div className={styles.bottomStack}>
-          {isAdminOpen ? (
-            <section className={`card ${styles.adminSheetMobile}`}>
-              {/* a régi mobile admin tartalom maradhat ide – ha akarod */}
-              <div className={styles.controlsRow}>
-                <button className="btn" type="button" onClick={() => setIsAdminOpen(false)}>
-                  Bezaras
-                </button>
-              </div>
-            </section>
-          ) : null}
-
-          <button
-            className={`home-plus-button ${styles.adminButton}`}
-            type="button"
-            onClick={() => setIsAdminOpen((prev) => !prev)}
-            aria-expanded={isAdminOpen}
-            aria-label="Admin panel"
-          >
-            Admin
-          </button>
-        </div>
-      </div>
-    ) : null}
+      {renderMobileToolPanel()}
   </div>
 );
 }
+

@@ -98,3 +98,25 @@ Server-side URL fetch is deferred.
 ## D-015 - Typography Baseline: Spectral + Source Serif 4
 Status: Accepted | Stage: M1
 Use Spectral as display font and Source Serif 4 as body font. Source Serif 4 keeps Minion-like book typography and allows future migration to licensed Minion without structural refactor.
+
+---
+
+## D-016 - Centralized UI Icon Wrapper (Lucide)
+Status: Accepted | Date: 2026-02-14
+
+Decision:
+Use `src/ui/icons/Icon.tsx` as the single rendering path for UI icons, with icons sourced from `lucide-react` via fixed internal mapping.
+
+Rationale:
+- Keep icon shape/style changes in one place.
+- Enforce consistent a11y behavior (decorative vs titled icons).
+- Remove custom inline SVG/path maintenance overhead in app code.
+- Remove swap-icon drift caused by CSS-only icon handling.
+
+Scope:
+- UI action/tool icons rendered in interactive controls.
+- Wrapper compatibility allowed (`ActionIcon`, `ToolIcon`) if they only delegate to `Icon`.
+
+Out of scope / exceptions:
+- Brand logo SVG assets.
+- Book cover/content SVG assets served from the existing asset pipeline.

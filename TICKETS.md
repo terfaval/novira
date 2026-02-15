@@ -61,6 +61,56 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-BOOK-TOPBAR-ICON-SCALE-AND-SPINE-LIKE-FRAME
+- Goal: Style `/book/[id]` topbar cover icon with spine-like frame treatment and increased SVG scale to match home spine icon visual language.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-MERGE-SPACE-CONCAT-SAFETY-CHECK
+- Goal: Merge neighboring blocks by concatenating `original_text` with a single space, and guard against destructive merge when source rows are missing or merged text would be empty.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-ACCEPT-VISIBLE-ONLY-WITH-GENERATED-CONTENT
+- Goal: Show block `Elfogad` action only when the translated panel has actual generated content (not original fallback text).
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-MERGE-ERROR-NONFATAL-RECOVERY
+- Goal: Prevent block-merge failures from switching the whole dashboard into fatal error mode; show inline merge error and reload current dashboard state.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-EDIT-PANEL-MERGE-BETWEEN-BLOCKS-AND-CONDITIONAL-ACCEPT
+- Goal: Add a hover merge action between neighboring edited-panel blocks and show `Elfogad` only when a generated acceptable variant exists.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `components/BookDashboard/README.md`, `src/ui/icons/Icon.tsx`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-UI-ICONS-MIGRATE-TO-LUCIDE-WRAPPER
+- Goal: Migrate UI icon rendering to `lucide-react` exclusively via `src/ui/icons/Icon.tsx`, remove legacy registry SVG path rendering, and align icon policy docs.
+- Files modified: `src/ui/icons/Icon.tsx`, `src/ui/icons/registry.ts`, `components/BookDashboard/BookDashboard.tsx`, `SPEC.md`, `DECISIONS.md`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-ACTIVITY-PANEL-OUTSIDE-RIGHT-NO-BACKGROUND
+- Goal: Move Book Dashboard activity panel outside to the right of the editor area and remove panel background styling.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-ACTIVITY-PANEL-EDGE-ATTACH-NO-STRIPE
+- Goal: Remove the colored left stripe from the Book Dashboard activity panel and align the panel to the edited panel right edge.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-ACTIVITY-PANEL-SINGLE-COLUMN-ROWS
+- Goal: Render Book Dashboard activity panel options in a single column with one option per row.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-UI-SVG-ICONS-CENTRALIZE-ICON-TSX
+- Goal: Centralize Book Dashboard UI SVG icon rendering through `Icon.tsx` + registry, replace empty CSS swap icon with SVG icon, and document icon policy/decision.
+- Files modified: `src/ui/icons/registry.ts`, `src/ui/icons/Icon.tsx`, `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `SPEC.md`, `DECISIONS.md`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-OSS-OPEN-READ-RLS-SELECT
 - Goal: Keep RLS enabled but temporarily open `SELECT` policies for shared book/dashboard data so Vercel users can see Supabase content across anon sessions.
 - Files modified: `supabase/migrations/supabase_migrations_0004_open_read_mode.sql`, `SECURITY.md`, `TICKETS.md`
@@ -381,3 +431,98 @@ Rate limiting, file size limits, error states.
 - Goal: Render system note suggestions on the referenced target text segment (word/phrase) instead of standalone marker token, keeping tooltip + approve/reject actions.
 - Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `components/BookDashboard/README.md`, `docs/BOOK_DASHBOARD.md`, `TICKETS.md`
 - Commit hash: `b1657456e83af3426666b20edb0e7df1433ab524` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-FAVICON-V3-AND-TOPBAR-LOGO-V3
+- Goal: Set application favicon to `novira_favicon_v3.svg` and switch topbar logo mark to v3 asset.
+- Files modified: `app/layout.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-TOPBAR-STYLE-AND-ICON-TOOLS-SYNC-SWITCH
+- Goal: Align `/book/[id]` top bar styling to the home shell style, add a brand-ink SVG cover icon in the top bar, convert right editor tool panel controls to icon-only buttons, and replace sync checkbox with an ON/OFF switch.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-TOPBAR-COVER-ICON-BETWEEN-LOGO-AND-TITLE
+- Goal: Place the book cover SVG icon in `/book/[id]` top bar directly between the shell logo mark and the title/subtitle text block.
+- Files modified: `components/ShellTopBar.tsx`, `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-TOPBAR-POSITION-ALIGN-HOME-SHELL
+- Goal: Align `/book/[id]` top bar position with home shell offsets by using shared shell top/left positioning variables.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-TOPBAR-ICON-SLUG-FALLBACK-MATCH-CARD
+- Goal: Make `/book/[id]` topbar icon slug resolution match card behavior by using `cover_slug` first and falling back to title-derived slug when cover slug is missing.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-TOPBAR-ICON-RENDER-USING-BOOKCOVERICON
+- Goal: Fix `/book/[id]` topbar icon visibility by rendering the SVG through `BookCoverIcon` (same mechanism as cards) instead of CSS mask-based drawing.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-ADMIN-META-BELOW-PROGRESS-SINGLE-SLUG-SCROLL-RESTORE
+- Goal: Move desktop book metadata admin section below progress, use one slug input for both SVG/PNG cover fields during save, and restore `/book/[id]` page scrolling.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-ALWAYS-OPEN-META-SUMMARY-GENERATE-SCROLLING-TOPBAR
+- Goal: Keep book metadata panel always visible (remove admin open/close controls), reorganize metadata fields into a 2-column form with larger description area, add AI-generated 2-sentence book summary action, and make top bar title/author scroll with page.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `app/api/llm/route.ts`, `lib/llm/types.ts`, `lib/llm/providers/provider.ts`, `lib/llm/providers/openai.ts`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-DEFAULT-SINGLE-EDITED-VIEW
+- Goal: Make `/book/[id]` desktop default to single-page mode with the edited (`Szerkesztett`) panel active on load.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-CAROUSEL-HORIZONTAL-SPINES-STACKED
+- Goal: On mobile home view, keep carousel behavior but render inactive book spines horizontally and stacked under each other.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-VERTICAL-SCROLL-CAROUSEL-NO-ARROWS
+- Goal: On mobile home view, hide carousel arrows, keep spine rows near full width, and allow vertical (up/down) scrolling inside the carousel area.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-MOBILE-TOOLS-GEAR-BOTTOM-SHEET-HOME-DASHBOARD
+- Goal: On mobile, move home and dashboard tool panels behind a bottom-right gear button with dimmed backdrop and bottom sheet; dashboard tools are selectable row actions with right-aligned icon.
+- Files modified: `components/LibraryClient.tsx`, `app/globals.css`, `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-PLUS-BUTTON-MATCH-MOBILE-GEAR-FAB
+- Goal: Make the home page plus button match the mobile gear FAB visual style and render a proper plus icon via centralized icon wrapper.
+- Files modified: `src/ui/icons/Icon.tsx`, `app/page.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-FAB-POSITION-SYMMETRY-PLUS-TOOLS
+- Goal: Make home mobile plus FAB and tools gear FAB positionally symmetric by aligning right-side FAB offsets to the same shell edge and bottom offsets used by the left-side plus control.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-TOOLBAR-STAGE-FILL-DESKTOP-MOBILE
+- Goal: Make desktop home toolbar match the mobile tool panel style and keep it fixed above the carousel stage; make the stage fill the remaining viewport on desktop and mobile, with full-page mobile stage and visible active card rendering.
+- Files modified: `components/LibraryClient.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-ONBOARDING-FUNCTION-INVENTORY-AND-ROUTE-POLICY
+- Goal: Create a single onboarding inventory document listing current system functions with onboarding coverage, define first-visit onboarding route, and enforce mandatory onboarding integration (with popup info when needed) for every new editor/page feature.
+- Files modified: `docs/ONBOARDING_FUNCTIONS.md`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-CAROUSEL-DESKTOP-HEIGHT-MOBILE-90W-60H-7SPINE
+- Goal: Increase desktop home carousel stage height, and on mobile center carousel content at ~90% width with active card at ~60% stage height and inactive spines around ~7% height.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-STAGE-90P-CENTER-SPINES-FULL-WIDTH
+- Goal: On mobile home view, center the carousel stage at 90% width and make inactive spine rows match the exact stage width.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-ONBOARDING-EDITORIAL-ONLY-SCOPE
+- Goal: Restrict onboarding scope to editorial functions only; explicitly exclude file upload and admin/tool functions from onboarding route and coverage.
+- Files modified: `docs/ONBOARDING_FUNCTIONS.md`, `TICKETS.md`
+- Commit hash: `759611c9ca3aa8090acc6cfea52daa58fa1ca025` (workspace base head; no new commit created in this session)

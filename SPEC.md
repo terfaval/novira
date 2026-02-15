@@ -25,3 +25,10 @@
 - Next.js server routes
 - Parsing imports (HTML/RTF/DOCX)
 - Server-side LLM calls
+
+## UI Icon Policy
+- UI icons must be rendered only through `src/ui/icons/Icon.tsx`.
+- UI icons must be sourced from `lucide-react` through the `Icon.tsx` mapping only.
+- Inline SVG is not allowed for UI icons.
+- Manual `<path>` definitions and custom `viewBox` definitions are not allowed for UI icons.
+- Brand/logo and content/cover SVG assets are exceptions and stay on the asset pipeline.

@@ -35,8 +35,20 @@ export type GenerateNoteOutput = {
   noteText: string;
 };
 
+export type GenerateBookSummaryInput = {
+  bookTitle?: string | null;
+  author?: string | null;
+  chapterTitles?: string[];
+  sampleText?: string | null;
+};
+
+export type GenerateBookSummaryOutput = {
+  summaryText: string;
+};
+
 export interface LlmProvider {
   name: string;
   translateBlock(input: TranslateBlockInput): Promise<TranslateBlockOutput>;
   generateNote(input: GenerateNoteInput): Promise<GenerateNoteOutput>;
+  generateBookSummary(input: GenerateBookSummaryInput): Promise<GenerateBookSummaryOutput>;
 }

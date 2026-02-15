@@ -50,7 +50,18 @@ const GenerateNoteSchema = z
   })
   .strict();
 
-const LlmRequestSchema = z.discriminatedUnion("action", [TranslateBlockSchema, GenerateNoteSchema]);
+const GenerateBookSummarySchema = z
+  .object({
+    action: z.literal("generate_book_summary"),
+    bookId: z.string().uuid(),
+  })
+  .strict();
+
+const LlmRequestSchema = z.discriminatedUnion("action", [
+  TranslateBlockSchema,
+  GenerateNoteSchema,
+  GenerateBookSummarySchema,
+]);
 
 function getAccessToken(req: NextRequest): string {
   const authHeader = req.headers.get("authorization");
@@ -107,6 +118,57 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
       );
     }
 
+    const provider = new OpenAiProvider();
+
+    if (body.action === "generate_book_summary") {
+      const { data: bookRow, error: bookErr } = await supabase
+        .from("books")
+        .select("id,title,author")
+        .eq("id", body.bookId)
+        .eq("user_id", userId)
+        .single();
+      if (bookErr || !bookRow) {
+        return NextResponse.json(
+          { ok: false, error: err("BAD_REQUEST", "A konyv nem talalhato a felhasznalohoz.") },
+          { status: 400 }
+        );
+      }
+
+      const { data: chapterRows } = await supabase
+        .from("chapters")
+        .select("title,chapter_index")
+        .eq("book_id", body.bookId)
+        .order("chapter_index", { ascending: true })
+        .limit(12);
+
+      const { data: blockRows } = await supabase
+        .from("blocks")
+        .select("original_text,block_index")
+        .eq("book_id", body.bookId)
+        .order("block_index", { ascending: true })
+        .limit(4);
+
+      const chapterTitles = ((chapterRows ?? []) as Array<{ title: string | null }>)
+        .map((row) => (row.title ?? "").trim())
+        .filter((title) => title.length > 0);
+      const sampleText = ((blockRows ?? []) as Array<{ original_text: string | null }>)
+        .map((row) => (row.original_text ?? "").trim())
+        .filter((text) => text.length > 0)
+        .join("\n\n");
+
+      try {
+        const out = await provider.generateBookSummary({
+          bookTitle: bookRow.title,
+          author: bookRow.author,
+          chapterTitles,
+          sampleText,
+        });
+        return NextResponse.json({ ok: true, summaryText: out.summaryText }, { status: 200 });
+      } catch (providerError) {
+        return NextResponse.json({ ok: false, error: mapProviderError(providerError) }, { status: 500 });
+      }
+    }
+
     const ctx = await getLlmContextForBlock(supabase, { bookId: body.bookId, blockId: body.blockId });
     if (ctx.originalText.length > INPUT_CHAR_CAP) {
       return NextResponse.json(
@@ -114,8 +176,6 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
         { status: 400 }
       );
     }
-
-    const provider = new OpenAiProvider();
 
     if (body.action === "translate_block") {
       let out: { text: string };

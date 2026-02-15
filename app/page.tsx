@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { TopBar } from "@/components/TopBar";
 import { LibraryClient } from "@/components/LibraryClient";
+import { Icon } from "@/src/ui/icons/Icon";
 
 export default function Page() {
   return (
@@ -19,7 +20,7 @@ export default function Page() {
 
       <div className="home-layer-plus">
         <Link className="home-plus-button" href="/upload" aria-label="Add new book">
-          +
+          <Icon name="add" size={22} />
         </Link>
       </div>
     </div>

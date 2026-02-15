@@ -16,6 +16,11 @@ const fontBody = Source_Serif_4({
 export const metadata = {
   title: "Novira",
   description: "A kurátori irodalmi műhely — blokk-alapú átirat és jegyzetelés.",
+  icons: {
+    icon: "/novira_favicon_v3.svg",
+    shortcut: "/novira_favicon_v3.svg",
+    apple: "/novira_favicon_v3.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
