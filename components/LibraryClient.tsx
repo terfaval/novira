@@ -2,6 +2,7 @@
 
 import { type TouchEvent as ReactTouchEvent, useEffect, useMemo, useRef, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { toSessionIdentity } from "@/lib/auth/identity";
 import type { BookRow } from "@/lib/types";
 import { BookCard } from "@/components/BookCard";
 import { LibraryEmpty } from "@/components/LibraryEmpty";
@@ -93,9 +94,11 @@ export function LibraryClient({
     let cancelled = false;
 
     async function loadBooks() {
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+      const identity = toSessionIdentity(sessionData.session ?? null);
+
       if (requireSession) {
-        const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
-        if (sessionErr || !sessionData.session?.user?.id) {
+        if (sessionErr || !identity?.userId) {
           if (!cancelled) {
             setState({
               status: "error",
@@ -106,10 +109,18 @@ export function LibraryClient({
         }
       }
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("books")
         .select("*")
         .order("updated_at", { ascending: false });
+
+      if (!identity?.userId) {
+        query = query.eq("is_public", true).eq("status", "ready");
+      } else if (identity.role !== "admin") {
+        query = query.or(`user_id.eq.${identity.userId},is_public.eq.true`);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         if (!cancelled) setState({ status: "error", message: error.message });

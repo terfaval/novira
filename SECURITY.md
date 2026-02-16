@@ -46,6 +46,7 @@ Date: 2026-02-11
 - Upload/import endpoints must enforce admin role server-side.
 - Admin-only UI actions must be hidden for non-admin roles.
 - Admin checks must not rely on client-only gating.
+- Book visibility (`is_public`) changes are admin-only and enforced by DB policy.
 
 ### 2.7 Data protection & retention
 - Soft-delete for Book/Chapter/Block/Variant/Note (optional MVP+)
@@ -96,3 +97,17 @@ Date: 2026-02-16
   - `source_original_sha256`
 - Book UI must display source/license metadata and legal disclaimer text for Project Gutenberg imports.
 - Import cache should reuse existing ready import by same source/work ID for the same user to prevent repeated automated downloads.
+
+## 7. Public catalog visibility controls
+
+Date: 2026-02-16
+
+- Books have `is_public` visibility flag controlled from `/admin`.
+- Public catalog behavior:
+  - logged-out users: only `is_public = true` and `ready` books,
+  - logged-in non-admin users: own books + public books.
+- Admin update policy for cross-user book visibility uses fixed admin user id:
+  - `956eb736-0fb5-49eb-9be8-7011517b9873`.
+- Editorial isolation rule:
+  - editing a public base book by non-owner always happens on a user-owned fork linked by `source_book_id`.
+- Source provenance editing is admin-only through the book page admin panel mode (`Forras szerkesztes`).

@@ -91,6 +91,11 @@ export default function Page() {
           <TopBar
             rightSlot={
               <div className="home-auth-actions">
+                {showAdminUpload ? (
+                  <Link className="btn" href="/admin">
+                    Admin
+                  </Link>
+                ) : null}
                 {isGuest ? (
                   <GuestSessionActions
                     className="home-guest-actions"

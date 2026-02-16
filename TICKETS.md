@@ -979,3 +979,18 @@ Step board:
 - Goal: Increase desktop description popover size on Home book card, and keep mobile popover constrained so it does not overlap the card icon area.
 - Files modified: `app/globals.css`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
 - Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-ADMIN-PUBLIC-BOOK-VISIBILITY-PAGE-AND-FIXED-ADMIN-ID
+- Goal: Set user `956eb736-0fb5-49eb-9be8-7011517b9873` as admin, add `/admin` page to list all books and toggle public visibility, and enforce visibility behavior in library listing.
+- Files modified: `lib/auth/identity.ts`, `lib/types.ts`, `app/page.tsx`, `app/admin/page.tsx`, `components/LibraryClient.tsx`, `supabase/migrations/supabase_migrations_0007_books_public_visibility_admin_policy.sql`, `SPEC.md`, `SECURITY.md`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-USER-FORK-SAJAT-OLVASAT-AUTO-CREATE-AND-REUSE
+- Goal: Implement automatic personal fork flow so opening another user's public base book creates/reuses a user-owned editable copy linked by `source_book_id`.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `lib/db/queries/books.ts`, `lib/types.ts`, `supabase/migrations/supabase_migrations_0008_books_fork_source_link.sql`, `SPEC.md`, `SECURITY.md`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-BOOK-ADMIN-SEPARATE-SOURCE-EDITOR-MODE
+- Goal: Add a dedicated admin edit mode on `/book/[id]` for editing source provenance fields separately from book metadata.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `SPEC.md`, `SECURITY.md`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)

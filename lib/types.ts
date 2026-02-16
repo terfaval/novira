@@ -11,6 +11,8 @@ export type BookStatus =
 export type BookRow = {
   id: string;
   user_id: string;
+  is_public?: boolean;
+  source_book_id?: string | null;
   title: string;
   author: string | null;
   cover_slug?: string | null;
