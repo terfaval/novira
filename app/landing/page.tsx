@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TopBar } from "@/components/TopBar";
 import { LibraryClient } from "@/components/LibraryClient";
@@ -60,6 +60,21 @@ export default function LandingPage() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    const check = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!active) return;
+      if (toSessionIdentity(data.session ?? null)) {
+        router.replace("/");
+      }
+    };
+    void check();
+    return () => {
+      active = false;
+    };
+  }, [router, supabase]);
 
   async function runLoginFlow() {
     const normalizedEmail = email.trim();

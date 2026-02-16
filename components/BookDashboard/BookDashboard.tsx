@@ -2240,10 +2240,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     async (opts?: { keepCurrentView?: boolean }) => {
       const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
       const identity = toSessionIdentity(sessionData.session ?? null);
-      if (sessionErr || !identity) {
+        if (sessionErr || !identity) {
         setState({
           status: "error",
-          message: sessionErr?.message ?? "Nincs aktiv munkamenet. Lepj be a landing oldalon.",
+          message: sessionErr?.message ?? "Nincs aktiv munkamenet. Lepj be a login oldalon.",
         });
         return;
       }

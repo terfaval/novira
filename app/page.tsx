@@ -58,7 +58,7 @@ export default function Page() {
 
   useEffect(() => {
     if (authState.status === "unauthenticated") {
-      router.replace("/landing");
+      router.replace("/login");
     }
   }, [authState.status, router]);
 
@@ -66,7 +66,7 @@ export default function Page() {
     setLogoutBusy(true);
     try {
       await supabase.auth.signOut();
-      router.replace("/landing");
+      router.replace("/login");
     } finally {
       setLogoutBusy(false);
     }
@@ -75,7 +75,7 @@ export default function Page() {
   if (authState.status !== "authenticated") {
     return (
       <div className="stack">
-        <div className="card">Atiranyitas a landing oldalra...</div>
+        <div className="card">Atiranyitas a login oldalra...</div>
       </div>
     );
   }
@@ -94,7 +94,7 @@ export default function Page() {
                 {isGuest ? (
                   <GuestSessionActions
                     className="home-guest-actions"
-                    onDeleted={() => router.replace("/landing")}
+                    onDeleted={() => router.replace("/login")}
                   />
                 ) : (
                   <button type="button" className="btn" onClick={() => void handleLogout()} disabled={logoutBusy}>

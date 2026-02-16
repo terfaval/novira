@@ -61,6 +61,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-LOGIN-ROUTE-FIRST-ENTRY-THEN-LIBRARY
+- Goal: Add dedicated `/login` entry route and make unauthenticated app start redirect to login first, then proceed to library after successful login/session.
+- Files modified: `app/login/page.tsx`, `app/page.tsx`, `app/landing/page.tsx`, `app/upload/page.tsx`, `components/LibraryClient.tsx`, `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `e7cc49200e31b4fedbca0169516cda340d7adb10` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-LANDING-SEPARATE-ROUTE-TOPBAR-AUTH-BUTTONS-AND-HOME-REDIRECT
 - Goal: Move unauthenticated first entry to dedicated `/landing` route, place top-bar auth buttons (`Belepes`, `Vendeg`) on the right-center alignment, and implement a structured marketing landing with reused home carousel.
 - Files modified: `app/page.tsx`, `app/landing/page.tsx`, `app/globals.css`, `components/TopBar.tsx`, `components/LibraryClient.tsx`, `TICKETS.md`
