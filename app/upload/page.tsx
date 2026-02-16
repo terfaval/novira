@@ -163,9 +163,9 @@ export default function UploadPage() {
       <div className="stack">
         <div className="card">
           <div style={{ fontWeight: 650, marginBottom: 6 }}>Nincs aktiv munkamenet</div>
-          <p className="sub">Elobb jelentkezz be vagy indits vendeg munkamenetet a login oldalon.</p>
+          <p className="sub">Elobb jelentkezz be vagy indits vendeg munkamenetet a landing oldalon.</p>
           <Link className="btn" href="/">
-            Vissza a login oldalra
+            Vissza a landing oldalra
           </Link>
         </div>
       </div>

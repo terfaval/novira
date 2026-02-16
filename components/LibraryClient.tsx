@@ -285,7 +285,7 @@ export function LibraryClient({
         <div style={{ fontWeight: 650, marginBottom: 6 }}>Hiba tortent</div>
         <div style={{ color: "var(--muted)", lineHeight: 1.55 }}>{state.message}</div>
         <div style={{ marginTop: 10 }}>
-          <small>Ellenorizd a munkamenetet, majd probald ujra a login oldalrol.</small>
+          <small>Ellenorizd a munkamenetet, majd probald ujra a landing oldalrol.</small>
         </div>
       </div>
     );

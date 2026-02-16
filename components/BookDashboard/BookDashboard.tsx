@@ -2243,7 +2243,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         if (sessionErr || !identity) {
         setState({
           status: "error",
-          message: sessionErr?.message ?? "Nincs aktiv munkamenet. Lepj be a login oldalon.",
+          message: sessionErr?.message ?? "Nincs aktiv munkamenet. Lepj be a landing oldalon.",
         });
         return;
       }

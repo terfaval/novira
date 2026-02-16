@@ -61,6 +61,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-AUTH-REDIRECT-LOGIC-ROOT-TO-LANDING-WHEN-LOGGED-OUT
+- Goal: Normalize auth navigation so logged-in users stay on main library (`/`) while logged-out users are consistently redirected to `/landing`.
+- Files modified: `app/page.tsx`, `app/upload/page.tsx`, `components/LibraryClient.tsx`, `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `911cbcda1784256efa3aab3f20078ae22afd2536` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-LANDING-PANEL-SPACING-REMOVE-ALL-WORKS-LINK-AND-NEW-AUDIENCE-ICONS
 - Goal: Increase vertical spacing between landing sections, remove the `Minden mu megtekintese` link under carousel, and apply a new dedicated icon set for the `Kinek keszult?` cards.
 - Files modified: `app/landing/page.tsx`, `app/globals.css`, `src/ui/icons/Icon.tsx`, `TICKETS.md`
