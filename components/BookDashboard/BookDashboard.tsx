@@ -1264,7 +1264,9 @@ function ToolIcon({
     | "swap"
     | "onboarding"
     | "bookmark"
-    | "add";
+    | "add"
+    | "toc"
+    | "notes";
 }) {
   return <Icon name={type} />;
 }
@@ -3178,26 +3180,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const handleSelectMobileBookmarksTab = useCallback(() => setMobilePage("bookmarks"), []);
   const handleOpenMobileToolPanel = useCallback(() => setMobileToolPanelOpen(true), []);
   const handleCloseMobileToolPanel = useCallback(() => setMobileToolPanelOpen(false), []);
-  const handleSelectMobileSingleLayout = useCallback(() => {
-    setStore((prev) => ({ ...prev, desktopLayout: "single" }));
-    setMobileToolPanelOpen(false);
-  }, []);
-  const handleSelectMobileSplitLayout = useCallback(() => {
-    setStore((prev) => ({ ...prev, desktopLayout: "split" }));
-    setMobileToolPanelOpen(false);
-  }, []);
-  const handleSelectMobileOriginalPanel = useCallback(() => {
-    setMobilePage("original");
-    setStore((prev) => ({ ...prev, activePanel: "original", panelMode: "single" }));
-    setMobileToolPanelOpen(false);
-  }, []);
-  const handleSelectMobileTranslatedPanel = useCallback(() => {
-    setMobilePage("translated");
-    setStore((prev) => ({ ...prev, activePanel: "translated", panelMode: "single" }));
-    setMobileToolPanelOpen(false);
-  }, []);
-  const handleToggleMobileSyncScroll = useCallback(() => {
-    setStore((prev) => ({ ...prev, syncScroll: !prev.syncScroll }));
+  const handleMobileLayoutChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value === "split" ? "split" : "single";
+    setStore((prev) => ({ ...prev, desktopLayout: value }));
   }, []);
   const handleSelectBookmarkFromList = useCallback((event: MouseEvent<HTMLButtonElement>) => {
     const bookmarkId = event.currentTarget.dataset.bookmarkId;
@@ -4563,12 +4548,41 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     </section>
   );
 
+  const renderEditorialNotePanel = (mobile: boolean) => (
+    <section className={mobile ? styles.mobileInfoBlock : styles.infoColumn}>
+      <header className={styles.infoColumnHeader}>
+        <strong>Szerkesztoi jegyzet</strong>
+        <span>Folyamat emlekezteto</span>
+      </header>
+      <div className={styles.infoColumnBody}>
+        <article className={styles.editorialNoteCard}>
+          <p className={styles.editorialNoteLine}>
+            Nezet: <strong>{store.viewState === "workbench" ? "Workbench" : "Reader"}</strong>
+          </p>
+          <p className={styles.editorialNoteLine}>
+            Elfogadatlan generalt blokk:{" "}
+            <strong>
+              {generatedUnacceptedCount}/{MAX_UNACCEPTED_GENERATED_BLOCKS}
+            </strong>
+          </p>
+          <p className={styles.editorialNoteLine}>
+            Tobb blokk generalas szabad hely: <strong>{generationCapacityRemaining}</strong>
+          </p>
+          <p className={styles.editorialNoteHint}>
+            Blokk veglegesiteshez hasznald az <strong>Elfogad</strong> lepest.
+          </p>
+        </article>
+      </div>
+    </section>
+  );
+
   const renderDesktopInformationPanel = () => (
     <section className={`card ${styles.progressCard} ${styles.infoPanelCard}`}>
       <div className={styles.infoPanelGrid}>
         {renderChapterNavigator(false)}
         {renderNoteNavigator(false)}
         {renderBookmarkNavigator(false)}
+        {renderEditorialNotePanel(false)}
       </div>
     </section>
   );
@@ -4590,35 +4604,40 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         className={`${styles.mobilePageTab} ${mobilePage === "original" ? styles.mobilePageTabActive : ""}`}
         onClick={handleSelectMobileOriginalTab}
       >
-        Eredeti
+        <span>Eredeti</span>
+        <ToolIcon type="reader" />
       </button>
       <button
         type="button"
         className={`${styles.mobilePageTab} ${mobilePage === "translated" ? styles.mobilePageTabActive : ""}`}
         onClick={handleSelectMobileTranslatedTab}
       >
-        Szerkesztett
+        <span>Szerkesztett</span>
+        <ActionIcon type="edit" />
       </button>
       <button
         type="button"
         className={`${styles.mobilePageTab} ${mobilePage === "toc" ? styles.mobilePageTabActive : ""}`}
         onClick={handleSelectMobileTocTab}
       >
-        Tartalom
+        <span>Tartalom</span>
+        <ToolIcon type="toc" />
       </button>
       <button
         type="button"
         className={`${styles.mobilePageTab} ${mobilePage === "notes" ? styles.mobilePageTabActive : ""}`}
         onClick={handleSelectMobileNotesTab}
       >
-        Jegyzetek
+        <span>Jegyzetek</span>
+        <ToolIcon type="notes" />
       </button>
       <button
         type="button"
         className={`${styles.mobilePageTab} ${mobilePage === "bookmarks" ? styles.mobilePageTabActive : ""}`}
         onClick={handleSelectMobileBookmarksTab}
       >
-        Konyvjelzok
+        <span>Konyvjelzok</span>
+        <ToolIcon type="bookmark" />
       </button>
     </nav>
   );
@@ -4854,198 +4873,137 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               onClick={handleCloseMobileToolPanel}
             />
             <section className={styles.mobileToolSheet} aria-label="Dashboard tool panel">
-              <div className={styles.mobileToolSheetTitle}>
-                <span>Tool panel</span>
-                <ToolIcon type="admin" />
-              </div>
+              <button
+                type="button"
+                className={styles.mobileToolClose}
+                aria-label="Tool panel bezarasa"
+                onClick={handleCloseMobileToolPanel}
+              >
+                X
+              </button>
+              <section className={`card ${styles.progressCard} ${styles.mobileToolProgress}`} data-onboarding-id="onb-progress">
+                <div className={styles.progressSummary}>
+                  <div className={styles.progressPercent}>{progress}%</div>
+                  <div className={styles.progressLabel}>
+                    Completion: <span>{completion.accepted}</span> / <span>{completion.total}</span>
+                  </div>
+                </div>
+                <div
+                  className={`${styles.progressTrack} ${progress === 100 ? styles.progressTrackComplete : ""}`}
+                  aria-label={`Completion ${progress}%`}
+                >
+                  <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+                </div>
+              </section>
               <div className={styles.mobileToolRows}>
-                <button
-                  className={`${styles.mobileToolRow} ${store.desktopLayout === "single" ? styles.mobileToolRowActive : ""}`}
-                  type="button"
-                  onClick={handleSelectMobileSingleLayout}
-                >
-                  <span>Egy oldalas nezet</span>
-                  <ToolIcon type="single" />
-                </button>
-                <button
-                  className={`${styles.mobileToolRow} ${store.desktopLayout === "split" ? styles.mobileToolRowActive : ""}`}
-                  type="button"
-                  onClick={handleSelectMobileSplitLayout}
-                >
-                  <span>Osztott nezet</span>
-                  <ToolIcon type="split" />
-                </button>
-                <button
-                  className={`${styles.mobileToolRow} ${store.viewState === "workbench" ? styles.mobileToolRowActive : ""}`}
-                  type="button"
-                  data-onboarding-id="onb-mode-controls"
-                  onClick={handleSelectMobileWorkbenchMode}
-                >
-                  <span>Workbench</span>
-                  <ToolIcon type="workbench" />
-                </button>
-                <button
-                  className={`${styles.mobileToolRow} ${store.viewState === "reader" ? styles.mobileToolRowActive : ""}`}
-                  type="button"
-                  disabled={!canReader}
-                  title={!canReader ? readerDisabledReason : undefined}
-                  onClick={handleSelectMobileReaderMode}
-                >
-                  <span>Reader</span>
-                  <ToolIcon type="reader" />
-                </button>
-                <button
-                  className={`${styles.mobileToolRow} ${store.activePanel === "original" ? styles.mobileToolRowActive : ""}`}
-                  type="button"
-                  onClick={handleSelectMobileOriginalPanel}
-                >
-                  <span>Eredeti panel</span>
-                  <ToolIcon type="swap" />
-                </button>
-                <button
-                  className={`${styles.mobileToolRow} ${store.activePanel === "translated" ? styles.mobileToolRowActive : ""}`}
-                  type="button"
-                  onClick={handleSelectMobileTranslatedPanel}
-                >
-                  <span>Szerkesztett panel</span>
-                  <ToolIcon type="swap" />
-                </button>
-                <button
-                  className={`${styles.mobileToolRow} ${chapterAddMode ? styles.mobileToolRowActive : ""}`}
-                  type="button"
-                  onClick={handleToggleChapterAddMode}
-                  disabled={chapterEditSaving || chapterDeleteSaving || chapterAddSaving || !isReady}
-                >
-                  <span>{chapterAddMode ? "Fejezet +: aktiv" : "Fejezet +"}</span>
-                  <ToolIcon type="add" />
-                </button>
-                <button
-                  className={styles.mobileToolRow}
-                  type="button"
-                  onClick={() => void handleBatchGenerate("manual")}
-                  disabled={
-                    !isReady ||
-                    store.viewState !== "workbench" ||
-                    isBatchGenerating ||
-                    isEditorBusy ||
-                    generationCapacityRemaining <= 0
-                  }
-                >
-                  <span>
-                    {isBatchGenerating
-                      ? "Tobb blokk generalasa..."
-                      : `Tobb blokk generalasa (${generationCapacityRemaining})`}
-                  </span>
-                  <ActionIcon type="generate" />
-                </button>
-                <button
-                  className={styles.mobileToolRow}
-                  type="button"
-                  onClick={() => void handleUndoLastEditedPanelChange()}
-                  disabled={!isReady || !lastEditedPanelUndo || isEditorBusy}
-                >
-                  <span>
-                    {isUndoApplying ? "Visszaallitas..." : "Utolso szerkesztes visszavonasa"}
-                  </span>
-                  <ToolIcon type="back" />
-                </button>
-                <button
-                  className={`${styles.mobileToolRow} ${store.syncScroll ? styles.mobileToolRowActive : ""}`}
-                  type="button"
-                  role="switch"
-                  aria-checked={store.syncScroll}
-                  onClick={handleToggleMobileSyncScroll}
-                >
-                  <span>Szinkron gorgetes: {store.syncScroll ? "ON" : "OFF"}</span>
-                  <ToolIcon type="sync" />
-                </button>
-                <button
-                  className={`${styles.mobileToolRow} ${autoGenerateOnScroll ? styles.mobileToolRowActive : ""}`}
-                  type="button"
-                  role="switch"
-                  aria-checked={autoGenerateOnScroll}
-                  onClick={() => setAutoGenerateOnScroll((prev) => !prev)}
-                >
-                  <span>Gorgetes alapu auto-generalas: {autoGenerateOnScroll ? "ON" : "OFF"}</span>
-                  <ActionIcon type="generate" />
-                </button>
-                <button
-                  className={`${styles.mobileToolRow} ${autoTranslateChapterTitles ? styles.mobileToolRowActive : ""}`}
-                  type="button"
-                  role="switch"
-                  aria-checked={autoTranslateChapterTitles}
-                  onClick={() => setAutoTranslateChapterTitles((prev) => !prev)}
-                >
-                  <span>Fejezetcim auto-forditas: {autoTranslateChapterTitles ? "ON" : "OFF"}</span>
-                  <ActionIcon type="edit" />
-                </button>
-                <div className={styles.mobileToolHint}>
-                  Elfogadatlan generalt blokk: {generatedUnacceptedCount}/{MAX_UNACCEPTED_GENERATED_BLOCKS}
-                </div>
-                {lastEditedPanelUndo ? (
-                  <div className={styles.mobileToolHint}>Visszaallithato: {lastEditedPanelUndo.actionLabel}</div>
-                ) : null}
-                {batchFeedback ? <div className={styles.mobileToolHint}>{batchFeedback}</div> : null}
-                {undoFeedback ? <div className={styles.mobileToolHint}>{undoFeedback}</div> : null}
-                <button
-                  className={`${styles.mobileToolRow} ${onboardingGuideOpen ? styles.mobileToolRowActive : ""}`}
-                  type="button"
-                  data-onboarding-id="onb-replay"
-                  onClick={handleOpenOnboardingGuide}
-                >
-                  <span>Onboarding sugo</span>
-                  <ToolIcon type="onboarding" />
-                </button>
-                <div className={styles.mobileBookmarkColorControl}>
-                  <span>Kategoria</span>
-                  {renderBookmarkPalette("mobile")}
-                </div>
-                {hasBookmarks ? (
-                  <>
-                    <div className={styles.mobileBookmarkList}>
-                      {bookmarks.map((entry) => (
-                        <button
-                          key={entry.id}
-                          type="button"
-                          className={`${styles.mobileToolRow} ${selectedBookmarkId === entry.id ? styles.mobileToolRowActive : ""}`}
-                          data-bookmark-id={entry.id}
-                          onClick={handleSelectBookmarkFromList}
-                        >
-                          <span>{entry.kind === "progress" ? "Haladas" : "Fontos"}: {entry.name || "Nev nelkul"}</span>
-                          <ToolIcon type="bookmark" />
-                        </button>
-                      ))}
-                    </div>
-                    <label className={styles.mobileBookmarkNameControl}>
-                      <span>Label</span>
-                      <input
-                        className={`input ${styles.mobileBookmarkNameInput}`}
-                        value={selectedBookmark?.name ?? ""}
-                        onChange={handleSelectedBookmarkNameChange}
-                        placeholder="Konyvjelzo label"
-                        aria-label="Konyvjelzo label"
+                <section className={styles.mobileActivityGroup}>
+                  <div className={styles.mobileActivityGroupTitle}>Nezet</div>
+                  <label className={styles.mobileViewSelectControl}>
+                    <span>Nezet menu</span>
+                    <select
+                      className={styles.mobileViewSelect}
+                      value={store.desktopLayout}
+                      onChange={handleMobileLayoutChange}
+                      aria-label="Nezet menu"
+                    >
+                      <option value="single">Egy oldalas nezet</option>
+                      <option value="split">Osztott nezet</option>
+                    </select>
+                  </label>
+                  {renderMobilePageTabs()}
+                </section>
+                <section className={styles.mobileActivityGroup}>
+                  <div className={styles.mobileActivityGroupTitle}>Szerkesztes</div>
+                  <button
+                    className={`${styles.mobileToolRow} ${chapterAddMode ? styles.mobileToolRowActive : ""}`}
+                    type="button"
+                    onClick={handleToggleChapterAddMode}
+                    disabled={chapterEditSaving || chapterDeleteSaving || chapterAddSaving || !isReady}
+                  >
+                    <span>{chapterAddMode ? "Fejezet +: aktiv" : "Fejezet +"}</span>
+                    <ToolIcon type="add" />
+                  </button>
+                  <button
+                    className={styles.mobileToolRow}
+                    type="button"
+                    onClick={() => void handleUndoLastEditedPanelChange()}
+                    disabled={!isReady || !lastEditedPanelUndo || isEditorBusy}
+                  >
+                    <span>
+                      {isUndoApplying ? "Visszaallitas..." : "Utolso szerkesztes visszavonasa"}
+                    </span>
+                    <ToolIcon type="back" />
+                  </button>
+                  {lastEditedPanelUndo ? (
+                    <div className={styles.mobileToolHint}>Visszaallithato: {lastEditedPanelUndo.actionLabel}</div>
+                  ) : null}
+                  {undoFeedback ? <div className={styles.mobileToolHint}>{undoFeedback}</div> : null}
+                </section>
+                <section className={styles.mobileActivityGroup}>
+                  <div className={styles.mobileActivityGroupTitle}>Onboarding</div>
+                  <button
+                    className={`${styles.mobileToolRow} ${onboardingGuideOpen ? styles.mobileToolRowActive : ""}`}
+                    type="button"
+                    data-onboarding-id="onb-replay"
+                    onClick={handleOpenOnboardingGuide}
+                  >
+                    <span>Onboarding sugo</span>
+                    <ToolIcon type="onboarding" />
+                  </button>
+                </section>
+                <section className={styles.mobileActivityGroup}>
+                  <div className={styles.mobileActivityGroupTitle}>Konyvjelzo</div>
+                  <div className={styles.mobileBookmarkColorControl}>
+                    <span>Kategoria</span>
+                    {renderBookmarkPalette("mobile")}
+                  </div>
+                  {hasBookmarks ? (
+                    <>
+                      <div className={styles.mobileBookmarkList}>
+                        {bookmarks.map((entry) => (
+                          <button
+                            key={entry.id}
+                            type="button"
+                            className={`${styles.mobileToolRow} ${selectedBookmarkId === entry.id ? styles.mobileToolRowActive : ""}`}
+                            data-bookmark-id={entry.id}
+                            onClick={handleSelectBookmarkFromList}
+                          >
+                            <span>{entry.kind === "progress" ? "Haladas" : "Fontos"}: {entry.name || "Nev nelkul"}</span>
+                            <ToolIcon type="bookmark" />
+                          </button>
+                        ))}
+                      </div>
+                      <label className={styles.mobileBookmarkNameControl}>
+                        <span>Label</span>
+                        <input
+                          className={`input ${styles.mobileBookmarkNameInput}`}
+                          value={selectedBookmark?.name ?? ""}
+                          onChange={handleSelectedBookmarkNameChange}
+                          placeholder="Konyvjelzo label"
+                          aria-label="Konyvjelzo label"
+                          disabled={!selectedBookmark}
+                        />
+                      </label>
+                      <button
+                        className={`${styles.mobileToolRow} ${styles.mobileToolRowActive}`}
+                        type="button"
                         disabled={!selectedBookmark}
-                      />
-                    </label>
-                    <button
-                      className={`${styles.mobileToolRow} ${styles.mobileToolRowActive}`}
-                      type="button"
-                      disabled={!selectedBookmark}
-                      onClick={handleJumpToSelectedBookmarkAndClose}
-                    >
-                      <span>Ugras a konyvjelzohoz</span>
-                      <ToolIcon type="bookmark" />
-                    </button>
-                    <button
-                      className={styles.mobileToolRow}
-                      type="button"
-                      onClick={handleDeleteSelectedBookmark}
-                    >
-                      <span>Konyvjelzo torlese</span>
-                      X
-                    </button>
-                  </>
-                ) : null}
+                        onClick={handleJumpToSelectedBookmarkAndClose}
+                      >
+                        <span>Ugras a konyvjelzohoz</span>
+                        <ToolIcon type="bookmark" />
+                      </button>
+                      <button
+                        className={styles.mobileToolRow}
+                        type="button"
+                        onClick={handleDeleteSelectedBookmark}
+                      >
+                        <span>Konyvjelzo torlese</span>
+                        X
+                      </button>
+                    </>
+                  ) : null}
+                </section>
               </div>
             </section>
           </>
@@ -5225,22 +5183,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         <div className="card">Ehhez a konyvhoz meg nincs blokk.</div>
       ) : isMobile ? (
         <div className={styles.mobileStage}>
-          {renderMobilePageTabs()}
           {renderMobileContent()}
-          <section className={`card ${styles.progressCard}`} data-onboarding-id="onb-progress">
-            <div className={styles.progressSummary}>
-              <div className={styles.progressPercent}>{progress}%</div>
-              <div className={styles.progressLabel}>
-                Completion: <span>{completion.accepted}</span> / <span>{completion.total}</span>
-              </div>
-            </div>
-            <div
-              className={`${styles.progressTrack} ${progress === 100 ? styles.progressTrackComplete : ""}`}
-              aria-label={`Completion ${progress}%`}
-            >
-              <div className={styles.progressFill} style={{ width: `${progress}%` }} />
-            </div>
-          </section>
         </div>
       ) : (
         <div className={styles.desktopStage}>

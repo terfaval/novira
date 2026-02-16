@@ -15,6 +15,8 @@ import {
   Plus,
   GraduationCap,
   Bookmark,
+  ListTree,
+  ScrollText,
 } from "lucide-react";
 
 export type IconName =
@@ -33,7 +35,9 @@ export type IconName =
   | "add"
   | "merge"
   | "onboarding"
-  | "bookmark";
+  | "bookmark"
+  | "toc"
+  | "notes";
 
 const ICON_MAP = {
   generate: Sparkles,
@@ -52,6 +56,8 @@ const ICON_MAP = {
   merge: GitMerge,
   onboarding: GraduationCap,
   bookmark: Bookmark,
+  toc: ListTree,
+  notes: ScrollText,
 } as const;
 
 type Props = {

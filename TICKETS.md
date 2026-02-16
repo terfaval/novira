@@ -61,6 +61,61 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-BOOK-DESKTOP-EDITORIAL-NOTE-PANEL-IN-BOTTOM-MULTI-BLOCK-SECTION
+- Goal: Add a dedicated `Szerkesztoi jegyzet` panel to the Book Dashboard desktop bottom multi-panel block area, with live editorial workflow indicators.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `a22e27d8b78ffb33f038cebd822a9936e437069b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-LARGE-BREAKPOINT-TYPE-AND-COVER-ICON-SCALE-UP
+- Goal: Increase typography and cover icon sizes on the `min-width: 1360px` home carousel breakpoint for better large-screen readability and visual balance.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `a22e27d8b78ffb33f038cebd822a9936e437069b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-CAROUSEL-DESKTOP-PAGINATION-VISIBILITY-AND-LARGE-SCREEN-TUNE
+- Goal: Restore desktop home carousel pagination visibility after height capping by using viewport-safe carousel sizing, and add a dedicated larger-screen sizing tier.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `a22e27d8b78ffb33f038cebd822a9936e437069b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-CAROUSEL-DESKTOP-MAX-HEIGHT-AND-TYPE-SCALE
+- Goal: Limit desktop home carousel height with ratio-based active-card sizing, and scale book-card/spine typography so large screens do not stretch layout with undersized text.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `a22e27d8b78ffb33f038cebd822a9936e437069b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-MOBILE-FULLHEIGHT-REMOVE-FIXED-BOTTOM-GAP
+- Goal: Remove fixed mobile bottom spacing from Book Dashboard shell so main panel can reach full viewport height, while keeping safe-area bottom inset.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `a22e27d8b78ffb33f038cebd822a9936e437069b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-MOBILE-MAIN-HEIGHT-FOCUS-RESTORE-H-INSET
+- Goal: Correct mobile dashboard full-screen tweak to keep horizontal inset while targeting only vertical fill behavior on the dashboard main container.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `a22e27d8b78ffb33f038cebd822a9936e437069b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-MOBILE-MAIN-FULL-STRETCH-NO-INSET
+- Goal: Ensure the mobile Book Dashboard main viewport fills the screen edge-to-edge by removing mobile main/header inset padding and top gap on the dashboard shell.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `a22e27d8b78ffb33f038cebd822a9936e437069b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-MOBILE-DASHBOARD-FULL-VIEWPORT-HEIGHT
+- Goal: Make Book Dashboard fill the mobile viewport by switching mobile shell/main/stage to full-height layout and removing mobile panel/info max-height caps.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `a22e27d8b78ffb33f038cebd822a9936e437069b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-MOBILE-TOOLPANEL-PROGRESS-TOP-AND-THIN-CLOSE-X
+- Goal: Move mobile progress card into the top of the mobile tool panel and make the tool panel close `X` visually thinner.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `a22e27d8b78ffb33f038cebd822a9936e437069b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-MOBILE-TOOLPANEL-CLOSE-X-AND-REMOVE-MODE-TOGGLES
+- Goal: On mobile tool panel remove title and gear from header, add a dedicated `X` close button, and remove Workbench/Reader options from the panel.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `a22e27d8b78ffb33f038cebd822a9936e437069b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-MOBILE-ACTIVITY-VIEW-DROPDOWN-AND-PAGE-TABS
+- Goal: Move mobile page tabs into the mobile activity `Nezet` group with icons, make the mobile activity group scrollable, switch mobile view menu to dropdown, and remove mobile controls for multi-block generate, sync scroll, scroll-based auto-generate, and chapter-title auto-translate.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `src/ui/icons/Icon.tsx`, `TICKETS.md`
+- Commit hash: `a22e27d8b78ffb33f038cebd822a9936e437069b` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-HOME-MOBILE-CAROUSEL-ONE-SPINE-BEFORE-ACTIVE
 - Goal: Keep one spine before the active card on mobile carousel whenever a previous book exists, by adjusting visible window anchoring and mobile item ordering.
 - Files modified: `components/LibraryClient.tsx`, `app/globals.css`, `TICKETS.md`

@@ -1240,3 +1240,138 @@ details[open] > .book-accordion-trigger::after {
     pointer-events: none;
   }
 }
+
+/* Final desktop carousel sizing overrides (keep after mobile-final block). */
+@media (min-width: 721px) {
+  .library-layout {
+    --desktop-carousel-height: clamp(420px, 58vh, 560px);
+    --desktop-carousel-safe-space: 300px;
+    gap: 12px;
+  }
+
+  .library-carousel-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    align-items: center;
+  }
+
+  .library-carousel-stage {
+    height: min(var(--desktop-carousel-height), calc(100vh - var(--desktop-carousel-safe-space)));
+    max-height: var(--desktop-carousel-height);
+    min-height: 340px;
+    align-items: center;
+  }
+
+  .library-carousel-track {
+    height: 100%;
+  }
+
+  .library-carousel-item {
+    height: 100%;
+  }
+
+  .library-carousel-item.is-active {
+    width: clamp(300px, calc(var(--desktop-carousel-height) * 0.66), 370px);
+  }
+
+  .library-carousel-item.is-active .book-card,
+  .library-carousel-item.is-inactive .book-spine {
+    height: 100%;
+    min-height: 100%;
+  }
+
+  .book-card {
+    padding: clamp(28px, 3.4vh, 38px) 14px 14px;
+  }
+
+  .book-cover {
+    width: min(100%, clamp(148px, 12vw, 190px));
+    margin: 0 auto clamp(12px, 1.6vh, 16px);
+  }
+
+  .book-title {
+    font-size: clamp(18px, 1.35vw, 22px);
+  }
+
+  .book-author {
+    font-size: clamp(14px, 1.05vw, 17px);
+  }
+
+  .book-year {
+    font-size: clamp(13px, 0.95vw, 15px);
+  }
+
+  .book-card .details {
+    font-size: clamp(12px, 0.9vw, 14px);
+  }
+
+  .status-pin {
+    font-size: clamp(12px, 0.9vw, 14px);
+  }
+
+  .book-spine-author-line {
+    font-size: clamp(10px, 0.72vw, 12px);
+  }
+
+  .book-spine-title-line {
+    font-size: clamp(11px, 0.82vw, 13px);
+  }
+
+  .book-spine-icon {
+    width: clamp(18px, 1.65vw, 24px);
+    height: clamp(18px, 1.65vw, 24px);
+  }
+
+  .carousel-pagination {
+    margin-top: 10px;
+    position: relative;
+    z-index: 35;
+  }
+}
+
+@media (min-width: 1360px) {
+  .library-layout {
+    --desktop-carousel-height: clamp(500px, 60vh, 640px);
+  }
+
+  .library-carousel-item.is-active {
+    width: clamp(330px, calc(var(--desktop-carousel-height) * 0.68), 420px);
+  }
+
+  .book-title {
+    font-size: clamp(20px, 1.2vw, 24px);
+  }
+
+  .book-author {
+    font-size: clamp(15px, 0.95vw, 18px);
+  }
+
+  .book-year {
+    font-size: clamp(14px, 0.82vw, 16px);
+  }
+
+  .book-cover {
+    width: min(100%, clamp(180px, 13.2vw, 230px));
+  }
+
+  .book-spine-icon {
+    width: clamp(22px, 1.9vw, 30px);
+    height: clamp(22px, 1.9vw, 30px);
+  }
+
+  .book-spine-author-line {
+    font-size: clamp(11px, 0.82vw, 13px);
+  }
+
+  .book-spine-title-line {
+    font-size: clamp(12px, 0.92vw, 14px);
+  }
+
+  .book-card .details {
+    font-size: clamp(13px, 0.9vw, 15px);
+  }
+
+  .status-pin {
+    font-size: clamp(13px, 0.9vw, 15px);
+  }
+}
