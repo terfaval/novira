@@ -1454,15 +1454,14 @@ details[open] > .book-accordion-trigger::after {
 }
 
 .landing-layer-top {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
+  position: fixed;
+  bottom: 0;
   left: 0;
   right: 0;
   z-index: 120;
   backdrop-filter: blur(4px);
   background: color-mix(in srgb, var(--brand-paper) 82%, transparent);
-  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .landing-container {
@@ -1486,7 +1485,7 @@ details[open] > .book-accordion-trigger::after {
 .landing-main {
   width: min(100%, 980px);
   margin: 0 auto;
-  padding: 72px var(--shell-side-pad) 80px;
+  padding: 72px var(--shell-side-pad) 148px;
   display: grid;
   gap: 112px;
 }
@@ -1664,6 +1663,7 @@ details[open] > .book-accordion-trigger::after {
   .landing-main {
     gap: 72px;
     padding-top: 44px;
+    padding-bottom: 132px;
   }
 
   .landing-hero-sub {

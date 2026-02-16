@@ -91,6 +91,9 @@ export default function Page() {
           <TopBar
             rightSlot={
               <div className="home-auth-actions">
+                <Link href="/login" className="btn">
+                  Login
+                </Link>
                 {isGuest ? (
                   <GuestSessionActions
                     className="home-guest-actions"

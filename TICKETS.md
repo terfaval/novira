@@ -61,6 +61,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-HOME-TEMP-LOGIN-BUTTON
+- Goal: Add a temporary login navigation button on the main home page that routes to `/login`.
+- Files modified: `app/page.tsx`, `TICKETS.md`
+- Commit hash: `cb2774c5449e160112d869837780e299bb8ffd80` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-AUTH-REDIRECT-LOGIC-ROOT-TO-LANDING-WHEN-LOGGED-OUT
 - Goal: Normalize auth navigation so logged-in users stay on main library (`/`) while logged-out users are consistently redirected to `/landing`.
 - Files modified: `app/page.tsx`, `app/upload/page.tsx`, `components/LibraryClient.tsx`, `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`

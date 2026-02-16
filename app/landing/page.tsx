@@ -268,6 +268,23 @@ export default function LandingPage() {
           </div>
         </section>
 
+        <section className="landing-intro">
+          <div className="landing-pillars">
+            <article className="card landing-pillar-card">
+              <h3>Kozkincs muvek</h3>
+              <p>Elsosorban kozkincs irodalmi szovegekkel dolgozik, a mai magyar olvaso szamara.</p>
+            </article>
+            <article className="card landing-pillar-card">
+              <h3>Mai magyar olvasas</h3>
+              <p>A klasszikus muvek ujraolvashatova valnak a jelen nyelvi kozegeben.</p>
+            </article>
+            <article className="card landing-pillar-card">
+              <h3>Kiserleti forditas</h3>
+              <p>Idegen nyelvu muvek feldolgozasa elerheto, de a vegleges valtozat szakmai lektoralast igenyel.</p>
+            </article>
+          </div>
+        </section>
+
         <section className="landing-audience">
           <h2>Kinek keszult?</h2>
           <div className="landing-audience-grid">
@@ -298,23 +315,10 @@ export default function LandingPage() {
 
         <section className="landing-final-cta">
           <p className="landing-final-statement">
-            Az irodalom nem roviditesre szorul.
+            A klasszikus irodalom nem elavul.
             <br />
-            Megertesre.
+            Csak ujra kell olvasni.
           </p>
-          <div className="landing-cta-row">
-            <button type="button" className="btn" onClick={() => void handleLoginClick()} disabled={loginBusy || guestBusy}>
-              Belepes
-            </button>
-            <button
-              type="button"
-              className="btn landing-ghost-button"
-              onClick={() => void handleGuestClick()}
-              disabled={loginBusy || guestBusy}
-            >
-              Vendeg mod
-            </button>
-          </div>
         </section>
       </div>
     </div>
