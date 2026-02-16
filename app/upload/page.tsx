@@ -6,18 +6,21 @@ import { ensureAnonIdentity } from "@/lib/auth/anon";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Status = "idle" | "uploading" | "done" | "error";
+type ImportMode = "file" | "project_gutenberg";
 
 export default function UploadPage() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const [importMode, setImportMode] = useState<ImportMode>("file");
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [projectGutenbergWorkId, setProjectGutenbergWorkId] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [bookId, setBookId] = useState<string | null>(null);
 
-  async function onUpload() {
+  async function onImport() {
     setStatus("uploading");
     setError(null);
     setBookId(null);
@@ -31,48 +34,80 @@ export default function UploadPage() {
 
     if (!title.trim()) {
       setStatus("error");
-      setError("Kérlek add meg a címet.");
-      return;
-    }
-
-    if (!file) {
-      setStatus("error");
-      setError("Kérlek válassz egy fájlt.");
-      return;
-    }
-
-    const fileName = file.name.toLowerCase();
-    if (!(/\.(html?|rtf|docx)$/.test(fileName))) {
-      setStatus("error");
-      setError("Csak HTML, RTF és DOCX fájl tölthető fel.");
+      setError("Kerlek add meg a cimet.");
       return;
     }
 
     const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
     if (sessionErr || !sessionData.session?.access_token) {
       setStatus("error");
-      setError(sessionErr?.message ?? "Nem található érvényes munkamenet.");
+      setError(sessionErr?.message ?? "Nem talalhato ervenyes munkamenet.");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("title", title.trim());
-    if (author.trim()) formData.append("author", author.trim());
-    if (description.trim()) formData.append("description", description.trim());
+    if (importMode === "file") {
+      if (!file) {
+        setStatus("error");
+        setError("Kerlek valassz egy fajlt.");
+        return;
+      }
+      const fileName = file.name.toLowerCase();
+      if (!/\.(html?|rtf|docx)$/.test(fileName)) {
+        setStatus("error");
+        setError("Csak HTML, RTF es DOCX fajl toltheto fel.");
+        return;
+      }
 
-    const response = await fetch("/api/upload", {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("title", title.trim());
+      if (author.trim()) formData.append("author", author.trim());
+      if (description.trim()) formData.append("description", description.trim());
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
+        body: formData,
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result?.ok) {
+        setStatus("error");
+        setError(result?.message ?? "A feltoltes nem sikerult.");
+        return;
+      }
+
+      setStatus("done");
+      setBookId(result.bookId ?? null);
+      return;
+    }
+
+    const workIdNumber = Number.parseInt(projectGutenbergWorkId.trim(), 10);
+    if (!Number.isFinite(workIdNumber) || workIdNumber <= 0) {
+      setStatus("error");
+      setError("A Project Gutenberg Work ID pozitiv egesz szam legyen.");
+      return;
+    }
+
+    const response = await fetch("/api/import/external", {
       method: "POST",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${sessionData.session.access_token}`,
       },
-      body: formData,
+      body: JSON.stringify({
+        source: "project_gutenberg",
+        workId: workIdNumber,
+        title: title.trim(),
+        author: author.trim() || undefined,
+        description: description.trim() || undefined,
+      }),
     });
-    const result = await response.json();
-
+    const result = await response.json().catch(() => null);
     if (!response.ok || !result?.ok) {
       setStatus("error");
-      setError(result?.message ?? "A feltöltés nem sikerült.");
+      setError(result?.message ?? "A kulso forras import nem sikerult.");
       return;
     }
 
@@ -84,46 +119,118 @@ export default function UploadPage() {
     <div className="stack">
       <div className="row">
         <div>
-          <div className="h1">Új könyv</div>
-          <p className="sub">Lokális feltöltés (HTML, RTF, DOCX) és automatikus feldolgozás.</p>
+          <div className="h1">Uj konyv</div>
+          <p className="sub">
+            Lokalis feltoltes (HTML, RTF, DOCX) vagy kulso forras import (Project Gutenberg HTML ZIP).
+          </p>
         </div>
-        <Link className="btn" href="/">Vissza a könyvtárba</Link>
+        <Link className="btn" href="/">
+          Vissza a konyvtarba
+        </Link>
       </div>
 
       <div className="card stack">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
+          <button
+            className="btn"
+            type="button"
+            disabled={status === "uploading"}
+            onClick={() => setImportMode("file")}
+            aria-pressed={importMode === "file"}
+          >
+            Lokalis fajl
+          </button>
+          <button
+            className="btn"
+            type="button"
+            disabled={status === "uploading"}
+            onClick={() => setImportMode("project_gutenberg")}
+            aria-pressed={importMode === "project_gutenberg"}
+          >
+            Project Gutenberg
+          </button>
+        </div>
+
+        {importMode === "file" ? (
+          <label>
+            <div style={{ marginBottom: 6, color: "var(--muted)" }}>Fajl</div>
+            <input
+              className="input"
+              type="file"
+              accept=".html,.htm,.rtf,.docx"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <div style={{ marginTop: 6 }}>
+              <small>
+                {file ? `Kivalasztva: ${file.name}` : "A kivalasztott fajl a szerverre kerul es feldolgozas indul."}
+              </small>
+            </div>
+          </label>
+        ) : (
+          <label>
+            <div style={{ marginBottom: 6, color: "var(--muted)" }}>Project Gutenberg Work ID</div>
+            <input
+              className="input"
+              value={projectGutenbergWorkId}
+              onChange={(event) => setProjectGutenbergWorkId(event.target.value)}
+              placeholder="pl. 23962"
+              inputMode="numeric"
+            />
+            <div style={{ marginTop: 6 }}>
+              <small>
+                A rendszer a PG HTML ZIP forrast importalja (mirror/fallback URL-lal), majd fejezetekre es blokkokra bontja.
+              </small>
+            </div>
+          </label>
+        )}
+
         <label>
-          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Fájl</div>
+          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Cim</div>
           <input
             className="input"
-            type="file"
-            accept=".html,.htm,.rtf,.docx"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="pl. A jo palocok"
           />
-          <div style={{ marginTop: 6 }}>
-            <small>{file ? `Kiválasztva: ${file.name}` : "A kiválasztott fájl a szerverre kerül és feldolgozás indul."}</small>
-          </div>
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Cím</div>
-          <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="pl. A jó palócok" />
+          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Szerzo</div>
+          <input
+            className="input"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            placeholder="pl. Mikszath Kalman"
+          />
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Szerző</div>
-          <input className="input" value={author} onChange={(e) => setAuthor(e.target.value)} placeholder="pl. Mikszáth Kálmán" />
-        </label>
-
-        <label>
-          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Rövid leírás (opcionális)</div>
-          <input className="input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="1–2 mondat." />
+          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Rovid leiras (opcionalis)</div>
+          <input
+            className="input"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="1-2 mondat."
+          />
         </label>
 
         <div className="row">
-          <button className="btn" onClick={onUpload} disabled={status === "uploading"}>
-            {status === "uploading" ? "Feltöltés…" : "Feltöltés indítása"}
+          <button className="btn" onClick={onImport} disabled={status === "uploading"}>
+            {status === "uploading"
+              ? importMode === "file"
+                ? "Feltoltes..."
+                : "Kulso import..."
+              : importMode === "file"
+                ? "Feltoltes inditasa"
+                : "PG import inditasa"}
           </button>
-          {bookId ? <Link className="btn" href={`/book/${bookId}`}>Megnyitás</Link> : <span />}
+          {bookId ? (
+            <Link className="btn" href={`/book/${bookId}`}>
+              Megnyitas
+            </Link>
+          ) : (
+            <span />
+          )}
         </div>
 
         {status === "error" && error ? (

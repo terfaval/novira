@@ -7,12 +7,8 @@
 }
 
 .header {
-  position: static;
-  top: auto;
-  left: auto;
   z-index: 100;
   width: min(100%, 980px);
-  transform: none;
   padding: 0;
 }
 
@@ -73,12 +69,10 @@
 .main {
   min-height: calc(100dvh - 98px);
   margin-top: 12px;
-  overflow: visible;
   padding: 0 12px 26px;
 }
 
 .desktopStage {
-  height: auto;
   min-height: 0;
   display: grid;
   grid-template-rows: auto auto;
@@ -145,19 +139,26 @@
   box-shadow:
     inset 9px 0 0 var(--panel-accent-color, var(--brand-ink)),
     0 10px 28px var(--shadow);
+}
+
+.panelBody,
+.infoColumnBody {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
 
-.panelBody::-webkit-scrollbar {
+.panelBody::-webkit-scrollbar,
+.infoColumnBody::-webkit-scrollbar {
   width: 10px;
 }
 
-.panelBody::-webkit-scrollbar-track {
+.panelBody::-webkit-scrollbar-track,
+.infoColumnBody::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.panelBody::-webkit-scrollbar-thumb {
+.panelBody::-webkit-scrollbar-thumb,
+.infoColumnBody::-webkit-scrollbar-thumb {
   background: transparent;
   border-radius: 999px;
 }
@@ -274,6 +275,14 @@
 .blockCard:hover,
 .blockCard:focus-within {
   z-index: 8;
+}
+
+.blockCard[data-chapter-add-mode="true"] {
+  cursor: crosshair;
+}
+
+.blockCard[data-chapter-add-mode="true"]:hover {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #2b7a44 38%, transparent);
 }
 
 .blockMergeSlot {
@@ -657,6 +666,23 @@
   gap: 7px;
 }
 
+.activityMeta {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.activityIconButton,
+.bookmarkListItem,
+.syncToggle,
+.mobileToolRow,
+.mobilePageTab {
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
+  color: var(--text);
+}
+
 .controlsRow {
   display: flex;
   align-items: center;
@@ -664,7 +690,6 @@
 }
 
 .activeToggle {
-  border-color: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 70%, var(--line));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 40%, transparent);
 }
 
@@ -675,10 +700,7 @@
 .activityIconButton {
   width: 100%;
   height: 36px;
-  border: 1px solid var(--line);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
-  color: var(--text);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -693,7 +715,10 @@
   --tone: #7b3f7a;
 }
 
-.bookmarkColorControl {
+.bookmarkColorControl,
+.bookmarkNameControl,
+.mobileBookmarkColorControl,
+.mobileBookmarkNameControl {
   width: 100%;
   min-height: 44px;
   border: 1px solid var(--line);
@@ -702,19 +727,19 @@
   color: var(--text);
   display: grid;
   gap: 6px;
+}
+
+.bookmarkColorControl,
+.bookmarkNameControl {
   padding: 7px 10px;
   box-shadow: 0 4px 12px var(--shadow);
   font-size: 11px;
   font-weight: 700;
 }
 
-.bookmarkPalette {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.mobileBookmarkPalette {
+.bookmarkPalette,
+.mobileBookmarkPalette,
+.mobilePageTabs {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
@@ -733,24 +758,13 @@
   box-shadow: inset 0 0 0 2px color-mix(in srgb, white 86%, transparent);
 }
 
-.bookmarkNameControl {
+.bookmarkClearButton,
+.bookmarkListItem {
   width: 100%;
-  min-height: 44px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
-  color: var(--text);
-  display: grid;
-  gap: 6px;
-  padding: 7px 10px;
-  box-shadow: 0 4px 12px var(--shadow);
-  font-size: 11px;
-  font-weight: 700;
+  min-height: 36px;
 }
 
 .bookmarkClearButton {
-  width: 100%;
-  min-height: 36px;
   border: 1px solid color-mix(in srgb, #aa3a32 48%, var(--line));
   border-radius: 999px;
   background: color-mix(in srgb, #aa3a32 12%, var(--brand-paper));
@@ -759,26 +773,22 @@
   font-weight: 700;
 }
 
-.bookmarkList {
+.bookmarkList,
+.mobileBookmarkList {
   display: grid;
   gap: 6px;
 }
 
 .bookmarkListItem {
-  width: 100%;
-  min-height: 36px;
-  border: 1px solid var(--line);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
-  color: var(--text);
   padding: 6px 10px;
   text-align: left;
   display: grid;
   gap: 2px;
 }
 
-.bookmarkListItemActive {
-  border-color: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 70%, var(--line));
+.bookmarkListItemActive,
+.onboardingGuideItemActive {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 30%, transparent);
 }
 
@@ -792,10 +802,7 @@
   grid-column: span 1;
   width: 100%;
   height: 36px;
-  border: 1px solid var(--line);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
-  color: var(--text);
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
@@ -896,13 +903,17 @@
   gap: 8px;
 }
 
+.mobileToolHint {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+  padding: 0 2px;
+}
+
 .mobileToolRow {
   width: 100%;
   min-height: 38px;
-  border: 1px solid var(--line);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
-  color: var(--text);
   padding: 0 12px;
   display: flex;
   align-items: center;
@@ -913,52 +924,22 @@
 }
 
 .mobileToolRowActive {
-  border-color: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 70%, var(--line));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 35%, transparent);
 }
 
-.mobileBookmarkColorControl {
-  width: 100%;
-  min-height: 44px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
-  color: var(--text);
-  padding: 8px 10px;
-  display: grid;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 650;
-}
-
+.mobileBookmarkColorControl,
 .mobileBookmarkNameControl {
-  width: 100%;
-  min-height: 44px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
-  color: var(--text);
   padding: 8px 10px;
-  display: grid;
-  gap: 6px;
   font-size: 13px;
   font-weight: 650;
-}
-
-.mobileBookmarkList {
-  display: grid;
-  gap: 6px;
-}
-
-.mobileBookmarkNameInput {
-  height: 34px;
 }
 
 .mobileToolRow:disabled {
   opacity: 0.5;
 }
 
-.bookmarkNameInput {
+.bookmarkNameInput,
+.mobileBookmarkNameInput {
   width: 100%;
   height: 34px;
 }
@@ -1009,6 +990,13 @@
   gap: 2px;
 }
 
+.infoColumnHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .infoColumnHeader strong {
   font-size: 12px;
 }
@@ -1016,6 +1004,26 @@
 .infoColumnHeader span {
   font-size: 11px;
   color: var(--muted);
+}
+
+.infoHeaderActionButton {
+  min-height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: color-mix(in srgb, var(--brand-paper) 94%, transparent);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.infoHeaderActionButtonActive {
+  border-color: color-mix(in srgb, #2b7a44 50%, var(--line));
+  background: color-mix(in srgb, #2b7a44 18%, var(--brand-paper));
+  color: color-mix(in srgb, #2b7a44 88%, var(--text));
 }
 
 .infoColumnBody {
@@ -1026,21 +1034,6 @@
   gap: 6px;
   align-content: start;
   grid-auto-rows: max-content;
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-}
-
-.infoColumnBody::-webkit-scrollbar {
-  width: 10px;
-}
-
-.infoColumnBody::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.infoColumnBody::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 999px;
 }
 
 .infoListButton {
@@ -1090,7 +1083,8 @@
   overflow: hidden;
 }
 
-.infoMiniFill {
+.infoMiniFill,
+.progressFill {
   height: 100%;
   background: var(--progress-fill);
 }
@@ -1124,26 +1118,24 @@
   cursor: pointer;
 }
 
-.mobilePageTabs {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
-}
-
 .mobilePageTab {
   min-height: 34px;
-  border: 1px solid var(--line);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-paper) 93%, transparent);
-  color: var(--text);
   font-size: 11px;
   font-weight: 700;
   padding: 0 8px;
 }
 
 .mobilePageTabActive {
-  border-color: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 70%, var(--line));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 34%, transparent);
+}
+
+.activeToggle,
+.bookmarkListItemActive,
+.onboardingGuideItemActive,
+.mobileToolRowActive,
+.mobilePageTabActive {
+  border-color: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 70%, var(--line));
 }
 
 .mobileInfoCard {
@@ -1175,13 +1167,6 @@
   background: var(--progress-track);
   overflow: hidden;
 }
-
-.progressFill {
-  height: 100%;
-  background: var(--progress-fill);
-}
-
-.progressTrackComplete {}
 
 .progressTrackComplete .progressFill {
   filter: brightness(1.12);
@@ -1224,6 +1209,63 @@
   gap: 7px;
 }
 
+.sourcePanel {
+  margin-top: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-paper) 95%, transparent);
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.sourcePanelTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sourceRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.sourceRow span {
+  color: var(--muted);
+}
+
+.sourceRow a {
+  color: color-mix(in srgb, #2f6aa8 86%, var(--text));
+}
+
+.sourceHash {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.sourceHash span {
+  color: var(--muted);
+}
+
+.sourceHash code {
+  white-space: nowrap;
+  overflow: auto;
+  padding: 4px 6px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  background: color-mix(in srgb, var(--brand-paper) 92%, transparent);
+}
+
+.sourceDisclaimer {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
 .iconPreview {
   display: flex;
   align-items: center;
@@ -1242,11 +1284,7 @@
   background-size: contain;
 }
 
-.mobileStage {
-  display: grid;
-  gap: 10px;
-}
-
+.mobileStage,
 .mobileStack {
   display: grid;
   gap: 10px;
@@ -1374,10 +1412,7 @@
   line-height: 1.3;
 }
 
-.onboardingGuideItemActive {
-  border-color: color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 70%, var(--line));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-accent-color, var(--brand-ink)) 30%, transparent);
-}
+
 
 .onboardingGuideActions {
   display: flex;
@@ -1386,6 +1421,11 @@
 }
 
 @media (max-width: 960px) {
+  .header,
+  .main {
+    padding: 0 12px;
+  }
+
   .pageShell {
     width: 100%;
     height: auto;
@@ -1394,17 +1434,11 @@
   }
 
   .header {
-    position: static;
     width: 100%;
-    transform: none;
-    padding: 0 12px;
   }
 
   .main {
     margin-top: 10px;
-    height: auto;
-    overflow: visible;
-    padding: 0 12px;
   }
 
   .sidebar {
@@ -1463,7 +1497,6 @@
 
   .mobileInfoBlock {
     height: 100%;
-    min-height: 0;
   }
 
   .onboardingPopup {

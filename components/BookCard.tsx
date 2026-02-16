@@ -5,6 +5,19 @@ import { useRouter } from "next/navigation";
 import type { BookRow } from "@/lib/types";
 import { BookCoverIcon } from "@/components/BookCoverIcon";
 
+function inferOriginalBookYear(book: BookRow) {
+  const currentYear = new Date().getUTCFullYear();
+  const text = `${book.description ?? ""} ${book.source_filename ?? ""}`;
+  const yearMatches = [...text.matchAll(/\b(1[5-9]\d{2}|20\d{2})\b/g)];
+  const candidateYears = yearMatches
+    .map((entry) => Number(entry[1]))
+    .filter((year) => Number.isFinite(year) && year <= currentYear);
+  if (candidateYears.length > 0) {
+    return `${Math.min(...candidateYears)}`;
+  }
+  return null;
+}
+
 function statusMeta(status: BookRow["status"]) {
   switch (status) {
     case "uj":
@@ -51,12 +64,7 @@ function resolveBookYear(book: BookRow) {
   if (direct !== null && direct !== undefined && `${direct}`.trim() !== "") {
     return `${direct}`.trim();
   }
-
-  const fromText = `${book.description ?? ""} ${book.source_filename ?? ""}`.match(/\b(1[5-9]\d{2}|20\d{2})\b/);
-  if (fromText) return fromText[1];
-
-  const date = new Date(book.created_at);
-  return Number.isNaN(date.getTime()) ? null : `${date.getUTCFullYear()}`;
+  return inferOriginalBookYear(book);
 }
 
 function normalizeAuthor(author: string) {

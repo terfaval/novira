@@ -1,22 +1,24 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { extractAndAnchorFootnotes } from "@/lib/upload/footnotes";
-import {
-  detectUploadFormat,
-  parseToCanonical,
-  type CanonicalBook,
-  type UploadFormat,
-} from "@/lib/upload/parser";
+import type { CanonicalBook } from "@/lib/upload/parser";
+import { importProjectGutenbergHtmlZip } from "@/lib/upload/external/projectGutenberg";
 
-const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
 const BUCKET_NAME = process.env.SUPABASE_UPLOAD_BUCKET ?? "sources";
 
-const MIME_BY_FORMAT: Record<UploadFormat, Set<string>> = {
-  html: new Set(["text/html", "application/xhtml+xml"]),
-  rtf: new Set(["application/rtf", "text/rtf", "application/x-rtf"]),
-  docx: new Set(["application/vnd.openxmlformats-officedocument.wordprocessingml.document"]),
-};
+const ExternalImportSchema = z.object({
+  source: z.literal("project_gutenberg"),
+  workId: z
+    .number()
+    .int()
+    .positive()
+    .or(z.string().regex(/^\d+$/).transform((value) => Number.parseInt(value, 10))),
+  title: z.string().trim().max(240).optional(),
+  author: z.string().trim().max(160).optional(),
+  description: z.string().trim().max(4000).optional(),
+});
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -32,149 +34,145 @@ export async function POST(req: NextRequest) {
   if (authErr || !authData.user) {
     return NextResponse.json({ ok: false, message: "Ervenytelen munkamenet." }, { status: 401 });
   }
-
   const userId = authData.user.id;
-  const form = await req.formData();
-  const file = form.get("file");
-  const title = String(form.get("title") ?? "").trim();
-  const author = String(form.get("author") ?? "").trim();
-  const description = String(form.get("description") ?? "").trim();
-  const inferredOriginalYear = inferOriginalPublicationYear({
-    description,
-    sourceFilename: file instanceof File ? file.name : "",
-  });
 
-  if (!(file instanceof File)) {
-    return NextResponse.json({ ok: false, message: "A fajl kotelezo." }, { status: 400 });
-  }
-  if (!title) {
-    return NextResponse.json({ ok: false, message: "A cim kotelezo." }, { status: 400 });
-  }
-  if (file.size > MAX_UPLOAD_BYTES) {
-    return NextResponse.json({ ok: false, message: "A fajl tul nagy (max 12 MB)." }, { status: 413 });
-  }
-
-  const format = detectUploadFormat(file.name, file.type);
-  if (!format) {
+  const parsed = ExternalImportSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) {
     return NextResponse.json(
-      { ok: false, message: "Csak HTML, RTF es DOCX formatum tamogatott." },
-      { status: 415 }
+      { ok: false, message: "Ervenytelen kulso import kerelmi parameter." },
+      { status: 400 }
     );
   }
+  const body = parsed.data;
+  const sourceWorkId = `${body.workId}`;
 
-  if (!isAllowedMime(format, file.type)) {
-    return NextResponse.json(
-      { ok: false, message: "A MIME tipus nem megfelelo a fajl kiterjesztesehez." },
-      { status: 415 }
-    );
+  const { data: cachedBookRows } = await supabase
+    .from("books")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("source_name", "project_gutenberg")
+    .eq("source_work_id", sourceWorkId)
+    .eq("status", "ready")
+    .order("updated_at", { ascending: false })
+    .limit(1);
+  const cachedBookId = (cachedBookRows as Array<{ id: string }> | null)?.[0]?.id;
+  if (cachedBookId) {
+    return NextResponse.json({ ok: true, cached: true, bookId: cachedBookId });
   }
 
-  const fileBuffer = Buffer.from(await file.arrayBuffer());
-  const ext = format === "html" ? "html" : format;
-  const storagePath = `${userId}/${Date.now()}-${safeBaseName(file.name)}.${ext}`;
-  const sourceMime = normalizeMime(file.type);
+  let imported: Awaited<ReturnType<typeof importProjectGutenbergHtmlZip>>;
+  try {
+    imported = await importProjectGutenbergHtmlZip(body.workId);
+  } catch (error: any) {
+    return NextResponse.json(
+      { ok: false, message: error?.message ?? "A kulso forras letoltese/feldolgozasa sikertelen." },
+      { status: 500 }
+    );
+  }
+  const zipHash = createHash("sha256").update(imported.zipBuffer).digest("hex");
+  const sourceFilename = `pg${sourceWorkId}-h.zip`;
+  const storagePath = `${userId}/external/${Date.now()}-${sourceFilename}`;
 
   const uploadRes = await supabase.storage
     .from(BUCKET_NAME)
-    .upload(storagePath, fileBuffer, { upsert: false, contentType: sourceMime });
+    .upload(storagePath, imported.zipBuffer, { upsert: false, contentType: "application/zip" });
   if (uploadRes.error) {
     return NextResponse.json(
-      { ok: false, message: `A fajl tarolasa sikertelen: ${uploadRes.error.message}` },
+      { ok: false, message: `A forrasfajl tarolasa sikertelen: ${uploadRes.error.message}` },
       { status: 500 }
     );
   }
 
   let bookId: string | null = null;
   try {
+    const title = body.title?.trim() || imported.titleHint || `Project Gutenberg #${sourceWorkId}`;
+    const description = body.description?.trim() || null;
+    const author = body.author?.trim() || null;
     const baseBookInsertPayload = {
       owner_id: userId,
       user_id: userId,
       title,
-      author: author || null,
-      description: description || null,
-      source_format: format,
-      source_filename: file.name,
-      source_mime: sourceMime,
-      source_size_bytes: file.size,
+      author,
+      description,
+      source_format: "html",
+      source_filename: sourceFilename,
+      source_mime: "application/zip",
+      source_size_bytes: imported.zipBuffer.byteLength,
       source_storage_path: storagePath,
+      source_name: imported.sourceName,
+      source_url: imported.sourceUrl,
+      source_retrieved_at: imported.sourceRetrievedAt,
+      source_license_url: imported.sourceLicenseUrl,
+      source_original_sha256: imported.sourceOriginalSha256,
+      source_work_id: imported.sourceWorkId,
       status: "processing",
     };
-    const bookInsertWithYearPayload = {
-      ...baseBookInsertPayload,
-      publication_year: inferredOriginalYear,
-      year: inferredOriginalYear,
-    };
-    let insertResult = await supabase.from("books").insert(bookInsertWithYearPayload).select("id").single();
 
-    if (insertResult.error && hasOptionalYearColumnError(insertResult.error)) {
-      insertResult = await supabase.from("books").insert(baseBookInsertPayload).select("id").single();
+    let insertResult = await supabase.from("books").insert(baseBookInsertPayload).select("id").single();
+    if (insertResult.error && hasMissingOptionalSourceColumns(insertResult.error)) {
+      const fallbackPayload = {
+        owner_id: userId,
+        user_id: userId,
+        title,
+        author,
+        description,
+        source_format: "html",
+        source_filename: sourceFilename,
+        source_mime: "application/zip",
+        source_size_bytes: imported.zipBuffer.byteLength,
+        source_storage_path: storagePath,
+        status: "processing",
+      };
+      insertResult = await supabase.from("books").insert(fallbackPayload).select("id").single();
     }
 
     const { data, error } = insertResult;
-
-    if (error || !data?.id) {
-      throw mapInsertError(error);
-    }
-
+    if (error || !data?.id) throw mapInsertError(error);
     bookId = data.id as string;
 
-    const canonical = await parseToCanonical(fileBuffer, format);
-    if (canonical.chapters.length === 0) {
-      throw new Error("A parser nem talalt feldolgozhato tartalmat.");
-    }
-
-    await persistCanonical(supabase, bookId, userId, canonical);
+    await persistCanonical(supabase, bookId, userId, imported.canonical);
     await extractAndAnchorFootnotes(supabase, { userId, bookId });
     await setBookStatus(supabase, bookId, "ready", null);
 
     return NextResponse.json({
       ok: true,
+      cached: false,
       bookId,
-      chapters: canonical.chapters.length,
-      blocks: canonical.chapters.reduce((sum, ch) => sum + ch.blocks.length, 0),
+      source: imported.sourceName,
+      sourceUrl: imported.sourceUrl,
+      sourceOriginalSha256: imported.sourceOriginalSha256,
+      zipSha256: zipHash,
     });
   } catch (err: any) {
-    const message = err?.message ?? "Sikertelen feltoltes.";
-
+    const message = err?.message ?? "Sikertelen kulso forras import.";
     if (bookId) {
       await setBookStatus(supabase, bookId, "failed", message);
     } else {
       await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
     }
-
     return NextResponse.json({ ok: false, message }, { status: 500 });
   }
 }
 
-function normalizeMime(mime: string): string {
-  return mime.trim().toLowerCase();
-}
-
-function isAllowedMime(format: UploadFormat, mime: string): boolean {
-  const normalized = normalizeMime(mime);
-  if (!normalized) return false;
-  return MIME_BY_FORMAT[format].has(normalized);
+function hasMissingOptionalSourceColumns(error: { message?: string } | null): boolean {
+  const normalized = `${error?.message ?? ""}`.toLowerCase();
+  return (
+    normalized.includes("source_name") ||
+    normalized.includes("source_url") ||
+    normalized.includes("source_retrieved_at") ||
+    normalized.includes("source_license_url") ||
+    normalized.includes("source_original_sha256") ||
+    normalized.includes("source_work_id")
+  );
 }
 
 function mapInsertError(error: { message?: string } | null): Error {
   const raw = error?.message ?? "Nem sikerult letrehozni a konyv rekordot.";
   const normalized = raw.toLowerCase();
-
-  if (normalized.includes("could not find") && normalized.includes("column")) {
-    return new Error(
-      "Adatbazis schema elteres: hianyzik egy feltolteshez szukseges oszlop a books tablabol."
-    );
-  }
   if (normalized.includes("row-level security")) {
     return new Error("Nincs jogosultsag a konyv letrehozasahoz (RLS policy hiba).");
   }
-
   return new Error(raw);
-}
-
-function hasOptionalYearColumnError(error: { message?: string } | null): boolean {
-  const normalized = `${error?.message ?? ""}`.toLowerCase();
-  return normalized.includes("publication_year") || normalized.includes("column") && normalized.includes(" year");
 }
 
 async function setBookStatus(
@@ -238,11 +236,9 @@ async function insertChapter(
     .insert(payload)
     .select("id")
     .single();
-
   if (error || !data?.id) {
     throw new Error(error?.message ?? "Nem sikerult menteni a fejezetet.");
   }
-
   return data.id as string;
 }
 
@@ -265,26 +261,4 @@ async function insertBlock(
   if (error) {
     throw new Error(error.message ?? "Nem sikerult menteni a blokkot.");
   }
-}
-
-function safeBaseName(name: string) {
-  const lower = name.toLowerCase();
-  const dot = lower.lastIndexOf(".");
-  const base = dot > 0 ? lower.slice(0, dot) : lower;
-  return base.replace(/[^a-z0-9._-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "upload";
-}
-
-function inferOriginalPublicationYear(input: {
-  description: string;
-  sourceFilename: string;
-}): number | null {
-  const currentYear = new Date().getUTCFullYear();
-  const text = `${input.description} ${input.sourceFilename}`;
-  const matches = [...text.matchAll(/\b(1[5-9]\d{2}|20\d{2})\b/g)];
-  const candidateYears = matches
-    .map((entry) => Number.parseInt(entry[1], 10))
-    .filter((year) => Number.isFinite(year) && year <= currentYear);
-  if (candidateYears.length > 0) return Math.min(...candidateYears);
-
-  return null;
 }

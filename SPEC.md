@@ -8,6 +8,7 @@
 
 ## MVP Scope (IN)
 - HTML + RTF + DOCX import
+- External source import (Project Gutenberg HTML ZIP, work-id based)
 - Deterministic segmentation
 - Parallel editor (original + modernized)
 - Variant handling per block

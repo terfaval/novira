@@ -26,6 +26,7 @@ See:
 Novira enables:
 
 - Full book upload (HTML / RTF / DOCX)
+- External source import (Project Gutenberg HTML ZIP by work ID)
 - Structured segmentation (chapter → block)
 - Block-based modernization workflow
 - Style-profile driven transformations

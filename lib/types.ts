@@ -23,6 +23,12 @@ export type BookRow = {
   source_mime: string;
   source_size_bytes: number;
   source_storage_path: string;
+  source_name?: string | null;
+  source_url?: string | null;
+  source_retrieved_at?: string | null;
+  source_license_url?: string | null;
+  source_original_sha256?: string | null;
+  source_work_id?: string | null;
   status: BookStatus;
   error_message: string | null;
   progress?: number;

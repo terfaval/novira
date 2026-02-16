@@ -76,3 +76,16 @@ Risk:
 
 Rollback:
 - Replace open `SELECT` policies with owner-bound policies (`owner_id = auth.uid()` / `user_id = auth.uid()`) when private mode is required again.
+
+## 6. External source import controls (Project Gutenberg)
+
+Date: 2026-02-16
+
+- URL-based ingestion is allowed only for explicitly supported sources (`project_gutenberg`).
+- Import requests must send identifiable `User-Agent` and use minimum pacing (1 req/sec) with retry backoff.
+- Imported source provenance is stored on book rows:
+  - `source_name`, `source_url`, `source_retrieved_at`
+  - `source_license_url`, `source_work_id`
+  - `source_original_sha256`
+- Book UI must display source/license metadata and legal disclaimer text for Project Gutenberg imports.
+- Import cache should reuse existing ready import by same source/work ID for the same user to prevent repeated automated downloads.

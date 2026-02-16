@@ -91,7 +91,7 @@ MVP ingestion limited to:
 - RTF
 - DOCX
 
-Server-side URL fetch is deferred.
+General server-side URL fetch is deferred, with explicit exception defined by D-017.
 
 ---
 
@@ -120,3 +120,21 @@ Scope:
 Out of scope / exceptions:
 - Brand logo SVG assets.
 - Book cover/content SVG assets served from the existing asset pipeline.
+
+---
+
+## D-017 - Controlled External Source Import (Project Gutenberg HTML ZIP)
+Status: Accepted | Date: 2026-02-16
+
+Decision:
+Allow server-side URL ingestion only for `project_gutenberg` HTML ZIP sources using configured mirrors and deterministic provenance logging.
+
+Constraints:
+- Required request safeguards: explicit User-Agent, minimum 1 request/sec pacing, retry with backoff.
+- Provenance must be stored on the imported book (`source_url`, retrieval timestamp, license reference, original HTML SHA-256, work ID).
+- UI must expose source + license metadata for imported works.
+- Cache behavior: if the same user already has a ready imported book for the same source/work ID, reuse that record instead of re-downloading.
+
+Rationale:
+- Keeps import automation simple for chapter/block pipeline by ingesting one bundled HTML source.
+- Aligns legal/compliance visibility with explicit source attribution in product UI.

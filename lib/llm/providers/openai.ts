@@ -8,6 +8,8 @@
 import type {
   GenerateBookSummaryInput,
   GenerateBookSummaryOutput,
+  InferPublicationYearInput,
+  InferPublicationYearOutput,
   GenerateNoteInput,
   GenerateNoteOutput,
   LlmProvider,
@@ -16,6 +18,7 @@ import type {
 } from "./provider";
 import { buildTranslateBlockPrompt } from "../prompts/translateBlock";
 import { buildGenerateNotePrompt } from "../prompts/generateNote";
+import { buildInferPublicationYearPrompt } from "../prompts/inferPublicationYear";
 
 export class OpenAiProvider implements LlmProvider {
   public name = "openai";
@@ -120,5 +123,48 @@ export class OpenAiProvider implements LlmProvider {
     const summaryText = (resp?.choices?.[0]?.message?.content ?? "").trim();
     if (!summaryText) throw new Error("Empty model output");
     return { summaryText };
+  }
+
+  async inferPublicationYear(input: InferPublicationYearInput): Promise<InferPublicationYearOutput> {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const OpenAI = require("openai");
+    const client = new OpenAI({ apiKey });
+    const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+    const { system, user } = buildInferPublicationYearPrompt(input);
+
+    const resp = await client.chat.completions.create({
+      model,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      temperature: 0.1,
+      max_tokens: 120,
+    });
+
+    const raw = (resp?.choices?.[0]?.message?.content ?? "").trim();
+    if (!raw) return { year: null };
+
+    let parsedYear: number | null = null;
+    try {
+      const parsed = JSON.parse(raw) as { year?: unknown };
+      if (typeof parsed.year === "number" && Number.isFinite(parsed.year)) {
+        parsedYear = Math.trunc(parsed.year);
+      } else if (parsed.year === null) {
+        parsedYear = null;
+      }
+    } catch {
+      const match = raw.match(/\b(1[5-9]\d{2}|20\d{2})\b/);
+      parsedYear = match?.[1] ? Number.parseInt(match[1], 10) : null;
+    }
+
+    const currentYear = new Date().getUTCFullYear();
+    if (parsedYear !== null && (parsedYear < 1500 || parsedYear > currentYear)) {
+      return { year: null };
+    }
+    return { year: parsedYear };
   }
 }

@@ -57,10 +57,18 @@ const GenerateBookSummarySchema = z
   })
   .strict();
 
+const InferPublicationYearSchema = z
+  .object({
+    action: z.literal("infer_publication_year"),
+    bookId: z.string().uuid(),
+  })
+  .strict();
+
 const LlmRequestSchema = z.discriminatedUnion("action", [
   TranslateBlockSchema,
   GenerateNoteSchema,
   GenerateBookSummarySchema,
+  InferPublicationYearSchema,
 ]);
 
 function getAccessToken(req: NextRequest): string {
@@ -169,6 +177,95 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
       }
     }
 
+    if (body.action === "infer_publication_year") {
+      const { data: bookRow, error: bookErr } = await supabase
+        .from("books")
+        .select("id,title,author,description,source_filename,publication_year,year")
+        .eq("id", body.bookId)
+        .eq("user_id", userId)
+        .single();
+      if (bookErr || !bookRow) {
+        return NextResponse.json(
+          { ok: false, error: err("BAD_REQUEST", "A konyv nem talalhato a felhasznalohoz.") },
+          { status: 400 }
+        );
+      }
+
+      const currentRaw = (bookRow as any).publication_year ?? (bookRow as any).year;
+      const currentYear =
+        currentRaw !== null && currentRaw !== undefined && `${currentRaw}`.trim() !== ""
+          ? Number.parseInt(`${currentRaw}`, 10)
+          : Number.NaN;
+      if (Number.isFinite(currentYear)) {
+        return NextResponse.json({ ok: true, inferredYear: currentYear, persisted: true }, { status: 200 });
+      }
+
+      const { data: chapterRows } = await supabase
+        .from("chapters")
+        .select("title,chapter_index")
+        .eq("book_id", body.bookId)
+        .order("chapter_index", { ascending: true })
+        .limit(12);
+
+      const { data: blockRows } = await supabase
+        .from("blocks")
+        .select("original_text,block_index")
+        .eq("book_id", body.bookId)
+        .order("block_index", { ascending: true })
+        .limit(8);
+
+      const chapterTitles = ((chapterRows ?? []) as Array<{ title: string | null }>)
+        .map((row) => (row.title ?? "").trim())
+        .filter((title) => title.length > 0);
+      const sampleText = ((blockRows ?? []) as Array<{ original_text: string | null }>)
+        .map((row) => (row.original_text ?? "").trim())
+        .filter((text) => text.length > 0)
+        .join("\n\n");
+
+      let out: { year: number | null };
+      try {
+        out = await provider.inferPublicationYear({
+          bookTitle: (bookRow as any).title ?? null,
+          author: (bookRow as any).author ?? null,
+          description: (bookRow as any).description ?? null,
+          sourceFilename: (bookRow as any).source_filename ?? null,
+          chapterTitles,
+          sampleText,
+        });
+      } catch (providerError) {
+        return NextResponse.json({ ok: false, error: mapProviderError(providerError) }, { status: 500 });
+      }
+
+      if (out.year === null) {
+        return NextResponse.json({ ok: true, inferredYear: null, persisted: false }, { status: 200 });
+      }
+
+      const fullPayload = { publication_year: out.year, year: out.year };
+      const legacyPayload = { year: out.year };
+
+      const booksTable = supabase.from("books") as any;
+      const fullUpdate = await booksTable.update(fullPayload).eq("id", body.bookId).eq("user_id", userId);
+      if (fullUpdate.error) {
+        if (hasMissingOptionalYearColumns(fullUpdate.error)) {
+          const legacyUpdate = await booksTable.update(legacyPayload).eq("id", body.bookId).eq("user_id", userId);
+          if (legacyUpdate.error) {
+            return NextResponse.json(
+              { ok: false, error: err("INTERNAL", legacyUpdate.error.message ?? "Sikertelen ev mentes.") },
+              { status: 500 }
+            );
+          }
+          return NextResponse.json({ ok: true, inferredYear: out.year, persisted: true }, { status: 200 });
+        }
+
+        return NextResponse.json(
+          { ok: false, error: err("INTERNAL", fullUpdate.error.message ?? "Sikertelen ev mentes.") },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ ok: true, inferredYear: out.year, persisted: true }, { status: 200 });
+    }
+
     const ctx = await getLlmContextForBlock(supabase, { bookId: body.bookId, blockId: body.blockId });
     if (ctx.originalText.length > INPUT_CHAR_CAP) {
       return NextResponse.json(
@@ -224,4 +321,9 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
     const message = e instanceof Error ? e.message : "Ismeretlen szerverhiba.";
     return NextResponse.json({ ok: false, error: err("INTERNAL", message) }, { status: 500 });
   }
+}
+
+function hasMissingOptionalYearColumns(error: { message?: string } | null): boolean {
+  const message = `${error?.message ?? ""}`.toLowerCase();
+  return message.includes("publication_year") || message.includes("column") && message.includes(" year");
 }

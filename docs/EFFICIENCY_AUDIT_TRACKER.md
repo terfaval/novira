@@ -1,4 +1,4 @@
-﻿# Efficiency Audit Tracker (Manual Governance)
+# Efficiency Audit Tracker (Manual Governance)
 
 Date: 2026-02-15
 Status: Active
@@ -37,17 +37,17 @@ This is a one-time/batch audit process with periodic manual updates, not continu
 
 | ID | Item | Current signal | Status | Priority | Notes |
 |---|---|---|---|---|---|
-| EFF-001 | Split `BookDashboard.tsx` into focused subcomponents | 3646-line component with mixed responsibilities | backlog | P0 | First target for render-cost and maintenance reduction |
-| EFF-002 | Memoization audit (`useMemo`, `useCallback`, memo boundaries) | High probability of avoidable rerenders in dashboard tree | backlog | P0 | Measure before/after with React Profiler |
-| EFF-003 | Normalize heavy derived state into selectors/hooks | Repeated local derivations likely in large view logic | backlog | P1 | Prefer predictable, testable hook boundaries |
-| EFF-004 | Event handler stability pass | Many interactive controls/hover actions | backlog | P1 | Reduce function churn for list rows/blocks |
+| EFF-001 | Split `BookDashboard.tsx` into focused subcomponents | 3646-line component with mixed responsibilities | in_progress | P0 | Phase-6 done: reduced chapter-level callback prop fan-out via typed `chapterSectionHandlers` bundle and stable cancel callback. |
+| EFF-002 | Memoization audit (`useMemo`, `useCallback`, memo boundaries) | High probability of avoidable rerenders in dashboard tree | in_progress | P0 | Phase-3 done: stabilized panel shell callbacks (`onSwap`, `onBodyScroll`, `onBodyClick`) and removed inline handler churn in `renderDashboardPanel`. |
+| EFF-003 | Normalize heavy derived state into selectors/hooks | Repeated local derivations likely in large view logic | in_progress | P1 | Phase-3 done: consolidated chapter/note navigator derivations into memoized `navigatorDerived` selector. |
+| EFF-004 | Event handler stability pass | Many interactive controls/hover actions | in_progress | P1 | Phase-2 done: stabilized mobile tool panel, mobile tab, and bookmark editor interactions by replacing inline closures with shared callback handlers. |
 
 ### WS-2 CSS + Layout Efficiency
 
 | ID | Item | Current signal | Status | Priority | Notes |
 |---|---|---|---|---|---|
-| EFF-005 | Modularize dashboard stylesheet by panel/feature | 1289-line module CSS file | backlog | P0 | Split by concern: shell/panels/cards/mobile/actions |
-| EFF-006 | Remove duplicated/overlapping style rules | Frequent UI iteration indicates possible rule accumulation | backlog | P1 | Keep behavior identical while reducing cascade weight |
+| EFF-005 | Modularize dashboard stylesheet by panel/feature | 1289-line module CSS file | in_progress | P0 | Phase-5 done: reduced mobile media-query duplication by consolidating shared horizontal gutter rules for `.header` and `.main`. |
+| EFF-006 | Remove duplicated/overlapping style rules | Frequent UI iteration indicates possible rule accumulation | done | P1 | Phase-5 done: finalized overlap cleanup by removing desktop/mobile bookmark control padding override churn; no further safe dedup items identified in this pass. |
 | EFF-007 | Optimize expensive visual effects | Potential costly shadows/filters during scroll/hover | backlog | P2 | Validate with Performance panel |
 
 ### WS-3 Data + API Efficiency
@@ -92,6 +92,29 @@ This is a one-time/batch audit process with periodic manual updates, not continu
 ## Progress Log
 
 - 2026-02-15: Tracker initialized with first-pass backlog from repository baseline.
+- 2026-02-15: EFF-001/EFF-002 phase-1 started in `BookDashboard.tsx` (memoized `BlockCard`, removed per-render fallback `new Set()` allocation for dismissed suggestions).
+- 2026-02-15: EFF-001 phase-2 completed in `BookDashboard.tsx` (extracted shared `ChapterBlockList` to centralize duplicated chapter block rendering).
+- 2026-02-15: EFF-002 phase-2 completed in `BookDashboard.tsx` (memoized leaf UI components in chapter/block render paths to reduce unnecessary rerenders).
+- 2026-02-15: EFF-001 phase-3 completed in `BookDashboard.tsx` (extracted `DashboardPanelShell` to centralize panel title/swap/body/error wrapper duplication).
+- 2026-02-15: EFF-001 phase-4 completed in `BookDashboard.tsx` (extracted `ChapterSection` to centralize repeated chapter-level composition used by both panels).
+- 2026-02-15: EFF-001 phase-5 completed in `BookDashboard.tsx` (introduced `renderDashboardPanel` helper to unify panel-level render branches and reduce duplication).
+- 2026-02-15: EFF-001 phase-6 completed in `BookDashboard.tsx` (reduced callback prop fan-out in chapter rendering by bundling handlers in `chapterSectionHandlers`).
+- 2026-02-15: EFF-002 phase-3 completed in `BookDashboard.tsx` (stabilized panel shell callbacks in `renderDashboardPanel` by replacing inline handlers with `useCallback` references).
+- 2026-02-15: EFF-003 phase-1 completed in `BookDashboard.tsx` (normalized dashboard-level derived state into memoized `dashboardDerived` selector and removed per-render completion fallback object allocation).
+- 2026-02-15: EFF-003 phase-2 completed in `BookDashboard.tsx` (consolidated bookmark-related derived calculations into memoized `bookmarkDerived` selector).
+- 2026-02-15: EFF-003 phase-3 completed in `BookDashboard.tsx` (consolidated chapter progress and note navigator derived calculations into memoized `navigatorDerived` selector).
+- 2026-02-15: EFF-004 phase-1 completed in `BookDashboard.tsx` (stabilized chapter/note/bookmark navigator event handlers by removing per-item inline closures in mapped rows).
+- 2026-02-15: EFF-004 phase-2 completed in `BookDashboard.tsx` (stabilized mobile page tabs, mobile tool panel actions, and bookmark editor actions via shared `useCallback` handlers and `data-*` dispatch where applicable).
+- 2026-02-15: EFF-005 phase-1 started in `BookDashboard.module.css` (merged identical bookmark style blocks and removed empty `.progressTrackComplete {}` rule).
+- 2026-02-15: EFF-005 phase-2 completed in `BookDashboard.module.css` (merged repeated `mobilePageTabs`, list-grid, active-highlight, fill, and mobile layout grid rule blocks).
+- 2026-02-15: EFF-005 phase-3 completed in `BookDashboard.module.css` (consolidated shared scrollbar rules and unified desktop/mobile bookmark control base styles to reduce duplicated declarations).
+- 2026-02-15: EFF-005 phase-4 completed in `BookDashboard.module.css` (consolidated repeated neutral control declarations and merged bookmark name input sizing rules for desktop/mobile variants).
+- 2026-02-15: EFF-005 phase-5 completed in `BookDashboard.module.css` (consolidated shared mobile horizontal gutter declarations for `.header` and `.main` inside the `max-width: 960px` media query).
+- 2026-02-15: EFF-006 phase-1 completed in `BookDashboard.module.css` (removed overlapping/redundant declarations from `.header` base styles and `max-width: 960px` mobile overrides while preserving behavior).
+- 2026-02-15: EFF-006 phase-2 completed in `BookDashboard.module.css` (removed redundant non-media defaults from `.header`, `.main`, and `.desktopStage` declarations without changing behavior).
+- 2026-02-15: EFF-006 phase-3 completed in `BookDashboard.module.css` (grouped repeated active-state accent border color declarations across `activeToggle`, bookmark, mobile tool, and mobile tab variants).
+- 2026-02-15: EFF-006 phase-4 completed in `BookDashboard.module.css` (grouped shared bookmark control sizing declarations and removed residual empty spacing blocks without behavior changes).
+- 2026-02-15: EFF-006 phase-5 completed in `BookDashboard.module.css` (removed bookmark control padding override churn by splitting desktop/mobile padding declarations into their dedicated selector blocks); EFF-006 moved to `done`.
 
 ## Done Criteria For This Audit Program
 

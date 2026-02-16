@@ -13,7 +13,19 @@ type LoadState =
   | { status: "error"; message: string }
   | { status: "ready"; books: BookRow[] };
 
-type SortMode = "updated_desc" | "updated_asc" | "title_asc" | "author_asc" | "year_desc";
+type SortMode =
+  | "updated_desc"
+  | "updated_asc"
+  | "title_asc"
+  | "title_desc"
+  | "author_asc"
+  | "author_desc"
+  | "year_desc"
+  | "year_asc"
+  | "length_desc"
+  | "length_asc"
+  | "edited_ratio_desc"
+  | "edited_ratio_asc";
 
 function normalizeText(value: string | null | undefined) {
   return (value ?? "")
@@ -30,10 +42,25 @@ function resolveBookYear(book: BookRow) {
     return Number.isNaN(parsed) ? null : parsed;
   }
 
-  const fromText = `${book.description ?? ""} ${book.source_filename ?? ""}`.match(/\b(1[5-9]\d{2}|20\d{2})\b/);
-  if (!fromText) return null;
-  const parsed = Number.parseInt(fromText[1], 10);
-  return Number.isNaN(parsed) ? null : parsed;
+  const currentYear = new Date().getUTCFullYear();
+  const text = `${book.description ?? ""} ${book.source_filename ?? ""}`;
+  const matches = [...text.matchAll(/\b(1[5-9]\d{2}|20\d{2})\b/g)];
+  const candidateYears = matches
+    .map((entry) => Number.parseInt(entry[1], 10))
+    .filter((year) => Number.isFinite(year) && year <= currentYear);
+  if (candidateYears.length > 0) return Math.min(...candidateYears);
+  return null;
+}
+
+function resolveBookLength(book: BookRow) {
+  return typeof book.source_size_bytes === "number" && Number.isFinite(book.source_size_bytes)
+    ? Math.max(0, book.source_size_bytes)
+    : 0;
+}
+
+function resolveEditedRatio(book: BookRow) {
+  const raw = typeof book.progress === "number" && Number.isFinite(book.progress) ? book.progress : 0;
+  return Math.max(0, Math.min(100, raw));
 }
 
 export function LibraryClient() {
@@ -102,8 +129,15 @@ export function LibraryClient() {
     .sort((a, b) => {
       if (sortMode === "updated_asc") return a.updated_at.localeCompare(b.updated_at);
       if (sortMode === "title_asc") return a.title.localeCompare(b.title, "hu");
+      if (sortMode === "title_desc") return b.title.localeCompare(a.title, "hu");
       if (sortMode === "author_asc") return (a.author ?? "").localeCompare(b.author ?? "", "hu");
+      if (sortMode === "author_desc") return (b.author ?? "").localeCompare(a.author ?? "", "hu");
       if (sortMode === "year_desc") return (resolveBookYear(b) ?? -1) - (resolveBookYear(a) ?? -1);
+      if (sortMode === "year_asc") return (resolveBookYear(a) ?? -1) - (resolveBookYear(b) ?? -1);
+      if (sortMode === "length_desc") return resolveBookLength(b) - resolveBookLength(a);
+      if (sortMode === "length_asc") return resolveBookLength(a) - resolveBookLength(b);
+      if (sortMode === "edited_ratio_desc") return resolveEditedRatio(b) - resolveEditedRatio(a);
+      if (sortMode === "edited_ratio_asc") return resolveEditedRatio(a) - resolveEditedRatio(b);
       return b.updated_at.localeCompare(a.updated_at);
     });
 
@@ -229,8 +263,15 @@ export function LibraryClient() {
           <option value="updated_desc">Frissites (uj -&gt; regi)</option>
           <option value="updated_asc">Frissites (regi -&gt; uj)</option>
           <option value="title_asc">Cim (A-Z)</option>
+          <option value="title_desc">Cim (Z-A)</option>
           <option value="author_asc">Szerzo (A-Z)</option>
+          <option value="author_desc">Szerzo (Z-A)</option>
           <option value="year_desc">Ev (uj -&gt; regi)</option>
+          <option value="year_asc">Ev (regi -&gt; uj)</option>
+          <option value="length_desc">Hossz (hosszu -&gt; rovid)</option>
+          <option value="length_asc">Hossz (rovid -&gt; hosszu)</option>
+          <option value="edited_ratio_desc">Szerkesztettseg (magas -&gt; alacsony)</option>
+          <option value="edited_ratio_asc">Szerkesztettseg (alacsony -&gt; magas)</option>
         </select>
       </label>
     </div>
@@ -242,10 +283,6 @@ export function LibraryClient() {
         className="library-prototype-tools library-toolbar-desktop"
         aria-label="Konyvespolc szures es sorbarendezes prototipus"
       >
-        <div className="mobile-tools-sheet-title">
-          <span>Tool panel</span>
-          <Icon name="admin" size={16} />
-        </div>
         {renderToolsContent()}
       </section>
 

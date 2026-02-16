@@ -41,6 +41,10 @@ export type LlmRequest =
   | {
       action: "generate_book_summary";
       bookId: string;
+    }
+  | {
+      action: "infer_publication_year";
+      bookId: string;
     };
 
 export type VariantStatus = "draft" | "accepted" | "rejected";
@@ -67,6 +71,12 @@ export type LlmBookSummarySuccessResponse = {
   summaryText: string;
 };
 
+export type LlmPublicationYearSuccessResponse = {
+  ok: true;
+  inferredYear: number | null;
+  persisted: boolean;
+};
+
 export type LlmErrorResponse = {
   ok: false;
   error: LlmError;
@@ -76,4 +86,5 @@ export type LlmResponse =
   | LlmSuccessResponse
   | LlmNoteSuccessResponse
   | LlmBookSummarySuccessResponse
+  | LlmPublicationYearSuccessResponse
   | LlmErrorResponse;

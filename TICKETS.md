@@ -61,6 +61,56 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-BOOK-DASHBOARD-EDITED-PANEL-UNDO-LAST-CHANGE
+- Goal: Add undo-safe recovery for edited-panel mutations by checkpointing block/variant state before generate/accept/delete/reject/manual-save actions, then restoring the last checkpoint from desktop/mobile tool controls.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-DASHBOARD-BATCH-GENERATE-SCROLL-AUTO-AND-UNACCEPTED-LIMIT
+- Goal: Add dashboard multi-block generate action with scroll-triggered continuous generation option, enforce a fixed max on unaccepted generated blocks, and optionally auto-refresh chapter titles from newly generated content.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EXTIMPORT-PROJECT-GUTENBERG-HTML-ZIP
+- Goal: Add Project Gutenberg HTML ZIP external importer (work-id based) with mirror/fallback fetch, rate-limit/backoff, provenance + license metadata storage, upload-page trigger, and Book Dashboard Source & License panel.
+- Files modified: `app/api/import/external/route.ts`, `lib/upload/external/projectGutenberg.ts`, `supabase/migrations/supabase_migrations_0006_external_source_provenance.sql`, `app/upload/page.tsx`, `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `lib/types.ts`, `SPEC.md`, `DECISIONS.md`, `SECURITY.md`, `README.md`, `.env.example`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-DASHBOARD-REACT-WARNINGS-KEY-AND-NESTED-BUTTON
+- Goal: Resolve Book Dashboard React console warnings by adding missing chapter list keys and removing invalid nested `button` markup in note navigator cards.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-CHAPTER-DELETE-MERGE-AND-SIDEBAR-ADD-MODE
+- Goal: Ensure chapter delete always moves chapter blocks into the previous chapter when available, and add a sidebar `Fejezet +` mode where clicking a block creates a new chapter starting there with that block text as chapter title.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-YEAR-PERSISTENCE-DB-MIGRATION-AND-AI-PROMPT-RELAX
+- Goal: Fix non-persisting manual/AI year updates by adding missing `books.publication_year/year` DB columns via migration, and relax AI year prompt so it returns best-effort estimate when data is sparse.
+- Files modified: `supabase/migrations/supabase_migrations_0005_book_publication_year.sql`, `lib/llm/prompts/inferPublicationYear.ts`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-AI-PUBLICATION-YEAR-INFERENCE-PERSIST
+- Goal: Replace fixed-title year fallback with AI-based original publication-year inference, persist inferred year to Supabase via `/api/llm`, auto-run once for year-empty books, and add manual admin trigger.
+- Files modified: `app/api/llm/route.ts`, `lib/llm/types.ts`, `lib/llm/providers/provider.ts`, `lib/llm/providers/openai.ts`, `lib/llm/prompts/inferPublicationYear.ts`, `components/BookDashboard/BookDashboard.tsx`, `components/BookCard.tsx`, `components/LibraryClient.tsx`, `app/api/upload/route.ts`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-ORIGINAL-YEAR-AUTOFILL-NO-CREATED-AT-FALLBACK
+- Goal: Remove `created_at` year fallback (to prevent forced current-year display), keep manual year editable, and auto-fill original publication year from metadata/known works with one-time persistence on upload when inferable.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookCard.tsx`, `components/LibraryClient.tsx`, `app/api/upload/route.ts`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-YEAR-AUTOFILL-AND-LEGACY-SAVE-FALLBACK
+- Goal: Ensure admin year edits persist even on legacy schema (`year` fallback), and auto-fill year in edit form from stored metadata/text/date when explicit year is missing.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-CHAPTER-DELETE-MOVE-BLOCKS-TO-PREVIOUS
+- Goal: On chapter delete, move that chapter's blocks to the previous chapter before delete so block-linked data is preserved.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-BOOK-REJECT-X-ONLY-WHEN-UNACCEPTED-GENERATED-AND-RIGHT-ALIGNED-ROW
 - Goal: Render reject action as `X`, show it only for non-accepted generated state, and keep block action controls in one right-aligned row on hover.
 - Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
@@ -619,3 +669,148 @@ Step board:
 - Goal: Create a large, onboarding-style efficiency audit tracker in one markdown document for manual (non-continuous) progress tracking of refactor opportunities.
 - Files modified: `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
 - Commit hash: `5d9942f72a24d64abf2526a6e4e34144271b969a` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF001-EFF002-PHASE1-BLOCKCARD-MEMO
+- Goal: Start EFF-001/EFF-002 with a low-risk phase-1 optimization by memoizing `BlockCard` and removing per-render fallback `new Set()` allocations in dashboard block lists.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF005-PHASE1-CSS-BOOKMARK-CONSOLIDATION
+- Goal: Start EFF-005 with a behavior-preserving CSS cleanup by consolidating duplicated bookmark-related style blocks and removing one empty rule.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF005-PHASE2-CSS-RULE-MERGE
+- Goal: Continue EFF-005 with behavior-preserving CSS deduplication by merging repeated rule blocks for mobile tabs, list grids, active highlights, fills, and mobile layout wrappers.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF001-PHASE2-CHAPTER-BLOCKLIST-EXTRACTION
+- Goal: Continue EFF-001 with behavior-preserving component extraction by introducing shared `ChapterBlockList` for duplicated original/translated chapter block rendering.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF002-PHASE2-LEAF-MEMO-BOUNDARIES
+- Goal: Continue EFF-002 with behavior-preserving memoization by adding memo boundaries to leaf chapter/block UI components used in repeated render paths.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF001-PHASE3-PANEL-SHELL-EXTRACTION
+- Goal: Continue EFF-001 with behavior-preserving extraction by introducing shared `DashboardPanelShell` for duplicated original/translated panel wrapper structure.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF001-PHASE4-CHAPTER-SECTION-EXTRACTION
+- Goal: Continue EFF-001 with behavior-preserving extraction by introducing shared `ChapterSection` for duplicated chapter header + block list composition in original/translated panels.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF001-PHASE5-PANEL-RENDER-HELPER
+- Goal: Continue EFF-001 with behavior-preserving consolidation by introducing a parameterized panel render helper that unifies original/translated panel branches.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF001-PHASE6-CHAPTER-HANDLER-BUNDLE
+- Goal: Continue EFF-001 with behavior-preserving prop-surface reduction by bundling chapter-level callback props into typed `chapterSectionHandlers`.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF002-PHASE3-PANEL-CALLBACK-STABILIZATION
+- Goal: Continue EFF-002 with behavior-preserving callback stabilization by replacing inline panel shell handlers with stable `useCallback` references in `renderDashboardPanel`.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF003-PHASE1-DERIVED-SELECTOR-NORMALIZATION
+- Goal: Start EFF-003 with a behavior-preserving derived-state normalization by centralizing dashboard-level computed view values into a memoized selector block.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF003-PHASE2-BOOKMARK-DERIVED-CONSOLIDATION
+- Goal: Continue EFF-003 with behavior-preserving selector normalization by consolidating bookmark-related derived state and navigator mapping into one memoized block.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF003-PHASE3-NAVIGATOR-DERIVED-CONSOLIDATION
+- Goal: Continue EFF-003 with behavior-preserving selector normalization by consolidating chapter progress and note navigator derived calculations into one memoized block.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF004-PHASE1-NAVIGATOR-HANDLER-STABILIZATION
+- Goal: Start EFF-004 with behavior-preserving handler stabilization by replacing per-item inline navigator click handlers with stable `useCallback` handlers and `data-*` payload lookup.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF005-PHASE3-CSS-SHARED-RULE-CONSOLIDATION
+- Goal: Continue EFF-005 with behavior-preserving stylesheet deduplication by consolidating repeated scrollbar declarations and shared bookmark control base rules across desktop/mobile variants.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF004-PHASE2-MOBILE-EDITOR-HANDLER-STABILIZATION
+- Goal: Continue EFF-004 with behavior-preserving handler stabilization by replacing inline closures in mobile tabs/tool panel and bookmark editor controls with shared callbacks.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF005-PHASE4-CONTROL-BASESTYLE-CONSOLIDATION
+- Goal: Continue EFF-005 with behavior-preserving CSS deduplication by consolidating shared neutral control declarations and merging duplicated bookmark name input sizing rules.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF005-PHASE5-MEDIA-GUTTER-DEDUP
+- Goal: Continue EFF-005 with behavior-preserving media-query cleanup by consolidating repeated mobile horizontal gutter declarations in the `max-width: 960px` block.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF006-PHASE1-OVERLAP-RULE-CLEANUP
+- Goal: Start EFF-006 with behavior-preserving overlap cleanup by removing redundant base/mobile CSS declarations that do not affect computed layout or rendering.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF006-PHASE2-NONMEDIA-DEFAULT-CLEANUP
+- Goal: Continue EFF-006 with behavior-preserving cleanup by removing redundant non-media default declarations from layout shell selectors.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF006-PHASE3-ACTIVE-ACCENT-BORDER-CONSOLIDATION
+- Goal: Continue EFF-006 with behavior-preserving overlap cleanup by consolidating repeated active-state accent border color declarations across control variants.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF006-PHASE4-BOOKMARK-SIZING-AND-TIDY
+- Goal: Continue EFF-006 with behavior-preserving cleanup by consolidating repeated bookmark control sizing declarations and removing residual empty CSS spacing blocks.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-EFFICIENCY-EFF006-PHASE5-PADDING-OVERRIDE-FINALIZE
+- Goal: Finalize EFF-006 with behavior-preserving overlap cleanup by removing bookmark control padding override churn and explicitly separating desktop/mobile padding declarations.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `docs/EFFICIENCY_AUDIT_TRACKER.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-TOOLPANEL-HEADER-HIDE-AND-SPACING-INCREASE
+- Goal: On desktop home/library view, remove Tool panel title/gear header and increase spacing between topbar and carousel, plus carousel and pagination.
+- Files modified: `components/LibraryClient.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-LIBRARY-SORT-LENGTH-AND-EDITED-RATIO
+- Goal: Add Home/Library sort modes for book length and edited ratio.
+- Files modified: `components/LibraryClient.tsx`, `docs/ONBOARDING_FUNCTIONS.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-LIBRARY-SORT-REVERSED-DIRECTION-TOGGLE
+- Goal: Add a reversible direction control so all Home/Library sort modes can be inverted.
+- Files modified: `components/LibraryClient.tsx`, `docs/ONBOARDING_FUNCTIONS.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-LIBRARY-SORT-EXPLICIT-DIRECTION-OPTIONS-AND-STAGE-LAYOUT-FIX
+- Goal: Replace separate sort direction selector with explicit ascending/descending sort options, and fix Home carousel stage/bottom layout spacing so content reaches page bottom without distortion.
+- Files modified: `components/LibraryClient.tsx`, `app/globals.css`, `docs/ONBOARDING_FUNCTIONS.md`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-EDIT-SHORT-DESCRIPTION-TEXTAREA-DESKTOP-INCREASE-MOBILE-SAFE
+- Goal: Increase desktop short-description textarea size in book edit panel while keeping mobile layout safe so it does not collide with icon preview.
+- Files modified: `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-BOOKCARD-DESCRIPTION-BOX-DESKTOP-INCREASE-MOBILE-ICON-SAFE
+- Goal: Increase desktop description popover size on Home book card, and keep mobile popover constrained so it does not overlap the card icon area.
+- Files modified: `app/globals.css`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `ddf90fbe3b28274cb352cbd034a1618756278dc4` (workspace base head; no new commit created in this session)

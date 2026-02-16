@@ -30,7 +30,7 @@ Legend:
 | LIB-01 | Home/Library | Library list load | Loads books after anonymous identity boot and shows loading/error/empty states | no |
 | LIB-02 | Home/Library | Search filter | Filters by title/author/description | no |
 | LIB-03 | Home/Library | Status filter | Filters books by status | no |
-| LIB-04 | Home/Library | Sort options | Sort by updated/title/author/year | no |
+| LIB-04 | Home/Library | Sort options | Sort by updated/title/author/year/length/edited ratio with explicit ascending/descending options | no |
 | LIB-05 | Home/Library | Carousel navigation | Arrow buttons, keyboard arrows, pagination dots | no |
 | LIB-06 | Home/Library | Mobile tool sheet | FAB + mobile tool panel for filters/sort | no |
 | UPL-01 | Upload | Local file upload | Accepts HTML/RTF/DOCX with title/author/description metadata | no |

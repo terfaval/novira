@@ -1,10 +1,14 @@
 "use client";
 
 import {
+  type ChangeEvent,
   type CSSProperties,
   Fragment,
   type FocusEvent,
+  type KeyboardEvent,
   type MouseEvent,
+  type ReactNode,
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -57,6 +61,33 @@ type ManualEditErrorState = {
 type NoteErrorState = {
   blockId: string;
   message: string;
+};
+type UndoVariantStatus = "draft" | "accepted" | "rejected";
+type EditedPanelUndoVariantSnapshot = {
+  id: string;
+  owner_id: string | null;
+  book_id: string;
+  chapter_id: string;
+  block_id: string;
+  variant_index: number;
+  status: UndoVariantStatus;
+  text: string;
+};
+type EditedPanelUndoBlockSnapshot = {
+  id: string;
+  book_id: string;
+  chapter_id: string;
+  block_index: number;
+  original_text: string;
+};
+type EditedPanelUndoSnapshotEntry = {
+  block: EditedPanelUndoBlockSnapshot;
+  variants: EditedPanelUndoVariantSnapshot[];
+};
+type EditedPanelUndoSnapshot = {
+  actionLabel: string;
+  createdAt: number;
+  entries: EditedPanelUndoSnapshotEntry[];
 };
 type BlockSelectionRange = {
   start: number;
@@ -162,6 +193,118 @@ type BookmarkColorOption = {
   key: string;
   label: string;
   color: string;
+};
+
+type ChapterBlockListProps = {
+  group: ChapterGroup;
+  textMode: DashboardActivePanel;
+  showControls: boolean;
+  panelAccentColor: string;
+  isMobile: boolean;
+  activeMobileBlockId: string | null;
+  onMobileActivate: (blockId: string | null) => void;
+  bookmarksByMarkerId: Map<string, DashboardBookmarkEntry[]>;
+  bookmarkColorByKey: Record<string, string>;
+  acceptingBlockId: string | null;
+  generatingBlockId: string | null;
+  deletingBlockId: string | null;
+  manualSavingBlockId: string | null;
+  creatingNoteBlockId: string | null;
+  generateError: GenerateErrorState | null;
+  noteError: NoteErrorState | null;
+  manualEditError: ManualEditErrorState | null;
+  dismissedSuggestions: Record<string, Set<number>>;
+  onAccept: (block: DashboardBlock) => void;
+  onGenerate: (block: DashboardBlock) => void;
+  onDelete: (block: DashboardBlock) => void;
+  onSaveManualEdit: (args: { block: DashboardBlock; text: string }) => Promise<boolean>;
+  onRejectToOriginal: (block: DashboardBlock) => void;
+  onSetBookmarkBefore: (block: DashboardBlock, kind: DashboardBookmarkKind) => void;
+  onCreateNote: (args: { block: DashboardBlock; range: BlockSelectionRange }) => Promise<void>;
+  onApproveSuggestion: (args: {
+    block: DashboardBlock;
+    number: number;
+    content: string;
+    start: number;
+    end: number;
+  }) => Promise<void>;
+  onRejectSuggestion: (args: { block: DashboardBlock; number: number }) => void;
+  showMergeHandles: boolean;
+  mergingPairKey: string | null;
+  chapterActionsBusy: boolean;
+  chapterAddMode: boolean;
+  chapterAddBusy: boolean;
+  onMergeBlocks: (leftBlock: DashboardBlock, rightBlock: DashboardBlock) => void;
+  onAddChapterFromBlock: (block: DashboardBlock) => void;
+};
+
+type DashboardPanelShellProps = {
+  kind: "original" | "translated";
+  title: string;
+  showSwap: boolean;
+  onSwap: () => void;
+  swapLabel: string;
+  swapTitle: string;
+  bodyRef: { current: HTMLDivElement | null };
+  onBodyScroll: () => void;
+  onBodyClick: () => void;
+  inlineErrorMessage?: string | null;
+  children: ReactNode;
+};
+
+type ChapterSectionProps = {
+  panelMode: "original" | "translated";
+  group: ChapterGroup;
+  textMode: DashboardActivePanel;
+  showControls: boolean;
+  panelAccentColor: string;
+  isMobile: boolean;
+  activeMobileBlockId: string | null;
+  onMobileActivate: (blockId: string | null) => void;
+  bookmarksByMarkerId: Map<string, DashboardBookmarkEntry[]>;
+  bookmarkColorByKey: Record<string, string>;
+  acceptingBlockId: string | null;
+  generatingBlockId: string | null;
+  deletingBlockId: string | null;
+  manualSavingBlockId: string | null;
+  creatingNoteBlockId: string | null;
+  generateError: GenerateErrorState | null;
+  noteError: NoteErrorState | null;
+  manualEditError: ManualEditErrorState | null;
+  dismissedSuggestions: Record<string, Set<number>>;
+  chapterEdit: { chapterId: string; chapterIndex: number; title: string } | null;
+  chapterActionsBusy: boolean;
+  chapterAddMode: boolean;
+  chapterAddBusy: boolean;
+  chapterEditError: string | null;
+  showMergeHandles: boolean;
+  mergingPairKey: string | null;
+  handlers: ChapterSectionHandlers;
+};
+
+type ChapterSectionHandlers = {
+  onChapterEditOpen: (group: ChapterGroup) => void;
+  onChapterEditTitleChange: (chapterId: string, value: string) => void;
+  onChapterEditSave: () => void;
+  onChapterEditCancel: () => void;
+  onChapterDelete: (group: ChapterGroup) => void;
+  onAccept: (block: DashboardBlock) => void;
+  onGenerate: (block: DashboardBlock) => void;
+  onDelete: (block: DashboardBlock) => void;
+  onSaveManualEdit: (args: { block: DashboardBlock; text: string }) => Promise<boolean>;
+  onRejectToOriginal: (block: DashboardBlock) => void;
+  onSetBookmarkBefore: (block: DashboardBlock, kind: DashboardBookmarkKind) => void;
+  onCreateNote: (args: { block: DashboardBlock; range: BlockSelectionRange }) => Promise<void>;
+  onApproveSuggestion: (args: {
+    block: DashboardBlock;
+    number: number;
+    content: string;
+    start: number;
+    end: number;
+  }) => Promise<void>;
+  onRejectSuggestion: (args: { block: DashboardBlock; number: number }) => void;
+  onMergeBlocks: (leftBlock: DashboardBlock, rightBlock: DashboardBlock) => void;
+  onAddChapterFromBlock: (block: DashboardBlock) => void;
 };
 
 const BOOK_EDITORIAL_ONBOARDING_STEPS: OnboardingStep[] = [
@@ -271,7 +414,12 @@ const BOOKMARK_COLOR_OPTIONS: BookmarkColorOption[] = [
   { key: "slate", label: "Pala", color: "#637381" },
 ];
 const DEFAULT_BOOKMARK_COLOR_KEY = BOOKMARK_COLOR_OPTIONS[0].key;
+const EMPTY_NUMBER_SET = new Set<number>();
+const EMPTY_COMPLETION = { accepted: 0, total: 0, ratio: 0, isComplete: false };
 const IMPORTANT_BOOKMARK_DEFAULT_COLOR_KEY = "rose";
+const MAX_UNACCEPTED_GENERATED_BLOCKS = 12;
+const BATCH_GENERATE_CHUNK_SIZE = 4;
+const AUTO_GENERATE_SCROLL_THRESHOLD_PX = 320;
 
 function normalizeBookmarkColorKey(value: string | null | undefined): string {
   if (!value) return DEFAULT_BOOKMARK_COLOR_KEY;
@@ -539,6 +687,24 @@ const AUTHOR_SPINE_COLOR_RULES: Array<{ match: string[]; color: string }> = [
   { match: ["arany"], color: "#7A6A49" },
 ];
 
+function inferOriginalPublicationYearFromMetadata(input: {
+  description?: string | null;
+  sourceFilename?: string | null;
+}): string {
+  const currentYear = new Date().getUTCFullYear();
+  const text = `${input.description ?? ""} ${input.sourceFilename ?? ""}`;
+  const yearMatches = [...text.matchAll(/\b(1[5-9]\d{2}|20\d{2})\b/g)];
+  const candidateYears = yearMatches
+    .map((entry) => Number(entry[1]))
+    .filter((year) => Number.isFinite(year) && year <= currentYear);
+
+  if (candidateYears.length > 0) {
+    return `${Math.min(...candidateYears)}`;
+  }
+
+  return "";
+}
+
 function authorSpineColor(author: string): string {
   const normalized = normalizeAuthor(author);
   for (const rule of AUTHOR_SPINE_COLOR_RULES) {
@@ -549,19 +715,27 @@ function authorSpineColor(author: string): string {
   return "#4A5C78";
 }
 
-function toBookEditForm(data: BookDashboardData): BookEditForm {
-  const publicationYear = data.book.publication_year;
-  const legacyYear = data.book.year;
+function inferBookYear(book: BookDashboardData["book"]): string {
+  const direct = book.publication_year ?? book.year;
+  if (direct !== null && direct !== undefined && `${direct}`.trim() !== "") {
+    return `${direct}`.trim();
+  }
+  return inferOriginalPublicationYearFromMetadata({
+    description: book.description,
+    sourceFilename: book.source_filename,
+  });
+}
 
+function hasBookStoredYear(book: BookDashboardData["book"]): boolean {
+  const direct = book.publication_year ?? book.year;
+  return direct !== null && direct !== undefined && `${direct}`.trim() !== "";
+}
+
+function toBookEditForm(data: BookDashboardData): BookEditForm {
   return {
     title: data.book.title ?? "",
     author: data.book.author ?? "",
-    year:
-      publicationYear !== null && publicationYear !== undefined && String(publicationYear).trim() !== ""
-        ? String(publicationYear)
-        : legacyYear !== null && legacyYear !== undefined && String(legacyYear).trim() !== ""
-          ? String(legacyYear)
-          : "",
+    year: inferBookYear(data.book),
     description: data.book.description ?? "",
     icon: data.book.cover_slug ?? data.book.background_slug ?? "",
   };
@@ -621,11 +795,27 @@ function mapSummaryError(status: number, fallbackMessage?: string): string {
   return "Sikertelen leirasgeneralas.";
 }
 
+function mapYearInferenceError(status: number, fallbackMessage?: string): string {
+  if (status === 429) {
+    return "Tul sok evbecslesi keres erkezett. Varj egy kicsit, majd probald ujra.";
+  }
+  if (status === 400) {
+    return "A konyv adatai nem alkalmasak evbecslesre.";
+  }
+  if (status >= 500) {
+    return "Az AI evbecsles most nem elerheto. Probald meg par perc mulva.";
+  }
+  if (fallbackMessage && fallbackMessage.trim()) {
+    return fallbackMessage;
+  }
+  return "Sikertelen evbecsles.";
+}
+
 async function requestDraftGeneration(args: {
   supabase: ReturnType<typeof getSupabaseBrowserClient>;
   bookId: string;
   blockId: string;
-}): Promise<void> {
+}): Promise<string> {
   const { supabase, bookId, blockId } = args;
   const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;
@@ -651,6 +841,10 @@ async function requestDraftGeneration(args: {
     const fallbackMessage = payload && !payload.ok ? payload.error.message : undefined;
     throw new Error(mapGenerateError(response.status, fallbackMessage));
   }
+  if (!("variant" in payload) || !payload.variant?.text?.trim()) {
+    throw new Error("A generalas ures valasszal tert vissza.");
+  }
+  return payload.variant.text.trim();
 }
 
 async function requestSelectionNote(args: {
@@ -717,6 +911,37 @@ async function requestBookSummary(args: {
     throw new Error(mapSummaryError(response.status, fallbackMessage));
   }
   return payload.summaryText.trim();
+}
+
+async function requestPublicationYearInference(args: {
+  supabase: ReturnType<typeof getSupabaseBrowserClient>;
+  bookId: string;
+}): Promise<{ inferredYear: number | null; persisted: boolean }> {
+  const { supabase, bookId } = args;
+  const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (sessionErr || !accessToken) {
+    throw new Error(sessionErr?.message ?? "Nem talalhato ervenyes munkamenet.");
+  }
+
+  const response = await fetch("/api/llm", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      action: "infer_publication_year",
+      bookId,
+    }),
+  });
+
+  const payload = (await response.json().catch(() => null)) as LlmResponse | null;
+  if (!response.ok || !payload?.ok || !("inferredYear" in payload)) {
+    const fallbackMessage = payload && !payload.ok ? payload.error.message : undefined;
+    throw new Error(mapYearInferenceError(response.status, fallbackMessage));
+  }
+  return { inferredYear: payload.inferredYear, persisted: payload.persisted };
 }
 
 function getSelectionRangeWithin(container: HTMLElement): BlockSelectionRange | null {
@@ -904,7 +1129,7 @@ function renderTextWithInlineNotes(args: {
                   })
                 }
               >
-                âś“
+                OK
               </button>
               <button
                 type="button"
@@ -953,6 +1178,31 @@ function actionToneColor(tone: "generate" | "accept" | "delete"): string {
   return "#3969A8";
 }
 
+function hasGeneratedEditedContent(block: Pick<DashboardBlock, "translatedText" | "originalText">): boolean {
+  const translatedTrim = block.translatedText?.trim() ?? "";
+  return translatedTrim.length > 0 && translatedTrim !== block.originalText.trim();
+}
+
+function deriveChapterTitleFromGeneratedText(args: {
+  text: string;
+  chapterIndex: number;
+  maxLength?: number;
+}): string {
+  const maxLength = args.maxLength ?? 72;
+  const cleaned = args.text
+    .replace(/\[\[fn:\d+\]\]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) return `Fejezet ${args.chapterIndex}`;
+
+  const firstSentenceMatch = cleaned.match(/^(.*?[.!?])(?:\s|$)/);
+  const base = (firstSentenceMatch?.[1] ?? cleaned).trim();
+  const compact = base.replace(/[.!?]+$/g, "").trim();
+  if (!compact) return `Fejezet ${args.chapterIndex}`;
+  if (compact.length <= maxLength) return compact;
+  return `${compact.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
 function blockTone(args: { block: DashboardBlock; hasError: boolean }): "generate" | "accept" | "delete" {
   const { block, hasError } = args;
   if (hasError || block.workflowStatus === "rejected") return "delete";
@@ -977,12 +1227,13 @@ function ToolIcon({
     | "back"
     | "swap"
     | "onboarding"
-    | "bookmark";
+    | "bookmark"
+    | "add";
 }) {
   return <Icon name={type} />;
 }
 
-function BlockControls({
+const BlockControls = memo(function BlockControls({
   block,
   textMode,
   acceptInFlight,
@@ -1130,7 +1381,8 @@ function BlockControls({
       {generateError ? <div className={styles.blockError}>{generateError}</div> : null}
     </div>
   );
-}
+});
+BlockControls.displayName = "BlockControls";
 
 function mergePairKey(leftBlockId: string, rightBlockId: string): string {
   return `${leftBlockId}::${rightBlockId}`;
@@ -1149,7 +1401,7 @@ function parseBookmarkBeforeKey(markerId: string): { chapterId: string; blockId:
   };
 }
 
-function BlockMergeHandle({
+const BlockMergeHandle = memo(function BlockMergeHandle({
   leftBlock,
   rightBlock,
   mergeInFlight,
@@ -1178,9 +1430,10 @@ function BlockMergeHandle({
       </button>
     </div>
   );
-}
+});
+BlockMergeHandle.displayName = "BlockMergeHandle";
 
-function BookmarkMarkerStripe({
+const BookmarkMarkerStripe = memo(function BookmarkMarkerStripe({
   markerId,
   entries,
   bookmarkColorByKey,
@@ -1208,9 +1461,10 @@ function BookmarkMarkerStripe({
       ))}
     </div>
   );
-}
+});
+BookmarkMarkerStripe.displayName = "BookmarkMarkerStripe";
 
-function ChapterHeader({
+const ChapterHeader = memo(function ChapterHeader({
   group,
   showActions,
   isEditing,
@@ -1304,9 +1558,10 @@ function ChapterHeader({
       ) : null}
     </div>
   );
-}
+});
+ChapterHeader.displayName = "ChapterHeader";
 
-function BlockCard({
+const BlockCard = memo(function BlockCard({
   block,
   textMode,
   acceptInFlight,
@@ -1329,6 +1584,9 @@ function BlockCard({
   dismissedSuggestionNumbers,
   allowDelete,
   showControls,
+  chapterAddMode,
+  chapterAddBusy,
+  onAddChapterFromBlock,
   accentColor,
   isMobile,
   mobileActionsVisible,
@@ -1363,6 +1621,9 @@ function BlockCard({
   dismissedSuggestionNumbers: Set<number>;
   allowDelete: boolean;
   showControls: boolean;
+  chapterAddMode: boolean;
+  chapterAddBusy: boolean;
+  onAddChapterFromBlock: (block: DashboardBlock) => void;
   accentColor: string;
   isMobile: boolean;
   mobileActionsVisible: boolean;
@@ -1373,34 +1634,47 @@ function BlockCard({
   const [manualEditOpen, setManualEditOpen] = useState(false);
   const [manualDraftText, setManualDraftText] = useState("");
   const textRef = useRef<HTMLParagraphElement | null>(null);
-  const text =
-    textMode === "original"
-      ? block.originalText
-      : block.translatedText?.trim() || block.originalText;
-  const notesForCurrentText =
-    textMode === "translated"
-      ? block.inlineNotes.filter((note) => note.anchorStart >= 0 && note.anchorEnd <= text.length)
-      : [];
-  const suggestedRanges =
-    textMode === "translated"
-      ? findSuggestedRanges(text, block.footnoteSuggestions, dismissedSuggestionNumbers)
-      : [];
-  const remainingSuggestionCount = block.footnoteSuggestions.filter(
-    (item) => !dismissedSuggestionNumbers.has(item.number),
-  ).length;
-  const explanationSignalCount = remainingSuggestionCount + notesForCurrentText.length;
-  const renderedText =
-    notesForCurrentText.length > 0 || suggestedRanges.length > 0
-      ? renderTextWithInlineNotes({
-          text,
-          notes: notesForCurrentText,
-          suggestions: suggestedRanges,
-          blockId: block.id,
-          onApproveSuggestion: ({ number, content, start, end }) =>
-            onApproveSuggestion({ block, number, content, start, end }),
-          onRejectSuggestion: ({ number }) => onRejectSuggestion({ block, number }),
-        })
-      : text;
+  const text = useMemo(
+    () => (textMode === "original" ? block.originalText : block.translatedText?.trim() || block.originalText),
+    [block.originalText, block.translatedText, textMode],
+  );
+  const notesForCurrentText = useMemo(
+    () =>
+      textMode === "translated"
+        ? block.inlineNotes.filter((note) => note.anchorStart >= 0 && note.anchorEnd <= text.length)
+        : [],
+    [block.inlineNotes, text.length, textMode],
+  );
+  const suggestedRanges = useMemo(
+    () =>
+      textMode === "translated"
+        ? findSuggestedRanges(text, block.footnoteSuggestions, dismissedSuggestionNumbers)
+        : [],
+    [block.footnoteSuggestions, dismissedSuggestionNumbers, text, textMode],
+  );
+  const remainingSuggestionCount = useMemo(
+    () => block.footnoteSuggestions.filter((item) => !dismissedSuggestionNumbers.has(item.number)).length,
+    [block.footnoteSuggestions, dismissedSuggestionNumbers],
+  );
+  const explanationSignalCount = useMemo(
+    () => remainingSuggestionCount + notesForCurrentText.length,
+    [notesForCurrentText.length, remainingSuggestionCount],
+  );
+  const renderedText = useMemo(
+    () =>
+      notesForCurrentText.length > 0 || suggestedRanges.length > 0
+        ? renderTextWithInlineNotes({
+            text,
+            notes: notesForCurrentText,
+            suggestions: suggestedRanges,
+            blockId: block.id,
+            onApproveSuggestion: ({ number, content, start, end }) =>
+              onApproveSuggestion({ block, number, content, start, end }),
+            onRejectSuggestion: ({ number }) => onRejectSuggestion({ block, number }),
+          })
+        : text,
+    [block, notesForCurrentText, onApproveSuggestion, onRejectSuggestion, suggestedRanges, text],
+  );
   const translatedTrim = block.translatedText?.trim() ?? "";
   const hasTranslatedContent = Boolean(translatedTrim);
   const hasEditedContent =
@@ -1466,8 +1740,17 @@ function BlockCard({
       data-mode={textMode}
       data-note-signal={explanationSignalCount > 0 ? "true" : "false"}
       data-mobile-active={mobileActionsVisible ? "true" : "false"}
+      data-chapter-add-mode={chapterAddMode ? "true" : "false"}
       onClick={(event) => {
         event.stopPropagation();
+        if (chapterAddMode) {
+          const target = event.target as HTMLElement | null;
+          if (target?.closest("button, input, textarea, a, [role='button']")) return;
+          if (!chapterAddBusy && showControls) {
+            onAddChapterFromBlock(block);
+          }
+          return;
+        }
         if (!isMobile || !showControls) return;
         onMobileActivate(block.id);
       }}
@@ -1572,7 +1855,250 @@ function BlockCard({
       {noteError ? <div className={styles.inlineNoteError}>{noteError}</div> : null}
     </article>
   );
-}
+});
+BlockCard.displayName = "BlockCard";
+
+const ChapterBlockList = memo(function ChapterBlockList({
+  group,
+  textMode,
+  showControls,
+  panelAccentColor,
+  isMobile,
+  activeMobileBlockId,
+  onMobileActivate,
+  bookmarksByMarkerId,
+  bookmarkColorByKey,
+  acceptingBlockId,
+  generatingBlockId,
+  deletingBlockId,
+  manualSavingBlockId,
+  creatingNoteBlockId,
+  generateError,
+  noteError,
+  manualEditError,
+  dismissedSuggestions,
+  onAccept,
+  onGenerate,
+  onDelete,
+  onSaveManualEdit,
+  onRejectToOriginal,
+  onSetBookmarkBefore,
+  onCreateNote,
+  onApproveSuggestion,
+  onRejectSuggestion,
+  showMergeHandles,
+  mergingPairKey,
+  chapterActionsBusy,
+  chapterAddMode,
+  chapterAddBusy,
+  onMergeBlocks,
+  onAddChapterFromBlock,
+}: ChapterBlockListProps) {
+  return (
+    <>
+      {group.blocks.map((block, index) => {
+        const nextBlock = group.blocks[index + 1];
+        const currentMergeKey = nextBlock ? mergePairKey(block.id, nextBlock.id) : null;
+        const currentMarkerId = bookmarkBeforeKey(block);
+        const markerEntries = bookmarksByMarkerId.get(currentMarkerId) ?? [];
+        const mergeBusy =
+          Boolean(currentMergeKey) && mergingPairKey !== null && currentMergeKey === mergingPairKey;
+        const mergeDisabled =
+          mergingPairKey !== null ||
+          chapterActionsBusy ||
+          chapterAddMode ||
+          chapterAddBusy ||
+          acceptingBlockId !== null ||
+          generatingBlockId !== null ||
+          deletingBlockId !== null;
+
+        return (
+          <Fragment key={`${textMode}-row-${block.id}`}>
+            {markerEntries.length > 0 ? (
+              <BookmarkMarkerStripe
+                markerId={currentMarkerId}
+                entries={markerEntries}
+                bookmarkColorByKey={bookmarkColorByKey}
+              />
+            ) : null}
+            <BlockCard
+              key={`${textMode}-${block.id}`}
+              block={block}
+              textMode={textMode}
+              acceptInFlight={acceptingBlockId === block.id}
+              generateInFlight={generatingBlockId === block.id}
+              deleteInFlight={deletingBlockId === block.id}
+              generateError={generateError?.blockId === block.id ? generateError.message : null}
+              noteError={noteError?.blockId === block.id ? noteError.message : null}
+              manualEditError={manualEditError?.blockId === block.id ? manualEditError.message : null}
+              manualSaveInFlight={manualSavingBlockId === block.id}
+              creatingNoteInFlight={creatingNoteBlockId === block.id}
+              onAccept={onAccept}
+              onGenerate={onGenerate}
+              onDelete={onDelete}
+              onSaveManualEdit={onSaveManualEdit}
+              onRejectToOriginal={onRejectToOriginal}
+              onSetBookmarkBefore={onSetBookmarkBefore}
+              onCreateNote={onCreateNote}
+              onApproveSuggestion={onApproveSuggestion}
+              onRejectSuggestion={onRejectSuggestion}
+              dismissedSuggestionNumbers={dismissedSuggestions[block.id] ?? EMPTY_NUMBER_SET}
+              allowDelete={showControls}
+              showControls={showControls}
+              chapterAddMode={chapterAddMode}
+              chapterAddBusy={chapterAddBusy}
+              onAddChapterFromBlock={onAddChapterFromBlock}
+              accentColor={panelAccentColor}
+              isMobile={isMobile}
+              mobileActionsVisible={isMobile && showControls && activeMobileBlockId === block.id}
+              onMobileActivate={onMobileActivate}
+              bookmarksBeforeBlock={markerEntries}
+            />
+            {showMergeHandles && showControls && nextBlock ? (
+              <BlockMergeHandle
+                leftBlock={block}
+                rightBlock={nextBlock}
+                mergeInFlight={mergeBusy}
+                disabled={mergeDisabled}
+                onMerge={onMergeBlocks}
+              />
+            ) : null}
+          </Fragment>
+        );
+      })}
+    </>
+  );
+});
+ChapterBlockList.displayName = "ChapterBlockList";
+
+const ChapterSection = memo(function ChapterSection({
+  panelMode,
+  group,
+  textMode,
+  showControls,
+  panelAccentColor,
+  isMobile,
+  activeMobileBlockId,
+  onMobileActivate,
+  bookmarksByMarkerId,
+  bookmarkColorByKey,
+  acceptingBlockId,
+  generatingBlockId,
+  deletingBlockId,
+  manualSavingBlockId,
+  creatingNoteBlockId,
+  generateError,
+  noteError,
+  manualEditError,
+  dismissedSuggestions,
+  chapterEdit,
+  chapterActionsBusy,
+  chapterAddMode,
+  chapterAddBusy,
+  chapterEditError,
+  showMergeHandles,
+  mergingPairKey,
+  handlers,
+}: ChapterSectionProps) {
+  const isEditing = chapterEdit?.chapterId === group.chapterId;
+
+  return (
+    <section
+      key={`${panelMode}-chapter-${group.chapterId}`}
+      className={styles.chapterGroup}
+      data-dashboard-chapter-id={group.chapterId}
+    >
+      <ChapterHeader
+        group={group}
+        showActions={showControls}
+        isEditing={isEditing}
+        editTitle={isEditing ? chapterEdit.title : group.chapterTitle}
+        actionBusy={chapterActionsBusy}
+        error={chapterEditError}
+        onStartEdit={handlers.onChapterEditOpen}
+        onEditTitle={(value) => handlers.onChapterEditTitleChange(group.chapterId, value)}
+        onSaveEdit={handlers.onChapterEditSave}
+        onCancelEdit={handlers.onChapterEditCancel}
+        onDelete={handlers.onChapterDelete}
+      />
+      <ChapterBlockList
+        group={group}
+        textMode={textMode}
+        showControls={showControls}
+        panelAccentColor={panelAccentColor}
+        isMobile={isMobile}
+        activeMobileBlockId={activeMobileBlockId}
+        onMobileActivate={onMobileActivate}
+        bookmarksByMarkerId={bookmarksByMarkerId}
+        bookmarkColorByKey={bookmarkColorByKey}
+        acceptingBlockId={acceptingBlockId}
+        generatingBlockId={generatingBlockId}
+        deletingBlockId={deletingBlockId}
+        manualSavingBlockId={manualSavingBlockId}
+        creatingNoteBlockId={creatingNoteBlockId}
+        generateError={generateError}
+        noteError={noteError}
+        manualEditError={manualEditError}
+        dismissedSuggestions={dismissedSuggestions}
+        onAccept={handlers.onAccept}
+        onGenerate={handlers.onGenerate}
+        onDelete={handlers.onDelete}
+        onSaveManualEdit={handlers.onSaveManualEdit}
+        onRejectToOriginal={handlers.onRejectToOriginal}
+        onSetBookmarkBefore={handlers.onSetBookmarkBefore}
+        onCreateNote={handlers.onCreateNote}
+        onApproveSuggestion={handlers.onApproveSuggestion}
+        onRejectSuggestion={handlers.onRejectSuggestion}
+        showMergeHandles={showMergeHandles}
+        mergingPairKey={mergingPairKey}
+        chapterActionsBusy={chapterActionsBusy}
+        chapterAddMode={chapterAddMode}
+        chapterAddBusy={chapterAddBusy}
+        onMergeBlocks={handlers.onMergeBlocks}
+        onAddChapterFromBlock={handlers.onAddChapterFromBlock}
+      />
+    </section>
+  );
+});
+ChapterSection.displayName = "ChapterSection";
+
+const DashboardPanelShell = memo(function DashboardPanelShell({
+  kind,
+  title,
+  showSwap,
+  onSwap,
+  swapLabel,
+  swapTitle,
+  bodyRef,
+  onBodyScroll,
+  onBodyClick,
+  inlineErrorMessage = null,
+  children,
+}: DashboardPanelShellProps) {
+  return (
+    <section className={styles.panel} data-panel-kind={kind}>
+      <div className={styles.panelTitle}>
+        <span>{title}</span>
+        {showSwap ? (
+          <button
+            className={styles.panelSwapButton}
+            type="button"
+            onClick={onSwap}
+            aria-label={swapLabel}
+            title={swapTitle}
+          >
+            <Icon name="swap" size={16} />
+          </button>
+        ) : null}
+      </div>
+      <div className={styles.panelBody} ref={bodyRef} onScroll={onBodyScroll} onClick={onBodyClick}>
+        {inlineErrorMessage ? <div className={styles.panelInlineError}>{inlineErrorMessage}</div> : null}
+        {children}
+      </div>
+    </section>
+  );
+});
+DashboardPanelShell.displayName = "DashboardPanelShell";
 
 export function BookDashboard({ bookId }: { bookId: string }) {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
@@ -1586,6 +2112,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   });
   const [isEditSaving, setIsEditSaving] = useState(false);
   const [isSummaryGenerating, setIsSummaryGenerating] = useState(false);
+  const [isYearInferring, setIsYearInferring] = useState(false);
   const [editFeedback, setEditFeedback] = useState<string | null>(null);
   const [store, setStore] = useState<DashboardViewStore>({
     viewState: "workbench",
@@ -1598,6 +2125,13 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const [generatingBlockId, setGeneratingBlockId] = useState<string | null>(null);
   const [deletingBlockId, setDeletingBlockId] = useState<string | null>(null);
   const [generateError, setGenerateError] = useState<GenerateErrorState | null>(null);
+  const [batchFeedback, setBatchFeedback] = useState<string | null>(null);
+  const [undoFeedback, setUndoFeedback] = useState<string | null>(null);
+  const [lastEditedPanelUndo, setLastEditedPanelUndo] = useState<EditedPanelUndoSnapshot | null>(null);
+  const [isUndoApplying, setIsUndoApplying] = useState(false);
+  const [isBatchGenerating, setIsBatchGenerating] = useState(false);
+  const [autoGenerateOnScroll, setAutoGenerateOnScroll] = useState(false);
+  const [autoTranslateChapterTitles, setAutoTranslateChapterTitles] = useState(false);
   const [manualSavingBlockId, setManualSavingBlockId] = useState<string | null>(null);
   const [manualEditError, setManualEditError] = useState<ManualEditErrorState | null>(null);
   const [creatingNoteBlockId, setCreatingNoteBlockId] = useState<string | null>(null);
@@ -1610,6 +2144,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   } | null>(null);
   const [chapterEditSaving, setChapterEditSaving] = useState(false);
   const [chapterDeleteSaving, setChapterDeleteSaving] = useState(false);
+  const [chapterAddMode, setChapterAddMode] = useState(false);
+  const [chapterAddSaving, setChapterAddSaving] = useState(false);
   const [chapterEditError, setChapterEditError] = useState<string | null>(null);
   const [mergingPairKey, setMergingPairKey] = useState<string | null>(null);
   const [mergeError, setMergeError] = useState<string | null>(null);
@@ -1633,10 +2169,12 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const onboardingCompletedRef = useRef(false);
   const onboardingLastShownStepIdRef = useRef<string | null>(null);
   const onboardingLastNavigatedStepIdRef = useRef<string | null>(null);
+  const autoYearInferenceAttemptedRef = useRef(false);
   const initializedView = useRef(false);
   const originalPanelRef = useRef<HTMLDivElement | null>(null);
   const translatedPanelRef = useRef<HTMLDivElement | null>(null);
   const syncLock = useRef<"original" | "translated" | null>(null);
+  const autoBatchLockRef = useRef(false);
 
   const applyViewDefaults = useCallback((data: BookDashboardData) => {
     setStore((prev) => {
@@ -1688,6 +2226,15 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
+  useEffect(() => {
+    autoYearInferenceAttemptedRef.current = false;
+  }, [bookId]);
+
+  useEffect(() => {
+    setLastEditedPanelUndo(null);
+    setUndoFeedback(null);
+  }, [bookId]);
 
   useEffect(() => {
     const updateViewport = () => {
@@ -1840,17 +2387,211 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     });
   }, [emitOnboardingTelemetry]);
 
+  const generatedUnacceptedCount = useMemo(() => {
+    if (state.status !== "ready") return 0;
+    return state.data.blocks.filter((block) => hasGeneratedEditedContent(block) && !block.isAccepted).length;
+  }, [state]);
+  const remainingGenerateSlots = Math.max(0, MAX_UNACCEPTED_GENERATED_BLOCKS - generatedUnacceptedCount);
+  const generationCandidates = useMemo(() => {
+    if (state.status !== "ready") return [] as DashboardBlock[];
+    return state.data.blocks.filter((block) => !block.isAccepted && !hasGeneratedEditedContent(block));
+  }, [state]);
+  const generationCapacityRemaining = Math.min(remainingGenerateSlots, generationCandidates.length);
+  const isEditorBusy =
+    acceptingBlockId !== null ||
+    generatingBlockId !== null ||
+    deletingBlockId !== null ||
+    manualSavingBlockId !== null ||
+    creatingNoteBlockId !== null ||
+    chapterEditSaving ||
+    chapterDeleteSaving ||
+    chapterAddSaving ||
+    mergingPairKey !== null ||
+    isUndoApplying;
+
+  const captureEditedPanelUndoSnapshot = useCallback(
+    async (args: { blocks: DashboardBlock[]; actionLabel: string }): Promise<EditedPanelUndoSnapshot> => {
+      const uniqueBlocks = [...new Map(args.blocks.map((block) => [block.id, block])).values()];
+      if (uniqueBlocks.length === 0) {
+        throw new Error("Nem talalhato blokk visszaallitasi menteshez.");
+      }
+
+      const blocksTable = supabase.from("blocks") as any;
+      const variantsTable = supabase.from("variants") as any;
+
+      const entries = await Promise.all(
+        uniqueBlocks.map(async (block) => {
+          const { data: blockRow, error: blockError } = await blocksTable
+            .select("id,book_id,chapter_id,block_index,original_text")
+            .eq("id", block.id)
+            .eq("book_id", block.bookId)
+            .maybeSingle();
+          if (blockError) throw new Error(blockError.message || "Sikertelen blokk visszaallitasi mentes.");
+
+          const snapshotBlock: EditedPanelUndoBlockSnapshot =
+            (blockRow as EditedPanelUndoBlockSnapshot | null) ?? {
+              id: block.id,
+              book_id: block.bookId,
+              chapter_id: block.chapterId,
+              block_index: block.blockIndex,
+              original_text: block.originalText,
+            };
+
+          const { data: variantRows, error: variantError } = await variantsTable
+            .select("id,owner_id,book_id,chapter_id,block_id,variant_index,status,text")
+            .eq("block_id", block.id)
+            .eq("book_id", block.bookId)
+            .order("variant_index", { ascending: true });
+          if (variantError) throw new Error(variantError.message || "Sikertelen varians visszaallitasi mentes.");
+
+          return {
+            block: snapshotBlock,
+            variants: ((variantRows as EditedPanelUndoVariantSnapshot[] | null) ?? []).map((row) => ({
+              id: row.id,
+              owner_id: row.owner_id ?? null,
+              book_id: row.book_id,
+              chapter_id: row.chapter_id,
+              block_id: row.block_id,
+              variant_index: row.variant_index,
+              status: row.status,
+              text: row.text,
+            })),
+          } satisfies EditedPanelUndoSnapshotEntry;
+        }),
+      );
+
+      return {
+        actionLabel: args.actionLabel,
+        createdAt: Date.now(),
+        entries,
+      };
+    },
+    [supabase],
+  );
+
+  const handleUndoLastEditedPanelChange = useCallback(async () => {
+    if (state.status !== "ready") return;
+    if (!lastEditedPanelUndo || isEditorBusy) return;
+
+    setUndoFeedback(null);
+    setGenerateError(null);
+    setIsUndoApplying(true);
+
+    try {
+      const blocksTable = supabase.from("blocks") as any;
+      const variantsTable = supabase.from("variants") as any;
+
+      for (const entry of lastEditedPanelUndo.entries) {
+        const { data: existingBlock, error: existingBlockError } = await blocksTable
+          .select("id")
+          .eq("id", entry.block.id)
+          .eq("book_id", entry.block.book_id)
+          .maybeSingle();
+        if (existingBlockError) throw new Error(existingBlockError.message || "Sikertelen blokk visszaallitas ellenorzes.");
+
+        if (!existingBlock) {
+          const { error: insertBlockError } = await blocksTable.insert({
+            id: entry.block.id,
+            book_id: entry.block.book_id,
+            chapter_id: entry.block.chapter_id,
+            block_index: entry.block.block_index,
+            original_text: entry.block.original_text,
+          });
+          if (insertBlockError) throw new Error(insertBlockError.message || "Sikertelen blokk visszaallitas.");
+        } else {
+          const { error: updateBlockError } = await blocksTable
+            .update({
+              chapter_id: entry.block.chapter_id,
+              block_index: entry.block.block_index,
+              original_text: entry.block.original_text,
+            })
+            .eq("id", entry.block.id)
+            .eq("book_id", entry.block.book_id);
+          if (updateBlockError) throw new Error(updateBlockError.message || "Sikertelen blokk visszaallitas.");
+        }
+
+        const { error: clearVariantsError } = await variantsTable
+          .delete()
+          .eq("block_id", entry.block.id)
+          .eq("book_id", entry.block.book_id);
+        if (clearVariantsError) throw new Error(clearVariantsError.message || "Sikertelen varians visszaallitas torles.");
+
+        if (entry.variants.length > 0) {
+          const payload = entry.variants.map((variant) => ({
+            id: variant.id,
+            owner_id: variant.owner_id ?? state.userId,
+            book_id: variant.book_id,
+            chapter_id: variant.chapter_id,
+            block_id: variant.block_id,
+            variant_index: variant.variant_index,
+            status: variant.status,
+            text: variant.text,
+          }));
+          const { error: restoreVariantsError } = await variantsTable.insert(payload);
+          if (restoreVariantsError) throw new Error(restoreVariantsError.message || "Sikertelen varians visszaallitas.");
+        }
+      }
+
+      await loadDashboard({ keepCurrentView: true });
+      setLastEditedPanelUndo(null);
+      setUndoFeedback(`Visszaallitva: ${lastEditedPanelUndo.actionLabel}.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Sikertelen visszaallitas.";
+      setUndoFeedback(message);
+    } finally {
+      setIsUndoApplying(false);
+    }
+  }, [isEditorBusy, lastEditedPanelUndo, loadDashboard, state, supabase]);
+
+  const translateChapterTitlesFromGeneratedBlocks = useCallback(
+    async (generatedBlocks: Array<{ chapterId: string; chapterIndex: number; translatedText: string }>) => {
+      if (state.status !== "ready" || !autoTranslateChapterTitles || generatedBlocks.length === 0) return;
+      const chaptersTable = supabase.from("chapters") as any;
+      const currentTitleByChapterId = new Map<string, string>();
+      for (const block of state.data.blocks) {
+        if (!currentTitleByChapterId.has(block.chapterId)) {
+          currentTitleByChapterId.set(block.chapterId, block.chapterTitle?.trim() ?? "");
+        }
+      }
+
+      const candidateByChapterId = new Map<string, string>();
+      for (const item of generatedBlocks) {
+        if (candidateByChapterId.has(item.chapterId)) continue;
+        const candidate = deriveChapterTitleFromGeneratedText({
+          text: item.translatedText,
+          chapterIndex: item.chapterIndex,
+        });
+        if (!candidate.trim()) continue;
+        const current = currentTitleByChapterId.get(item.chapterId)?.trim() ?? "";
+        if (current === candidate) continue;
+        candidateByChapterId.set(item.chapterId, candidate);
+      }
+
+      for (const [chapterId, title] of candidateByChapterId) {
+        const { error } = await chaptersTable.update({ title }).eq("id", chapterId).eq("book_id", bookId);
+        if (error) throw new Error(error.message || "Sikertelen fejezetcim-frissites.");
+      }
+    },
+    [autoTranslateChapterTitles, bookId, state, supabase],
+  );
+
   const handleAccept = useCallback(
     async (block: DashboardBlock) => {
       if (state.status !== "ready") return;
       setAcceptingBlockId(block.id);
       try {
+        const undoSnapshot = await captureEditedPanelUndoSnapshot({
+          blocks: [block],
+          actionLabel: `Elfogadas (${block.blockIndex}. blokk)`,
+        });
         await acceptBlockVariant({
           supabase,
           userId: state.userId,
           block,
         });
         await loadDashboard({ keepCurrentView: true });
+        setLastEditedPanelUndo(undoSnapshot);
+        setUndoFeedback(null);
         completeOnboardingByEvent("accept_success");
       } catch (error) {
         const message = error instanceof Error ? error.message : "Sikertelen mentes.";
@@ -1859,21 +2600,38 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         setAcceptingBlockId(null);
       }
     },
-    [completeOnboardingByEvent, loadDashboard, state, supabase],
+    [captureEditedPanelUndoSnapshot, completeOnboardingByEvent, loadDashboard, state, supabase],
   );
 
   const handleGenerate = useCallback(
     async (block: DashboardBlock) => {
       if (state.status !== "ready") return;
+      if (!hasGeneratedEditedContent(block) && !block.isAccepted && remainingGenerateSlots <= 0) {
+        setGenerateError({
+          blockId: block.id,
+          message: `Elerted a ${MAX_UNACCEPTED_GENERATED_BLOCKS} elfogadatlan generalt blokk limitet. Elobb fogadj el vagy utasits el javaslatokat.`,
+        });
+        return;
+      }
       setGenerateError(null);
+      setBatchFeedback(null);
       setGeneratingBlockId(block.id);
       try {
-        await requestDraftGeneration({
+        const undoSnapshot = await captureEditedPanelUndoSnapshot({
+          blocks: [block],
+          actionLabel: `Generalas (${block.blockIndex}. blokk)`,
+        });
+        const translatedText = await requestDraftGeneration({
           supabase,
           bookId,
           blockId: block.id,
         });
+        await translateChapterTitlesFromGeneratedBlocks([
+          { chapterId: block.chapterId, chapterIndex: block.chapterIndex, translatedText },
+        ]);
         await loadDashboard({ keepCurrentView: true });
+        setLastEditedPanelUndo(undoSnapshot);
+        setUndoFeedback(null);
         completeOnboardingByEvent("generate_success");
       } catch (error) {
         const message = error instanceof Error ? error.message : "Sikertelen generalas.";
@@ -1882,7 +2640,111 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         setGeneratingBlockId(null);
       }
     },
-    [bookId, completeOnboardingByEvent, loadDashboard, state.status, supabase],
+    [
+      bookId,
+      captureEditedPanelUndoSnapshot,
+      completeOnboardingByEvent,
+      loadDashboard,
+      remainingGenerateSlots,
+      state.status,
+      supabase,
+      translateChapterTitlesFromGeneratedBlocks,
+    ],
+  );
+
+  const handleBatchGenerate = useCallback(
+    async (source: "manual" | "scroll" = "manual") => {
+      if (state.status !== "ready") return;
+      if (autoBatchLockRef.current || isBatchGenerating || isEditorBusy) return;
+
+      if (remainingGenerateSlots <= 0 || generationCandidates.length === 0) {
+        if (source === "manual") {
+          const message =
+            remainingGenerateSlots <= 0
+              ? `Elerted a ${MAX_UNACCEPTED_GENERATED_BLOCKS} elfogadatlan generalt blokk limitet.`
+              : "Nincs tovabbi generalhato blokk.";
+          setBatchFeedback(message);
+        }
+        return;
+      }
+
+      autoBatchLockRef.current = true;
+      setIsBatchGenerating(true);
+      setGenerateError(null);
+      if (source === "manual") {
+        setBatchFeedback("Tobb blokk generalasa folyamatban...");
+      }
+
+      const toGenerate = generationCandidates.slice(0, Math.min(BATCH_GENERATE_CHUNK_SIZE, remainingGenerateSlots));
+      let successCount = 0;
+      let failureCount = 0;
+      let undoSnapshot: EditedPanelUndoSnapshot | null = null;
+      const generatedForChapterTitles: Array<{ chapterId: string; chapterIndex: number; translatedText: string }> = [];
+
+      try {
+        undoSnapshot = await captureEditedPanelUndoSnapshot({
+          blocks: toGenerate,
+          actionLabel: `Tobb blokk generalasa (${toGenerate.length})`,
+        });
+        for (const block of toGenerate) {
+          setGeneratingBlockId(block.id);
+          try {
+            const translatedText = await requestDraftGeneration({
+              supabase,
+              bookId,
+              blockId: block.id,
+            });
+            generatedForChapterTitles.push({
+              chapterId: block.chapterId,
+              chapterIndex: block.chapterIndex,
+              translatedText,
+            });
+            successCount += 1;
+          } catch (error) {
+            failureCount += 1;
+            const message = error instanceof Error ? error.message : "Sikertelen generalas.";
+            setGenerateError({ blockId: block.id, message });
+          }
+        }
+
+        if (generatedForChapterTitles.length > 0) {
+          await translateChapterTitlesFromGeneratedBlocks(generatedForChapterTitles);
+        }
+        if (successCount > 0 || failureCount > 0) {
+          await loadDashboard({ keepCurrentView: true });
+        }
+        if (successCount > 0 && undoSnapshot) {
+          setLastEditedPanelUndo(undoSnapshot);
+          setUndoFeedback(null);
+        }
+        if (successCount > 0) {
+          completeOnboardingByEvent("generate_success");
+        }
+        if (source === "manual") {
+          setBatchFeedback(
+            failureCount > 0
+              ? `Generalas kesz: ${successCount} sikeres, ${failureCount} sikertelen.`
+              : `Generalas kesz: ${successCount} blokk.`,
+          );
+        }
+      } finally {
+        setGeneratingBlockId(null);
+        setIsBatchGenerating(false);
+        autoBatchLockRef.current = false;
+      }
+    },
+    [
+      bookId,
+      completeOnboardingByEvent,
+      generationCandidates,
+      isBatchGenerating,
+      isEditorBusy,
+      loadDashboard,
+      remainingGenerateSlots,
+      state.status,
+      supabase,
+      translateChapterTitlesFromGeneratedBlocks,
+    ],
   );
 
   const handleCreateNote = useCallback(
@@ -1994,6 +2856,12 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
       setDeletingBlockId(block.id);
       try {
+        const undoSnapshot = await captureEditedPanelUndoSnapshot({
+          blocks: [block],
+          actionLabel: block.editedVariantId
+            ? `Szerkesztett valtozat torlese (${block.blockIndex}. blokk)`
+            : `Blokk torlese (${block.blockIndex}. blokk)`,
+        });
         if (block.editedVariantId) {
           await deleteEditedBlockVariant({ supabase, block });
         } else {
@@ -2005,6 +2873,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           if (error) throw new Error(error.message || "Sikertelen blokk torles.");
         }
         await loadDashboard({ keepCurrentView: true });
+        setLastEditedPanelUndo(undoSnapshot);
+        setUndoFeedback(null);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Sikertelen torles.";
         setState({ status: "error", message });
@@ -2012,7 +2882,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         setDeletingBlockId(null);
       }
     },
-    [loadDashboard, state.status, supabase],
+    [captureEditedPanelUndoSnapshot, loadDashboard, state.status, supabase],
   );
 
   const handleRejectToOriginal = useCallback(
@@ -2026,8 +2896,14 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
       setDeletingBlockId(block.id);
       try {
+        const undoSnapshot = await captureEditedPanelUndoSnapshot({
+          blocks: [block],
+          actionLabel: `Elutasitas eredetire (${block.blockIndex}. blokk)`,
+        });
         await deleteEditedBlockVariant({ supabase, block });
         await loadDashboard({ keepCurrentView: true });
+        setLastEditedPanelUndo(undoSnapshot);
+        setUndoFeedback(null);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Sikertelen elutasitas.";
         setState({ status: "error", message });
@@ -2035,7 +2911,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         setDeletingBlockId(null);
       }
     },
-    [loadDashboard, state.status, supabase],
+    [captureEditedPanelUndoSnapshot, loadDashboard, state.status, supabase],
   );
 
   const handleSaveManualEdit = useCallback(
@@ -2050,6 +2926,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       setManualEditError(null);
       setManualSavingBlockId(block.id);
       try {
+        const undoSnapshot = await captureEditedPanelUndoSnapshot({
+          blocks: [block],
+          actionLabel: `Kezi javitas mentes (${block.blockIndex}. blokk)`,
+        });
         const variantsTable = supabase.from("variants") as any;
         const { data: latestVariantRows, error: latestVariantError } = await variantsTable
           .select("variant_index")
@@ -2076,6 +2956,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         }
 
         await loadDashboard({ keepCurrentView: true });
+        setLastEditedPanelUndo(undoSnapshot);
+        setUndoFeedback(null);
         return true;
       } catch (error) {
         const message = error instanceof Error ? error.message : "Sikertelen kezi javitas mentes.";
@@ -2085,7 +2967,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         setManualSavingBlockId(null);
       }
     },
-    [loadDashboard, state, supabase],
+    [captureEditedPanelUndoSnapshot, loadDashboard, state, supabase],
   );
 
   const handleSetBookmarkBeforeBlock = useCallback((block: DashboardBlock, kind: DashboardBookmarkKind) => {
@@ -2164,6 +3046,141 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       setStore((prev) => ({ ...prev, activePanel: "translated", panelMode: "single" }));
     }
   }, [isMobile]);
+  const handleChapterNavigatorJump = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      const chapterId = event.currentTarget.dataset.chapterId;
+      if (!chapterId) return;
+      handleJumpToChapter(chapterId);
+    },
+    [handleJumpToChapter],
+  );
+  const handleNoteNavigatorJump = useCallback(
+    (event: MouseEvent<HTMLElement>) => {
+      const blockId = event.currentTarget.dataset.blockId;
+      if (!blockId) return;
+      handleJumpToBlock(blockId);
+    },
+    [handleJumpToBlock],
+  );
+  const handleNoteNavigatorKeyDown = useCallback((event: KeyboardEvent<HTMLElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    const blockId = event.currentTarget.dataset.blockId;
+    if (!blockId) return;
+    handleJumpToBlock(blockId);
+  }, [handleJumpToBlock]);
+  const handleNoteNavigatorExpandToggle = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    const noteId = event.currentTarget.dataset.noteId;
+    if (!noteId) return;
+    setExpandedNoteIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(noteId)) {
+        next.delete(noteId);
+      } else {
+        next.add(noteId);
+      }
+      return next;
+    });
+  }, []);
+  const handleBookmarkNavigatorJump = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      const bookmarkId = event.currentTarget.dataset.bookmarkId;
+      if (!bookmarkId) return;
+      handleJumpToBookmark(bookmarkId);
+    },
+    [handleJumpToBookmark],
+  );
+  const handleSelectMobileOriginalTab = useCallback(() => {
+    setMobilePage("original");
+    setStore((prev) => ({ ...prev, activePanel: "original", panelMode: "single" }));
+  }, []);
+  const handleSelectMobileTranslatedTab = useCallback(() => {
+    setMobilePage("translated");
+    setStore((prev) => ({ ...prev, activePanel: "translated", panelMode: "single" }));
+  }, []);
+  const handleSelectMobileTocTab = useCallback(() => setMobilePage("toc"), []);
+  const handleSelectMobileNotesTab = useCallback(() => setMobilePage("notes"), []);
+  const handleSelectMobileBookmarksTab = useCallback(() => setMobilePage("bookmarks"), []);
+  const handleOpenMobileToolPanel = useCallback(() => setMobileToolPanelOpen(true), []);
+  const handleCloseMobileToolPanel = useCallback(() => setMobileToolPanelOpen(false), []);
+  const handleSelectMobileSingleLayout = useCallback(() => {
+    setStore((prev) => ({ ...prev, desktopLayout: "single" }));
+    setMobileToolPanelOpen(false);
+  }, []);
+  const handleSelectMobileSplitLayout = useCallback(() => {
+    setStore((prev) => ({ ...prev, desktopLayout: "split" }));
+    setMobileToolPanelOpen(false);
+  }, []);
+  const handleSelectMobileOriginalPanel = useCallback(() => {
+    setMobilePage("original");
+    setStore((prev) => ({ ...prev, activePanel: "original", panelMode: "single" }));
+    setMobileToolPanelOpen(false);
+  }, []);
+  const handleSelectMobileTranslatedPanel = useCallback(() => {
+    setMobilePage("translated");
+    setStore((prev) => ({ ...prev, activePanel: "translated", panelMode: "single" }));
+    setMobileToolPanelOpen(false);
+  }, []);
+  const handleToggleMobileSyncScroll = useCallback(() => {
+    setStore((prev) => ({ ...prev, syncScroll: !prev.syncScroll }));
+  }, []);
+  const handleSelectBookmarkFromList = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    const bookmarkId = event.currentTarget.dataset.bookmarkId;
+    if (!bookmarkId) return;
+    setSelectedBookmarkId(bookmarkId);
+  }, []);
+  const handleSelectedBookmarkNameChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const nextName = event.target.value;
+      setBookmarks((prev) =>
+        prev.map((entry) =>
+          entry.id === selectedBookmarkId ? { ...entry, name: nextName } : entry,
+        ),
+      );
+    },
+    [selectedBookmarkId],
+  );
+  const handleSelectedBookmarkColorChange = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      const colorKey = event.currentTarget.dataset.colorKey;
+      if (!colorKey) return;
+      setBookmarks((prev) =>
+        prev.map((entry) =>
+          entry.id === selectedBookmarkId ? { ...entry, colorKey } : entry,
+        ),
+      );
+    },
+    [selectedBookmarkId],
+  );
+  const handleJumpToSelectedBookmark = useCallback(() => {
+    handleJumpToBookmark();
+  }, [handleJumpToBookmark]);
+  const handleJumpToSelectedBookmarkAndClose = useCallback(() => {
+    handleJumpToBookmark();
+    setMobileToolPanelOpen(false);
+  }, [handleJumpToBookmark]);
+  const handleDeleteSelectedBookmark = useCallback(() => {
+    if (!selectedBookmarkId) return;
+    setBookmarks((prev) => prev.filter((entry) => entry.id !== selectedBookmarkId));
+  }, [selectedBookmarkId]);
+  const handleToggleDesktopEditPanel = useCallback(() => {
+    setDesktopEditPanelOpen((prev) => !prev);
+  }, []);
+  const handleToggleChapterAddMode = useCallback(() => {
+    if (chapterEditSaving || chapterDeleteSaving || chapterAddSaving) return;
+    setChapterEditError(null);
+    setChapterAddMode((prev) => {
+      const next = !prev;
+      if (next) {
+        setStore((current) => ({ ...current, viewState: "workbench", activePanel: "translated" }));
+        if (isMobile) {
+          setMobilePage("translated");
+        }
+      }
+      return next;
+    });
+  }, [chapterAddSaving, chapterDeleteSaving, chapterEditSaving, isMobile]);
 
   const handleEditSubmit = useCallback(async () => {
     if (state.status !== "ready") return;
@@ -2195,9 +3212,17 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       title,
       author: author || null,
       publication_year: yearValue,
+      year: yearValue,
       description: description || null,
       cover_slug: icon || null,
       background_slug: icon || null,
+    };
+
+    const legacyPayload = {
+      title,
+      author: author || null,
+      year: yearValue,
+      description: description || null,
     };
 
     const basePayload = {
@@ -2219,6 +3244,15 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         message.includes("background_slug");
 
       if (missingOptionalColumn) {
+        const legacyFallback = await booksTable.update(legacyPayload).eq("id", bookId).eq("user_id", state.userId);
+
+        if (!legacyFallback.error) {
+          setEditFeedback("Konyv adatai mentve (legacy ev mezovel).");
+          setIsEditSaving(false);
+          await loadDashboard({ keepCurrentView: true });
+          return;
+        }
+
         const fallback = await booksTable.update(basePayload).eq("id", bookId).eq("user_id", state.userId);
 
         if (fallback.error) {
@@ -2261,6 +3295,37 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     }
   }, [bookId, state.status, supabase]);
 
+  const handleInferPublicationYear = useCallback(async () => {
+    if (state.status !== "ready") return;
+    setEditFeedback(null);
+    setIsYearInferring(true);
+    try {
+      const out = await requestPublicationYearInference({ supabase, bookId });
+      if (out.inferredYear === null) {
+        setEditFeedback("Az AI nem tudott eleg biztos eredeti kiadasi evet becsulni.");
+        return;
+      }
+
+      setEditForm((prev) => ({ ...prev, year: String(out.inferredYear) }));
+      setEditFeedback(out.persisted ? "AI evbecsles mentve az adatbazisba." : "AI evbecsles elkeszult.");
+      await loadDashboard({ keepCurrentView: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Sikertelen evbecsles.";
+      setEditFeedback(message);
+    } finally {
+      setIsYearInferring(false);
+    }
+  }, [bookId, loadDashboard, state.status, supabase]);
+
+  useEffect(() => {
+    if (state.status !== "ready") return;
+    if (autoYearInferenceAttemptedRef.current) return;
+    if (hasBookStoredYear(state.data.book)) return;
+
+    autoYearInferenceAttemptedRef.current = true;
+    void handleInferPublicationYear();
+  }, [handleInferPublicationYear, state]);
+
   const syncPanels = useCallback(
     (source: "original" | "translated") => {
       if (isMobile || !store.syncScroll || store.viewState !== "workbench") return;
@@ -2282,21 +3347,65 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     },
     [isMobile, store.syncScroll, store.viewState],
   );
+  const handleSwapToOriginalPanel = useCallback(() => {
+    setStore((prev) => ({ ...prev, activePanel: "original" }));
+  }, []);
+  const handleSwapToTranslatedPanel = useCallback(() => {
+    setStore((prev) => ({ ...prev, activePanel: "translated" }));
+  }, []);
+  const handleOriginalPanelBodyScroll = useCallback(() => {
+    syncPanels("original");
+  }, [syncPanels]);
+  const handleTranslatedPanelBodyScroll = useCallback(() => {
+    syncPanels("translated");
+    if (!autoGenerateOnScroll || state.status !== "ready" || store.viewState !== "workbench") return;
+    const panel = translatedPanelRef.current;
+    if (!panel) return;
+    const remaining = panel.scrollHeight - panel.scrollTop - panel.clientHeight;
+    if (remaining > AUTO_GENERATE_SCROLL_THRESHOLD_PX) return;
+    void handleBatchGenerate("scroll");
+  }, [autoGenerateOnScroll, handleBatchGenerate, state.status, store.viewState, syncPanels]);
+  const handlePanelBodyClick = useCallback(() => {
+    if (!isMobile) return;
+    setActiveMobileBlockId(null);
+  }, [isMobile]);
 
-  const isReady = state.status === "ready";
-  const bookTitle = isReady ? state.data.book.title : "Konyv";
-  const bookAuthor = isReady ? state.data.book.author?.trim() || "Ismeretlen szerzo" : "Betoltes...";
+  const dashboardDerived = useMemo(() => {
+    if (state.status !== "ready") {
+      return {
+        isReady: false,
+        bookTitle: "Konyv",
+        bookAuthor: "Betoltes...",
+        blocks: [] as DashboardBlock[],
+        completion: EMPTY_COMPLETION,
+        progress: completionPercent(EMPTY_COMPLETION.ratio),
+        canReader: EMPTY_COMPLETION.isComplete,
+        readerDisabledReason: "Reader mod 0%-nal nem erheto el.",
+        topbarIconSlug: "",
+      };
+    }
+
+    const { book, blocks, completion } = state.data;
+    const bookAuthor = book.author?.trim() || "Ismeretlen szerzo";
+    return {
+      isReady: true,
+      bookTitle: book.title,
+      bookAuthor,
+      blocks,
+      completion,
+      progress: completionPercent(completion.ratio),
+      canReader: completion.isComplete,
+      readerDisabledReason:
+        completion.accepted === 0
+          ? "Reader mod 0%-nal nem erheto el."
+          : "Reader mod csak 100%-os completionnel erheto el.",
+      topbarIconSlug: resolveTopbarIconSlug(book),
+    };
+  }, [state]);
+  const { isReady, bookTitle, bookAuthor, blocks, completion, progress, canReader, readerDisabledReason, topbarIconSlug } =
+    dashboardDerived;
   const panelAccentColor = authorSpineColor(bookAuthor);
-  const blocks = isReady ? state.data.blocks : [];
-  const completion = isReady ? state.data.completion : { accepted: 0, total: 0, ratio: 0, isComplete: false };
-  const progress = completionPercent(completion.ratio);
-  const canReader = completion.isComplete;
-  const readerDisabledReason =
-    completion.accepted === 0
-      ? "Reader mod 0%-nal nem erheto el."
-      : "Reader mod csak 100%-os completionnel erheto el.";
   const iconPreviewSlug = normalizeIconSlug(editForm.icon);
-  const topbarIconSlug = isReady ? resolveTopbarIconSlug(state.data.book) : "";
   const iconPreviewPath = iconPreviewSlug
     ? `url('/covers/SVG/${iconPreviewSlug}.svg'), url('/covers/${iconPreviewSlug}.png')`
     : null;
@@ -2309,54 +3418,70 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       }, {}),
     [],
   );
-  const selectedBookmark = useMemo(
-    () => bookmarks.find((entry) => entry.id === selectedBookmarkId) ?? null,
-    [bookmarks, selectedBookmarkId],
-  );
-  const activeBookmarkColorKey = selectedBookmark?.colorKey ?? DEFAULT_BOOKMARK_COLOR_KEY;
-  const bookmarksByMarkerId = useMemo(() => {
-    const grouped = new Map<string, DashboardBookmarkEntry[]>();
+  const bookmarkDerived = useMemo(() => {
+    const selectedBookmark = bookmarks.find((entry) => entry.id === selectedBookmarkId) ?? null;
+    const activeBookmarkColorKey = selectedBookmark?.colorKey ?? DEFAULT_BOOKMARK_COLOR_KEY;
+
+    const bookmarksByMarkerId = new Map<string, DashboardBookmarkEntry[]>();
     for (const entry of bookmarks) {
-      const bucket = grouped.get(entry.markerId);
+      const bucket = bookmarksByMarkerId.get(entry.markerId);
       if (bucket) {
         bucket.push(entry);
       } else {
-        grouped.set(entry.markerId, [entry]);
+        bookmarksByMarkerId.set(entry.markerId, [entry]);
       }
     }
-    return grouped;
-  }, [bookmarks]);
-  const bookmarkedPlacements = useMemo(() => {
-    const result = new Map<string, { chapterIndex: number; block: DashboardBlock }>();
+
+    const bookmarkedPlacements = new Map<string, { chapterIndex: number; block: DashboardBlock }>();
     for (const group of chapterGroups) {
       for (const block of group.blocks) {
         const markerId = bookmarkBeforeKey(block);
         if (!bookmarksByMarkerId.has(markerId)) continue;
-        result.set(markerId, { chapterIndex: group.chapterIndex, block });
+        bookmarkedPlacements.set(markerId, { chapterIndex: group.chapterIndex, block });
       }
     }
-    return result;
-  }, [bookmarksByMarkerId, chapterGroups]);
-  const hasBookmarks = bookmarks.length > 0;
-  const chapterProgressItems = useMemo(
-    () =>
-      chapterGroups.map((group) => {
-        const total = group.blocks.length;
-        const translated = group.blocks.filter((block) => Boolean(block.translatedText?.trim())).length;
-        const ratio = total > 0 ? translated / total : 0;
-        return {
-          chapterId: group.chapterId,
-          chapterIndex: group.chapterIndex,
-          chapterTitle: group.chapterTitle,
-          total,
-          translated,
-          ratio,
-        };
-      }),
-    [chapterGroups],
-  );
-  const noteNavigatorItems = useMemo(() => {
-    const items: Array<{
+
+    const bookmarkNavigatorItems = bookmarks.map((entry) => {
+      const placement = bookmarkedPlacements.get(entry.markerId);
+      return {
+        entry,
+        placement,
+      };
+    });
+
+    return {
+      selectedBookmark,
+      activeBookmarkColorKey,
+      bookmarksByMarkerId,
+      bookmarkedPlacements,
+      hasBookmarks: bookmarks.length > 0,
+      bookmarkNavigatorItems,
+    };
+  }, [bookmarks, chapterGroups, selectedBookmarkId]);
+  const {
+    selectedBookmark,
+    activeBookmarkColorKey,
+    bookmarksByMarkerId,
+    bookmarkedPlacements,
+    hasBookmarks,
+    bookmarkNavigatorItems,
+  } = bookmarkDerived;
+  const navigatorDerived = useMemo(() => {
+    const chapterProgressItems = chapterGroups.map((group) => {
+      const total = group.blocks.length;
+      const translated = group.blocks.filter((block) => Boolean(block.translatedText?.trim())).length;
+      const ratio = total > 0 ? translated / total : 0;
+      return {
+        chapterId: group.chapterId,
+        chapterIndex: group.chapterIndex,
+        chapterTitle: group.chapterTitle,
+        total,
+        translated,
+        ratio,
+      };
+    });
+
+    const noteNavigatorItems: Array<{
       id: string;
       blockId: string;
       chapterIndex: number;
@@ -2372,7 +3497,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           const safeStart = Math.max(0, Math.min(sourceText.length, note.anchorStart));
           const safeEnd = Math.max(safeStart, Math.min(sourceText.length, note.anchorEnd));
           const expression = sourceText.slice(safeStart, safeEnd).trim() || "Jelolt kifejezes";
-          items.push({
+          noteNavigatorItems.push({
             id: note.id,
             blockId: block.id,
             chapterIndex: group.chapterIndex,
@@ -2383,17 +3508,13 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         }
       }
     }
-    return items;
+
+    return {
+      chapterProgressItems,
+      noteNavigatorItems,
+    };
   }, [chapterGroups]);
-  const bookmarkNavigatorItems = useMemo(() => {
-    return bookmarks.map((entry) => {
-      const placement = bookmarkedPlacements.get(entry.markerId);
-      return {
-        entry,
-        placement,
-      };
-    });
-  }, [bookmarkedPlacements, bookmarks]);
+  const { chapterProgressItems, noteNavigatorItems } = navigatorDerived;
   const selectedOnboardingStep = useMemo(
     () => findOnboardingStepById(onboardingSelectedStepId),
     [onboardingSelectedStepId],
@@ -2557,6 +3678,14 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     }
     setStore((prev) => ({ ...prev, viewState: "workbench" }));
   }, [completeOnboardingByEvent, isMobile, store.viewState]);
+  const handleSelectMobileWorkbenchMode = useCallback(() => {
+    handleModeToggle("workbench");
+    setMobileToolPanelOpen(false);
+  }, [handleModeToggle]);
+  const handleSelectMobileReaderMode = useCallback(() => {
+    handleModeToggle("reader");
+    setMobileToolPanelOpen(false);
+  }, [handleModeToggle]);
 
   const handleOpenOnboardingGuide = useCallback(() => {
     setOnboardingGuideOpen((prev) => {
@@ -2622,15 +3751,146 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   }, [bookId, chapterEdit, completeOnboardingByEvent, loadDashboard, state.status, supabase]);
 
   const handleChapterDelete = useCallback(async (group: ChapterGroup) => {
-    if (state.status !== "ready" || chapterEditSaving || chapterDeleteSaving) return;
+    if (state.status !== "ready" || chapterEditSaving || chapterDeleteSaving || chapterAddSaving) return;
     const confirmed = window.confirm(
-      `Biztosan toroljuk a(z) ${group.chapterIndex}. fejezetet? A fejezet blokkjai es valtozatai is torlodnek.`,
+      `Biztosan toroljuk a(z) ${group.chapterIndex}. fejezetet? A fejezet blokkjai az elozo fejezethez kerulnek.`,
     );
     if (!confirmed) return;
 
     setChapterEditError(null);
     setChapterDeleteSaving(true);
     const chaptersTable = supabase.from("chapters") as any;
+    const blocksTable = supabase.from("blocks") as any;
+
+    const { data: initialChapterRows, error: initialChapterFetchError } = await chaptersTable
+      .select("id,chapter_index")
+      .eq("book_id", bookId)
+      .order("chapter_index", { ascending: true });
+
+    if (initialChapterFetchError) {
+      setChapterDeleteSaving(false);
+      setChapterEditError(initialChapterFetchError.message || "Sikertelen fejezet lekerdezes.");
+      return;
+    }
+
+    const initialRows = ((initialChapterRows ?? []) as ChapterRow[]).sort((a, b) => a.chapter_index - b.chapter_index);
+    const chapterPosition = initialRows.findIndex((row) => row.id === group.chapterId);
+    if (chapterPosition < 0) {
+      setChapterDeleteSaving(false);
+      setChapterEditError("A torlendo fejezet mar nem talalhato.");
+      return;
+    }
+
+    const previousChapter = chapterPosition > 0 ? initialRows[chapterPosition - 1] : null;
+    const { data: movingBlockRows, error: movingBlockFetchError } = await blocksTable
+      .select("id,block_index")
+      .eq("book_id", bookId)
+      .eq("chapter_id", group.chapterId)
+      .order("block_index", { ascending: true });
+
+    if (movingBlockFetchError) {
+      setChapterDeleteSaving(false);
+      setChapterEditError(movingBlockFetchError.message || "Sikertelen blokk lekerdezes.");
+      return;
+    }
+
+    const movingBlocks = (movingBlockRows ?? []) as BlockIndexRow[];
+    if (movingBlocks.length > 0 && !previousChapter) {
+      setChapterDeleteSaving(false);
+      setChapterEditError("Az elso fejezet nem torolheto, mert nincs elozo fejezet a blokkok atmozgatasahoz.");
+      return;
+    }
+
+    if (movingBlocks.length > 0 && previousChapter) {
+      const { data: previousLastRows, error: previousLastFetchError } = await blocksTable
+        .select("block_index")
+        .eq("book_id", bookId)
+        .eq("chapter_id", previousChapter.id)
+        .order("block_index", { ascending: false })
+        .limit(1);
+
+      if (previousLastFetchError) {
+        setChapterDeleteSaving(false);
+        setChapterEditError(previousLastFetchError.message || "Sikertelen blokk-athelyezes.");
+        return;
+      }
+
+      let nextBlockIndex = ((previousLastRows as Array<{ block_index: number }> | null)?.[0]?.block_index ?? 0) + 1;
+      for (const movingBlock of movingBlocks) {
+        const { error: moveError } = await blocksTable
+          .update({ chapter_id: previousChapter.id, block_index: nextBlockIndex })
+          .eq("id", movingBlock.id)
+          .eq("book_id", bookId)
+          .eq("chapter_id", group.chapterId);
+        if (moveError) {
+          setChapterDeleteSaving(false);
+          setChapterEditError(moveError.message || "Sikertelen blokk-athelyezes.");
+          return;
+        }
+        nextBlockIndex += 1;
+      }
+
+      const movedBlockIds = movingBlocks.map((row) => row.id);
+
+      const variantsTable = supabase.from("variants") as any;
+      const { error: variantsMoveError } = await variantsTable
+        .update({ chapter_id: previousChapter.id })
+        .eq("book_id", bookId)
+        .in("block_id", movedBlockIds);
+      if (variantsMoveError) {
+        setChapterDeleteSaving(false);
+        setChapterEditError(variantsMoveError.message || "Sikertelen varians-athelyezes.");
+        return;
+      }
+
+      const notesTable = supabase.from("notes") as any;
+      const { error: notesMoveError } = await notesTable
+        .update({ chapter_id: previousChapter.id })
+        .eq("book_id", bookId)
+        .in("block_id", movedBlockIds);
+      if (notesMoveError) {
+        setChapterDeleteSaving(false);
+        setChapterEditError(notesMoveError.message || "Sikertelen jegyzet-athelyezes.");
+        return;
+      }
+
+      const anchorsTable = supabase.from("footnote_anchors") as any;
+      const { error: anchorsMoveError } = await anchorsTable
+        .update({ chapter_id: previousChapter.id })
+        .eq("book_id", bookId)
+        .in("block_id", movedBlockIds);
+      if (anchorsMoveError) {
+        setChapterDeleteSaving(false);
+        setChapterEditError(anchorsMoveError.message || "Sikertelen labjegyzet-horgony athelyezes.");
+        return;
+      }
+
+      const footnotesTable = supabase.from("footnotes") as any;
+      const { error: footnotesMoveError } = await footnotesTable
+        .update({ source_chapter_id: previousChapter.id })
+        .eq("book_id", bookId)
+        .in("source_block_id", movedBlockIds);
+      if (footnotesMoveError) {
+        setChapterDeleteSaving(false);
+        setChapterEditError(footnotesMoveError.message || "Sikertelen labjegyzet-forras athelyezes.");
+        return;
+      }
+
+      const { count: remainingCount, error: remainingCountError } = await blocksTable
+        .select("id", { count: "exact", head: true })
+        .eq("book_id", bookId)
+        .eq("chapter_id", group.chapterId);
+      if (remainingCountError) {
+        setChapterDeleteSaving(false);
+        setChapterEditError(remainingCountError.message || "Sikertelen blokk-ellenorzes torles elott.");
+        return;
+      }
+      if ((remainingCount ?? 0) > 0) {
+        setChapterDeleteSaving(false);
+        setChapterEditError("A fejezet torlese megszakitva: maradt blokk a torlendo fejezetben.");
+        return;
+      }
+    }
 
     const { error: deleteError } = await chaptersTable
       .delete()
@@ -2686,10 +3946,173 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     setChapterDeleteSaving(false);
     setChapterEdit((prev) => (prev?.chapterId === group.chapterId ? null : prev));
     await loadDashboard({ keepCurrentView: true });
-  }, [bookId, chapterDeleteSaving, chapterEditSaving, loadDashboard, state.status, supabase]);
+  }, [bookId, chapterAddSaving, chapterDeleteSaving, chapterEditSaving, loadDashboard, state.status, supabase]);
+
+  const handleAddChapterFromBlock = useCallback(async (block: DashboardBlock) => {
+    if (
+      state.status !== "ready" ||
+      !chapterAddMode ||
+      chapterEditSaving ||
+      chapterDeleteSaving ||
+      chapterAddSaving
+    ) {
+      return;
+    }
+
+    setChapterEditError(null);
+    setChapterAddSaving(true);
+
+    try {
+      const chaptersTable = supabase.from("chapters") as any;
+      const blocksTable = supabase.from("blocks") as any;
+
+      const { data: chapterRows, error: chapterFetchError } = await chaptersTable
+        .select("id,chapter_index")
+        .eq("book_id", bookId)
+        .order("chapter_index", { ascending: true });
+      if (chapterFetchError) throw new Error(chapterFetchError.message || "Sikertelen fejezet lekerdezes.");
+
+      const rows = ((chapterRows ?? []) as ChapterRow[]).sort((a, b) => a.chapter_index - b.chapter_index);
+      const sourceChapter = rows.find((row) => row.id === block.chapterId);
+      if (!sourceChapter) throw new Error("A blokk fejezete mar nem talalhato.");
+
+      for (let index = rows.length - 1; index >= 0; index -= 1) {
+        const row = rows[index];
+        if (row.chapter_index <= sourceChapter.chapter_index) continue;
+        const { error } = await chaptersTable
+          .update({ chapter_index: row.chapter_index + 1 })
+          .eq("id", row.id)
+          .eq("book_id", bookId);
+        if (error) throw new Error(error.message || "Sikertelen fejezet-beszuras.");
+      }
+
+      const nextTitleRaw = block.originalText.trim();
+      const nextTitle = nextTitleRaw ? nextTitleRaw.slice(0, 160) : `Fejezet ${sourceChapter.chapter_index + 1}`;
+      const { data: insertedChapter, error: insertChapterError } = await chaptersTable
+        .insert({
+          owner_id: state.userId,
+          book_id: bookId,
+          chapter_index: sourceChapter.chapter_index + 1,
+          title: nextTitle,
+        })
+        .select("id")
+        .single();
+      if (insertChapterError) throw new Error(insertChapterError.message || "Sikertelen uj fejezet letrehozas.");
+
+      const newChapterId = (insertedChapter as { id: string } | null)?.id;
+      if (!newChapterId) throw new Error("Sikertelen uj fejezet letrehozas.");
+
+      const { data: sourceBlockRows, error: sourceBlockFetchError } = await blocksTable
+        .select("id,block_index")
+        .eq("book_id", bookId)
+        .eq("chapter_id", sourceChapter.id)
+        .order("block_index", { ascending: true });
+      if (sourceBlockFetchError) throw new Error(sourceBlockFetchError.message || "Sikertelen blokk lekerdezes.");
+
+      const sourceBlocks = (sourceBlockRows ?? []) as BlockIndexRow[];
+      const splitIndex = sourceBlocks.findIndex((row) => row.id === block.id);
+      if (splitIndex < 0) throw new Error("A kijelolt blokk mar nem talalhato.");
+
+      const movingBlocks = sourceBlocks.slice(splitIndex);
+      if (movingBlocks.length === 0) {
+        throw new Error("A kijelolt blokkbol nem kepzodott uj fejezet.");
+      }
+
+      let nextBlockIndex = 1;
+      for (const movingBlock of movingBlocks) {
+        const { error } = await blocksTable
+          .update({ chapter_id: newChapterId, block_index: nextBlockIndex })
+          .eq("id", movingBlock.id)
+          .eq("book_id", bookId)
+          .eq("chapter_id", sourceChapter.id);
+        if (error) throw new Error(error.message || "Sikertelen blokk-athelyezes.");
+        nextBlockIndex += 1;
+      }
+
+      const movedBlockIds = movingBlocks.map((row) => row.id);
+      const variantsTable = supabase.from("variants") as any;
+      const { error: variantsMoveError } = await variantsTable
+        .update({ chapter_id: newChapterId })
+        .eq("book_id", bookId)
+        .in("block_id", movedBlockIds);
+      if (variantsMoveError) throw new Error(variantsMoveError.message || "Sikertelen varians-athelyezes.");
+
+      const notesTable = supabase.from("notes") as any;
+      const { error: notesMoveError } = await notesTable
+        .update({ chapter_id: newChapterId })
+        .eq("book_id", bookId)
+        .in("block_id", movedBlockIds);
+      if (notesMoveError) throw new Error(notesMoveError.message || "Sikertelen jegyzet-athelyezes.");
+
+      const anchorsTable = supabase.from("footnote_anchors") as any;
+      const { error: anchorsMoveError } = await anchorsTable
+        .update({ chapter_id: newChapterId })
+        .eq("book_id", bookId)
+        .in("block_id", movedBlockIds);
+      if (anchorsMoveError) {
+        throw new Error(anchorsMoveError.message || "Sikertelen labjegyzet-horgony athelyezes.");
+      }
+
+      const footnotesTable = supabase.from("footnotes") as any;
+      const { error: footnotesMoveError } = await footnotesTable
+        .update({ source_chapter_id: newChapterId })
+        .eq("book_id", bookId)
+        .in("source_block_id", movedBlockIds);
+      if (footnotesMoveError) {
+        throw new Error(footnotesMoveError.message || "Sikertelen labjegyzet-forras athelyezes.");
+      }
+
+      const { data: remainingRows, error: remainingFetchError } = await blocksTable
+        .select("id,block_index")
+        .eq("book_id", bookId)
+        .eq("chapter_id", sourceChapter.id)
+        .order("block_index", { ascending: true });
+      if (remainingFetchError) throw new Error(remainingFetchError.message || "Sikertelen blokk ujraszamozas.");
+
+      const remaining = ((remainingRows ?? []) as BlockIndexRow[]).sort((a, b) => a.block_index - b.block_index);
+      for (let index = 0; index < remaining.length; index += 1) {
+        const row = remaining[index];
+        const tempIndex = 10000 + index + 1;
+        const { error } = await blocksTable
+          .update({ block_index: tempIndex })
+          .eq("id", row.id)
+          .eq("book_id", bookId)
+          .eq("chapter_id", sourceChapter.id);
+        if (error) throw new Error(error.message || "Sikertelen blokk ujraszamozas.");
+      }
+      for (let index = 0; index < remaining.length; index += 1) {
+        const row = remaining[index];
+        const finalIndex = index + 1;
+        const { error } = await blocksTable
+          .update({ block_index: finalIndex })
+          .eq("id", row.id)
+          .eq("book_id", bookId)
+          .eq("chapter_id", sourceChapter.id);
+        if (error) throw new Error(error.message || "Sikertelen blokk ujraszamozas.");
+      }
+
+      setChapterAddMode(false);
+      await loadDashboard({ keepCurrentView: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Sikertelen uj fejezet letrehozas.";
+      setChapterEditError(message);
+      await loadDashboard({ keepCurrentView: true });
+    } finally {
+      setChapterAddSaving(false);
+    }
+  }, [
+    bookId,
+    chapterAddMode,
+    chapterAddSaving,
+    chapterDeleteSaving,
+    chapterEditSaving,
+    loadDashboard,
+    state,
+    supabase,
+  ]);
 
   const handleMergeBlocks = useCallback(async (leftBlock: DashboardBlock, rightBlock: DashboardBlock) => {
-    if (state.status !== "ready" || chapterEditSaving || chapterDeleteSaving) return;
+    if (state.status !== "ready" || chapterEditSaving || chapterDeleteSaving || chapterAddSaving) return;
     if (leftBlock.chapterId !== rightBlock.chapterId) return;
     setMergeError(null);
 
@@ -2774,224 +4197,114 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     } finally {
       setMergingPairKey(null);
     }
-  }, [bookId, chapterDeleteSaving, chapterEditSaving, loadDashboard, state.status, supabase]);
+  }, [bookId, chapterAddSaving, chapterDeleteSaving, chapterEditSaving, loadDashboard, state.status, supabase]);
 
-  const renderOriginalPanel = (showControls: boolean, showSwap: boolean) => (
-    <section className={styles.panel} data-panel-kind="original">
-      <div className={styles.panelTitle}>
-        <span>Eredeti</span>
-        {showSwap ? (
-          <button
-            className={styles.panelSwapButton}
-            type="button"
-            onClick={() => setStore((prev) => ({ ...prev, activePanel: "translated" }))}
-            aria-label="Valtas a szerkesztett panelre"
-            title="Valtas a szerkesztett panelre"
-          >
-            <Icon name="swap" size={16} />
-          </button>
-        ) : null}
-      </div>
-      <div
-        className={styles.panelBody}
-        ref={originalPanelRef}
-        onScroll={() => syncPanels("original")}
-        onClick={() => {
-          if (!isMobile) return;
-          setActiveMobileBlockId(null);
-        }}
-      >
-        {chapterGroups.map((group) => (
-          <section
-            key={`original-chapter-${group.chapterId}`}
-            className={styles.chapterGroup}
-            data-dashboard-chapter-id={group.chapterId}
-          >
-            <ChapterHeader
-              group={group}
-              showActions={showControls}
-              isEditing={chapterEdit?.chapterId === group.chapterId}
-              editTitle={chapterEdit?.chapterId === group.chapterId ? chapterEdit.title : group.chapterTitle}
-              actionBusy={chapterEditSaving || chapterDeleteSaving}
-              error={chapterEdit?.chapterId === group.chapterId ? chapterEditError : null}
-              onStartEdit={handleChapterEditOpen}
-              onEditTitle={(value) =>
-                setChapterEdit((prev) => (prev && prev.chapterId === group.chapterId ? { ...prev, title: value } : prev))
-              }
-              onSaveEdit={handleChapterEditSubmit}
-              onCancelEdit={() => setChapterEdit(null)}
-              onDelete={handleChapterDelete}
-            />
-            {group.blocks.map((block) => {
-              const currentMarkerId = bookmarkBeforeKey(block);
-              const markerEntries = bookmarksByMarkerId.get(currentMarkerId) ?? [];
-
-              return (
-                <Fragment key={`original-row-${block.id}`}>
-                  {markerEntries.length > 0 ? (
-                    <BookmarkMarkerStripe
-                      markerId={currentMarkerId}
-                      entries={markerEntries}
-                      bookmarkColorByKey={bookmarkColorByKey}
-                    />
-                  ) : null}
-                  <BlockCard
-                    key={`original-${block.id}`}
-                    block={block}
-                    textMode="original"
-                    acceptInFlight={acceptingBlockId === block.id}
-                    generateInFlight={generatingBlockId === block.id}
-                    deleteInFlight={deletingBlockId === block.id}
-                    generateError={generateError?.blockId === block.id ? generateError.message : null}
-                    noteError={noteError?.blockId === block.id ? noteError.message : null}
-                    manualEditError={manualEditError?.blockId === block.id ? manualEditError.message : null}
-                    manualSaveInFlight={manualSavingBlockId === block.id}
-                    creatingNoteInFlight={creatingNoteBlockId === block.id}
-                    onAccept={handleAccept}
-                    onGenerate={handleGenerate}
-                    onDelete={handleDeleteBlock}
-                    onSaveManualEdit={handleSaveManualEdit}
-                    onRejectToOriginal={handleRejectToOriginal}
-                    onSetBookmarkBefore={handleSetBookmarkBeforeBlock}
-                    onCreateNote={handleCreateNote}
-                    onApproveSuggestion={handleApproveSuggestion}
-                    onRejectSuggestion={handleRejectSuggestion}
-                    dismissedSuggestionNumbers={dismissedSuggestions[block.id] ?? new Set<number>()}
-                    allowDelete={showControls}
-                    showControls={showControls}
-                    accentColor={panelAccentColor}
-                    isMobile={isMobile}
-                    mobileActionsVisible={isMobile && showControls && activeMobileBlockId === block.id}
-                    onMobileActivate={setActiveMobileBlockId}
-                    bookmarksBeforeBlock={markerEntries}
-                  />
-                </Fragment>
-              );
-            })}
-          </section>
-        ))}
-      </div>
-    </section>
+  const handleChapterEditTitleChange = useCallback((chapterId: string, value: string) => {
+    setChapterEdit((prev) => (prev && prev.chapterId === chapterId ? { ...prev, title: value } : prev));
+  }, []);
+  const handleChapterEditCancel = useCallback(() => setChapterEdit(null), []);
+  const chapterSectionHandlers = useMemo<ChapterSectionHandlers>(
+    () => ({
+      onChapterEditOpen: handleChapterEditOpen,
+      onChapterEditTitleChange: handleChapterEditTitleChange,
+      onChapterEditSave: handleChapterEditSubmit,
+      onChapterEditCancel: handleChapterEditCancel,
+      onChapterDelete: handleChapterDelete,
+      onAccept: handleAccept,
+      onGenerate: handleGenerate,
+      onDelete: handleDeleteBlock,
+      onSaveManualEdit: handleSaveManualEdit,
+      onRejectToOriginal: handleRejectToOriginal,
+      onSetBookmarkBefore: handleSetBookmarkBeforeBlock,
+      onCreateNote: handleCreateNote,
+      onApproveSuggestion: handleApproveSuggestion,
+      onRejectSuggestion: handleRejectSuggestion,
+      onMergeBlocks: handleMergeBlocks,
+      onAddChapterFromBlock: handleAddChapterFromBlock,
+    }),
+    [
+      handleAccept,
+      handleApproveSuggestion,
+      handleChapterDelete,
+      handleChapterEditOpen,
+      handleChapterEditSubmit,
+      handleChapterEditTitleChange,
+      handleCreateNote,
+      handleDeleteBlock,
+      handleGenerate,
+      handleMergeBlocks,
+      handleRejectSuggestion,
+      handleRejectToOriginal,
+      handleSaveManualEdit,
+      handleSetBookmarkBeforeBlock,
+      handleChapterEditCancel,
+      handleAddChapterFromBlock,
+    ],
   );
 
-  const renderTranslatedPanel = (showControls: boolean, showSwap: boolean) => (
-    <section className={styles.panel} data-panel-kind="translated">
-      <div className={styles.panelTitle}>
-        <span>Szerkesztett</span>
-        {showSwap ? (
-          <button
-            className={styles.panelSwapButton}
-            type="button"
-            onClick={() => setStore((prev) => ({ ...prev, activePanel: "original" }))}
-            aria-label="Valtas az eredeti panelre"
-            title="Valtas az eredeti panelre"
-          >
-            <Icon name="swap" size={16} />
-          </button>
-        ) : null}
-      </div>
-      <div
-        className={styles.panelBody}
-        ref={translatedPanelRef}
-        onScroll={() => syncPanels("translated")}
-        onClick={() => {
-          if (!isMobile) return;
-          setActiveMobileBlockId(null);
-        }}
-      >
-        {mergeError ? <div className={styles.panelInlineError}>{mergeError}</div> : null}
-        {chapterGroups.map((group) => (
-          <section
-            key={`translated-chapter-${group.chapterId}`}
-            className={styles.chapterGroup}
-            data-dashboard-chapter-id={group.chapterId}
-          >
-            <ChapterHeader
-              group={group}
-              showActions={showControls}
-              isEditing={chapterEdit?.chapterId === group.chapterId}
-              editTitle={chapterEdit?.chapterId === group.chapterId ? chapterEdit.title : group.chapterTitle}
-              actionBusy={chapterEditSaving || chapterDeleteSaving}
-              error={chapterEdit?.chapterId === group.chapterId ? chapterEditError : null}
-              onStartEdit={handleChapterEditOpen}
-              onEditTitle={(value) =>
-                setChapterEdit((prev) => (prev && prev.chapterId === group.chapterId ? { ...prev, title: value } : prev))
-              }
-              onSaveEdit={handleChapterEditSubmit}
-              onCancelEdit={() => setChapterEdit(null)}
-              onDelete={handleChapterDelete}
-            />
-            {group.blocks.map((block, index) => {
-              const nextBlock = group.blocks[index + 1];
-              const currentMergeKey = nextBlock ? mergePairKey(block.id, nextBlock.id) : null;
-              const currentMarkerId = bookmarkBeforeKey(block);
-              const markerEntries = bookmarksByMarkerId.get(currentMarkerId) ?? [];
-              const mergeBusy =
-                Boolean(currentMergeKey) && mergingPairKey !== null && currentMergeKey === mergingPairKey;
-              const mergeDisabled =
-                mergingPairKey !== null ||
-                chapterEditSaving ||
-                chapterDeleteSaving ||
-                acceptingBlockId !== null ||
-                generatingBlockId !== null ||
-                deletingBlockId !== null;
+  const renderDashboardPanel = (args: {
+    kind: "original" | "translated";
+    showControls: boolean;
+    showSwap: boolean;
+  }) => {
+    const { kind, showControls, showSwap } = args;
+    const isOriginal = kind === "original";
+    const chapterActionsBusy = chapterEditSaving || chapterDeleteSaving || chapterAddSaving;
 
-              return (
-                <Fragment key={`translated-row-${block.id}`}>
-                  {markerEntries.length > 0 ? (
-                    <BookmarkMarkerStripe
-                      markerId={currentMarkerId}
-                      entries={markerEntries}
-                      bookmarkColorByKey={bookmarkColorByKey}
-                    />
-                  ) : null}
-                  <BlockCard
-                    key={`translated-${block.id}`}
-                    block={block}
-                    textMode="translated"
-                    acceptInFlight={acceptingBlockId === block.id}
-                    generateInFlight={generatingBlockId === block.id}
-                    deleteInFlight={deletingBlockId === block.id}
-                    generateError={generateError?.blockId === block.id ? generateError.message : null}
-                    noteError={noteError?.blockId === block.id ? noteError.message : null}
-                    manualEditError={manualEditError?.blockId === block.id ? manualEditError.message : null}
-                    manualSaveInFlight={manualSavingBlockId === block.id}
-                    creatingNoteInFlight={creatingNoteBlockId === block.id}
-                    onAccept={handleAccept}
-                    onGenerate={handleGenerate}
-                    onDelete={handleDeleteBlock}
-                    onSaveManualEdit={handleSaveManualEdit}
-                    onRejectToOriginal={handleRejectToOriginal}
-                    onSetBookmarkBefore={handleSetBookmarkBeforeBlock}
-                    onCreateNote={handleCreateNote}
-                    onApproveSuggestion={handleApproveSuggestion}
-                    onRejectSuggestion={handleRejectSuggestion}
-                    dismissedSuggestionNumbers={dismissedSuggestions[block.id] ?? new Set<number>()}
-                    allowDelete={showControls}
-                    showControls={showControls}
-                    accentColor={panelAccentColor}
-                    isMobile={isMobile}
-                    mobileActionsVisible={isMobile && showControls && activeMobileBlockId === block.id}
-                    onMobileActivate={setActiveMobileBlockId}
-                    bookmarksBeforeBlock={markerEntries}
-                  />
-                  {showControls && nextBlock ? (
-                    <BlockMergeHandle
-                      leftBlock={block}
-                      rightBlock={nextBlock}
-                      mergeInFlight={mergeBusy}
-                      disabled={mergeDisabled}
-                      onMerge={handleMergeBlocks}
-                    />
-                  ) : null}
-                </Fragment>
-              );
-            })}
-          </section>
+    return (
+      <DashboardPanelShell
+        kind={kind}
+        title={isOriginal ? "Eredeti" : "Szerkesztett"}
+        showSwap={showSwap}
+        onSwap={isOriginal ? handleSwapToTranslatedPanel : handleSwapToOriginalPanel}
+        swapLabel={isOriginal ? "Valtas a szerkesztett panelre" : "Valtas az eredeti panelre"}
+        swapTitle={isOriginal ? "Valtas a szerkesztett panelre" : "Valtas az eredeti panelre"}
+        bodyRef={isOriginal ? originalPanelRef : translatedPanelRef}
+        onBodyScroll={isOriginal ? handleOriginalPanelBodyScroll : handleTranslatedPanelBodyScroll}
+        onBodyClick={handlePanelBodyClick}
+        inlineErrorMessage={isOriginal ? null : mergeError}
+      >
+        {chapterGroups.map((group) => (
+          <ChapterSection
+            key={`${kind}-${group.chapterId}`}
+            panelMode={kind}
+            group={group}
+            textMode={isOriginal ? "original" : "translated"}
+            showControls={showControls}
+            panelAccentColor={panelAccentColor}
+            isMobile={isMobile}
+            activeMobileBlockId={activeMobileBlockId}
+            onMobileActivate={setActiveMobileBlockId}
+            bookmarksByMarkerId={bookmarksByMarkerId}
+            bookmarkColorByKey={bookmarkColorByKey}
+            acceptingBlockId={acceptingBlockId}
+            generatingBlockId={generatingBlockId}
+            deletingBlockId={deletingBlockId}
+            manualSavingBlockId={manualSavingBlockId}
+            creatingNoteBlockId={creatingNoteBlockId}
+            generateError={generateError}
+            noteError={noteError}
+            manualEditError={manualEditError}
+            dismissedSuggestions={dismissedSuggestions}
+            chapterEdit={chapterEdit}
+            chapterActionsBusy={chapterActionsBusy}
+            chapterAddMode={chapterAddMode}
+            chapterAddBusy={chapterAddSaving}
+            chapterEditError={chapterEditError}
+            showMergeHandles={!isOriginal}
+            mergingPairKey={mergingPairKey}
+            handlers={chapterSectionHandlers}
+          />
         ))}
-      </div>
-    </section>
-  );
+      </DashboardPanelShell>
+    );
+  };
+
+  const renderOriginalPanel = (showControls: boolean, showSwap: boolean) =>
+    renderDashboardPanel({ kind: "original", showControls, showSwap });
+
+  const renderTranslatedPanel = (showControls: boolean, showSwap: boolean) =>
+    renderDashboardPanel({ kind: "translated", showControls, showSwap });
 
   const renderWorkbenchDesktop = () => (
     store.desktopLayout === "single" ? (
@@ -3017,8 +4330,20 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const renderChapterNavigator = (mobile: boolean) => (
     <section className={mobile ? styles.mobileInfoBlock : styles.infoColumn}>
       <header className={styles.infoColumnHeader}>
-        <strong>Tartalomjegyzek</strong>
-        <span>Fejezet progress</span>
+        <div className={styles.infoColumnHeaderRow}>
+          <strong>Tartalomjegyzek</strong>
+          <button
+            type="button"
+            className={`${styles.infoHeaderActionButton} ${chapterAddMode ? styles.infoHeaderActionButtonActive : ""}`}
+            onClick={handleToggleChapterAddMode}
+            disabled={chapterEditSaving || chapterDeleteSaving || chapterAddSaving || !isReady}
+            title={chapterAddMode ? "Fejezet-hozzaadas mod kikapcsolasa" : "Fejezet-hozzaadas mod bekapcsolasa"}
+          >
+            <ToolIcon type="add" />
+            <span>{chapterAddMode ? "Aktiv" : "Fejezet +"}</span>
+          </button>
+        </div>
+        <span>{chapterAddMode ? "Aktiv mod: kattints egy blokkra uj fejezethez." : "Fejezet progress"}</span>
       </header>
       <div className={styles.infoColumnBody}>
         {chapterProgressItems.length === 0 ? (
@@ -3029,7 +4354,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               key={item.chapterId}
               type="button"
               className={styles.infoListButton}
-              onClick={() => handleJumpToChapter(item.chapterId)}
+              data-chapter-id={item.chapterId}
+              onClick={handleChapterNavigatorJump}
             >
               <span className={styles.infoListTitle}>
                 {item.chapterIndex}. fejezet: {item.chapterTitle}
@@ -3068,10 +4394,13 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
             return (
               <article key={item.id} className={styles.infoListCard}>
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabIndex={0}
                   className={styles.infoListButton}
-                  onClick={() => handleJumpToBlock(item.blockId)}
+                  data-block-id={item.blockId}
+                  onClick={handleNoteNavigatorJump}
+                  onKeyDown={handleNoteNavigatorKeyDown}
                 >
                   <span className={styles.infoListTitle}>{item.expression}</span>
                   <span className={styles.infoListDescription}>
@@ -3082,18 +4411,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                         <button
                           type="button"
                           className={styles.infoInlineExpandButton}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setExpandedNoteIds((prev) => {
-                              const next = new Set(prev);
-                              if (next.has(item.id)) {
-                                next.delete(item.id);
-                              } else {
-                                next.add(item.id);
-                              }
-                              return next;
-                            });
-                          }}
+                          data-note-id={item.id}
+                          onClick={handleNoteNavigatorExpandToggle}
                         >
                           {isExpanded ? "Kevesebb" : "Tovabbiak..."}
                         </button>
@@ -3103,7 +4422,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   <span className={styles.infoListMeta}>
                     {item.chapterIndex}.f / {item.blockIndex}.b
                   </span>
-                </button>
+                </div>
               </article>
             );
           })
@@ -3127,7 +4446,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               key={entry.id}
               type="button"
               className={styles.infoListButton}
-              onClick={() => handleJumpToBookmark(entry.id)}
+              data-bookmark-id={entry.id}
+              onClick={handleBookmarkNavigatorJump}
             >
               <span className={styles.infoListTitle}>
                 <span
@@ -3175,41 +4495,35 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       <button
         type="button"
         className={`${styles.mobilePageTab} ${mobilePage === "original" ? styles.mobilePageTabActive : ""}`}
-        onClick={() => {
-          setMobilePage("original");
-          setStore((prev) => ({ ...prev, activePanel: "original", panelMode: "single" }));
-        }}
+        onClick={handleSelectMobileOriginalTab}
       >
         Eredeti
       </button>
       <button
         type="button"
         className={`${styles.mobilePageTab} ${mobilePage === "translated" ? styles.mobilePageTabActive : ""}`}
-        onClick={() => {
-          setMobilePage("translated");
-          setStore((prev) => ({ ...prev, activePanel: "translated", panelMode: "single" }));
-        }}
+        onClick={handleSelectMobileTranslatedTab}
       >
         Szerkesztett
       </button>
       <button
         type="button"
         className={`${styles.mobilePageTab} ${mobilePage === "toc" ? styles.mobilePageTabActive : ""}`}
-        onClick={() => setMobilePage("toc")}
+        onClick={handleSelectMobileTocTab}
       >
         Tartalom
       </button>
       <button
         type="button"
         className={`${styles.mobilePageTab} ${mobilePage === "notes" ? styles.mobilePageTabActive : ""}`}
-        onClick={() => setMobilePage("notes")}
+        onClick={handleSelectMobileNotesTab}
       >
         Jegyzetek
       </button>
       <button
         type="button"
         className={`${styles.mobilePageTab} ${mobilePage === "bookmarks" ? styles.mobilePageTabActive : ""}`}
-        onClick={() => setMobilePage("bookmarks")}
+        onClick={handleSelectMobileBookmarksTab}
       >
         Konyvjelzok
       </button>
@@ -3256,7 +4570,13 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
   const pageStyle = { "--panel-accent-color": panelAccentColor } as CSSProperties;
   const renderBookMetaSection = () => {
-    if (!isReady) return null;
+    if (state.status !== "ready") return null;
+    const sourceName = state.data.book.source_name?.trim() || "lokalis_feltoltes";
+    const sourceUrl = state.data.book.source_url?.trim() || null;
+    const sourceRetrievedAt = state.data.book.source_retrieved_at?.trim() || null;
+    const sourceLicenseUrl = state.data.book.source_license_url?.trim() || null;
+    const sourceWorkId = state.data.book.source_work_id?.trim() || null;
+    const sourceSha256 = state.data.book.source_original_sha256?.trim() || null;
 
     return (
       <section className={`card ${styles.progressCard} ${styles.desktopMetaCard}`}>
@@ -3315,6 +4635,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             <button className="btn" type="button" onClick={handleGenerateSummary} disabled={isSummaryGenerating}>
               {isSummaryGenerating ? "Generalas..." : "Leiras generalasa"}
             </button>
+            <button className="btn" type="button" onClick={handleInferPublicationYear} disabled={isYearInferring}>
+              {isYearInferring ? "AI evbecsles..." : "Ev becslese (AI)"}
+            </button>
           </div>
 
           {iconPreviewPath ? (
@@ -3334,6 +4657,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               className="btn"
               type="button"
               onClick={() => {
+                if (state.status !== "ready") return;
                 setEditFeedback(null);
                 setEditForm(toBookEditForm(state.data));
               }}
@@ -3342,6 +4666,53 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               Visszaallitas
             </button>
           </div>
+
+          <section className={styles.sourcePanel} aria-label="Forras es licenc">
+            <div className={styles.sourcePanelTitle}>Forras es licenc</div>
+            <div className={styles.sourceRow}>
+              <span>Forras</span>
+              <strong>{sourceName}</strong>
+            </div>
+            {sourceWorkId ? (
+              <div className={styles.sourceRow}>
+                <span>Work ID</span>
+                <strong>{sourceWorkId}</strong>
+              </div>
+            ) : null}
+            {sourceUrl ? (
+              <div className={styles.sourceRow}>
+                <span>Forras URL</span>
+                <a href={sourceUrl} target="_blank" rel="noreferrer">
+                  Megnyitas
+                </a>
+              </div>
+            ) : null}
+            {sourceRetrievedAt ? (
+              <div className={styles.sourceRow}>
+                <span>Letoltve</span>
+                <strong>{new Date(sourceRetrievedAt).toLocaleString("hu-HU")}</strong>
+              </div>
+            ) : null}
+            {sourceLicenseUrl ? (
+              <div className={styles.sourceRow}>
+                <span>Licenc</span>
+                <a href={sourceLicenseUrl} target="_blank" rel="noreferrer">
+                  Licenc oldal
+                </a>
+              </div>
+            ) : null}
+            {sourceSha256 ? (
+              <div className={styles.sourceHash}>
+                <span>Original HTML SHA-256</span>
+                <code>{sourceSha256}</code>
+              </div>
+            ) : null}
+            {sourceName === "project_gutenberg" ? (
+              <div className={styles.sourceDisclaimer}>
+                Project Gutenberg forras. Hasznalat orszagfuggo szerzoi jogi szabalyokhoz kotott lehet.
+              </div>
+            ) : null}
+          </section>
         </section>
       </section>
     );
@@ -3358,13 +4729,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           className={`${styles.bookmarkPaletteSwatch} ${activeBookmarkColorKey === option.key ? styles.bookmarkPaletteSwatchActive : ""}`}
           title={option.label}
           disabled={!selectedBookmark}
-          onClick={() =>
-            setBookmarks((prev) =>
-              prev.map((entry) =>
-                entry.id === selectedBookmarkId ? { ...entry, colorKey: option.key } : entry,
-              ),
-            )
-          }
+          data-color-key={option.key}
+          onClick={handleSelectedBookmarkColorChange}
           style={{ "--bookmark-color": option.color } as CSSProperties}
         />
       ))}
@@ -3381,7 +4747,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           className={styles.mobileToolFab}
           aria-label="Tool panel megnyitasa"
           aria-expanded={mobileToolPanelOpen}
-          onClick={() => setMobileToolPanelOpen(true)}
+          onClick={handleOpenMobileToolPanel}
         >
           <ToolIcon type="admin" />
         </button>
@@ -3392,7 +4758,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               type="button"
               className={styles.mobileToolBackdrop}
               aria-label="Tool panel bezarasa"
-              onClick={() => setMobileToolPanelOpen(false)}
+              onClick={handleCloseMobileToolPanel}
             />
             <section className={styles.mobileToolSheet} aria-label="Dashboard tool panel">
               <div className={styles.mobileToolSheetTitle}>
@@ -3403,10 +4769,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                 <button
                   className={`${styles.mobileToolRow} ${store.desktopLayout === "single" ? styles.mobileToolRowActive : ""}`}
                   type="button"
-                  onClick={() => {
-                    setStore((prev) => ({ ...prev, desktopLayout: "single" }));
-                    setMobileToolPanelOpen(false);
-                  }}
+                  onClick={handleSelectMobileSingleLayout}
                 >
                   <span>Egy oldalas nezet</span>
                   <ToolIcon type="single" />
@@ -3414,10 +4777,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                 <button
                   className={`${styles.mobileToolRow} ${store.desktopLayout === "split" ? styles.mobileToolRowActive : ""}`}
                   type="button"
-                  onClick={() => {
-                    setStore((prev) => ({ ...prev, desktopLayout: "split" }));
-                    setMobileToolPanelOpen(false);
-                  }}
+                  onClick={handleSelectMobileSplitLayout}
                 >
                   <span>Osztott nezet</span>
                   <ToolIcon type="split" />
@@ -3426,10 +4786,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   className={`${styles.mobileToolRow} ${store.viewState === "workbench" ? styles.mobileToolRowActive : ""}`}
                   type="button"
                   data-onboarding-id="onb-mode-controls"
-                  onClick={() => {
-                    handleModeToggle("workbench");
-                    setMobileToolPanelOpen(false);
-                  }}
+                  onClick={handleSelectMobileWorkbenchMode}
                 >
                   <span>Workbench</span>
                   <ToolIcon type="workbench" />
@@ -3439,10 +4796,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   type="button"
                   disabled={!canReader}
                   title={!canReader ? readerDisabledReason : undefined}
-                  onClick={() => {
-                    handleModeToggle("reader");
-                    setMobileToolPanelOpen(false);
-                  }}
+                  onClick={handleSelectMobileReaderMode}
                 >
                   <span>Reader</span>
                   <ToolIcon type="reader" />
@@ -3450,11 +4804,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                 <button
                   className={`${styles.mobileToolRow} ${store.activePanel === "original" ? styles.mobileToolRowActive : ""}`}
                   type="button"
-                  onClick={() => {
-                    setMobilePage("original");
-                    setStore((prev) => ({ ...prev, activePanel: "original", panelMode: "single" }));
-                    setMobileToolPanelOpen(false);
-                  }}
+                  onClick={handleSelectMobileOriginalPanel}
                 >
                   <span>Eredeti panel</span>
                   <ToolIcon type="swap" />
@@ -3462,25 +4812,88 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                 <button
                   className={`${styles.mobileToolRow} ${store.activePanel === "translated" ? styles.mobileToolRowActive : ""}`}
                   type="button"
-                  onClick={() => {
-                    setMobilePage("translated");
-                    setStore((prev) => ({ ...prev, activePanel: "translated", panelMode: "single" }));
-                    setMobileToolPanelOpen(false);
-                  }}
+                  onClick={handleSelectMobileTranslatedPanel}
                 >
                   <span>Szerkesztett panel</span>
                   <ToolIcon type="swap" />
+                </button>
+                <button
+                  className={`${styles.mobileToolRow} ${chapterAddMode ? styles.mobileToolRowActive : ""}`}
+                  type="button"
+                  onClick={handleToggleChapterAddMode}
+                  disabled={chapterEditSaving || chapterDeleteSaving || chapterAddSaving || !isReady}
+                >
+                  <span>{chapterAddMode ? "Fejezet +: aktiv" : "Fejezet +"}</span>
+                  <ToolIcon type="add" />
+                </button>
+                <button
+                  className={styles.mobileToolRow}
+                  type="button"
+                  onClick={() => void handleBatchGenerate("manual")}
+                  disabled={
+                    !isReady ||
+                    store.viewState !== "workbench" ||
+                    isBatchGenerating ||
+                    isEditorBusy ||
+                    generationCapacityRemaining <= 0
+                  }
+                >
+                  <span>
+                    {isBatchGenerating
+                      ? "Tobb blokk generalasa..."
+                      : `Tobb blokk generalasa (${generationCapacityRemaining})`}
+                  </span>
+                  <ActionIcon type="generate" />
+                </button>
+                <button
+                  className={styles.mobileToolRow}
+                  type="button"
+                  onClick={() => void handleUndoLastEditedPanelChange()}
+                  disabled={!isReady || !lastEditedPanelUndo || isEditorBusy}
+                >
+                  <span>
+                    {isUndoApplying ? "Visszaallitas..." : "Utolso szerkesztes visszavonasa"}
+                  </span>
+                  <ToolIcon type="back" />
                 </button>
                 <button
                   className={`${styles.mobileToolRow} ${store.syncScroll ? styles.mobileToolRowActive : ""}`}
                   type="button"
                   role="switch"
                   aria-checked={store.syncScroll}
-                  onClick={() => setStore((prev) => ({ ...prev, syncScroll: !prev.syncScroll }))}
+                  onClick={handleToggleMobileSyncScroll}
                 >
                   <span>Szinkron gorgetes: {store.syncScroll ? "ON" : "OFF"}</span>
                   <ToolIcon type="sync" />
                 </button>
+                <button
+                  className={`${styles.mobileToolRow} ${autoGenerateOnScroll ? styles.mobileToolRowActive : ""}`}
+                  type="button"
+                  role="switch"
+                  aria-checked={autoGenerateOnScroll}
+                  onClick={() => setAutoGenerateOnScroll((prev) => !prev)}
+                >
+                  <span>Gorgetes alapu auto-generalas: {autoGenerateOnScroll ? "ON" : "OFF"}</span>
+                  <ActionIcon type="generate" />
+                </button>
+                <button
+                  className={`${styles.mobileToolRow} ${autoTranslateChapterTitles ? styles.mobileToolRowActive : ""}`}
+                  type="button"
+                  role="switch"
+                  aria-checked={autoTranslateChapterTitles}
+                  onClick={() => setAutoTranslateChapterTitles((prev) => !prev)}
+                >
+                  <span>Fejezetcim auto-forditas: {autoTranslateChapterTitles ? "ON" : "OFF"}</span>
+                  <ActionIcon type="edit" />
+                </button>
+                <div className={styles.mobileToolHint}>
+                  Elfogadatlan generalt blokk: {generatedUnacceptedCount}/{MAX_UNACCEPTED_GENERATED_BLOCKS}
+                </div>
+                {lastEditedPanelUndo ? (
+                  <div className={styles.mobileToolHint}>Visszaallithato: {lastEditedPanelUndo.actionLabel}</div>
+                ) : null}
+                {batchFeedback ? <div className={styles.mobileToolHint}>{batchFeedback}</div> : null}
+                {undoFeedback ? <div className={styles.mobileToolHint}>{undoFeedback}</div> : null}
                 <button
                   className={`${styles.mobileToolRow} ${onboardingGuideOpen ? styles.mobileToolRowActive : ""}`}
                   type="button"
@@ -3502,7 +4915,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                           key={entry.id}
                           type="button"
                           className={`${styles.mobileToolRow} ${selectedBookmarkId === entry.id ? styles.mobileToolRowActive : ""}`}
-                          onClick={() => setSelectedBookmarkId(entry.id)}
+                          data-bookmark-id={entry.id}
+                          onClick={handleSelectBookmarkFromList}
                         >
                           <span>{entry.kind === "progress" ? "Haladas" : "Fontos"}: {entry.name || "Nev nelkul"}</span>
                           <ToolIcon type="bookmark" />
@@ -3514,13 +4928,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       <input
                         className={`input ${styles.mobileBookmarkNameInput}`}
                         value={selectedBookmark?.name ?? ""}
-                        onChange={(event) =>
-                          setBookmarks((prev) =>
-                            prev.map((entry) =>
-                              entry.id === selectedBookmarkId ? { ...entry, name: event.target.value } : entry,
-                            ),
-                          )
-                        }
+                        onChange={handleSelectedBookmarkNameChange}
                         placeholder="Konyvjelzo label"
                         aria-label="Konyvjelzo label"
                         disabled={!selectedBookmark}
@@ -3530,10 +4938,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       className={`${styles.mobileToolRow} ${styles.mobileToolRowActive}`}
                       type="button"
                       disabled={!selectedBookmark}
-                      onClick={() => {
-                        handleJumpToBookmark();
-                        setMobileToolPanelOpen(false);
-                      }}
+                      onClick={handleJumpToSelectedBookmarkAndClose}
                     >
                       <span>Ugras a konyvjelzohoz</span>
                       <ToolIcon type="bookmark" />
@@ -3541,10 +4946,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                     <button
                       className={styles.mobileToolRow}
                       type="button"
-                      onClick={() => {
-                        if (!selectedBookmarkId) return;
-                        setBookmarks((prev) => prev.filter((entry) => entry.id !== selectedBookmarkId));
-                      }}
+                      onClick={handleDeleteSelectedBookmark}
                     >
                       <span>Konyvjelzo torlese</span>
                       X
@@ -3820,7 +5222,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                             key={entry.id}
                             type="button"
                             className={`${styles.bookmarkListItem} ${selectedBookmarkId === entry.id ? styles.bookmarkListItemActive : ""}`}
-                            onClick={() => setSelectedBookmarkId(entry.id)}
+                            data-bookmark-id={entry.id}
+                            onClick={handleSelectBookmarkFromList}
                           >
                             <span className={styles.bookmarkListMeta}>
                               {entry.kind === "progress" ? "Haladas" : "Fontos"}
@@ -3838,13 +5241,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       <input
                         className={`input ${styles.bookmarkNameInput}`}
                         value={selectedBookmark?.name ?? ""}
-                        onChange={(event) =>
-                          setBookmarks((prev) =>
-                            prev.map((entry) =>
-                              entry.id === selectedBookmarkId ? { ...entry, name: event.target.value } : entry,
-                            ),
-                          )
-                        }
+                        onChange={handleSelectedBookmarkNameChange}
                         placeholder="Konyvjelzo label"
                         aria-label="Konyvjelzo label"
                         disabled={!selectedBookmark}
@@ -3854,7 +5251,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       className={styles.activityIconButton}
                       type="button"
                       disabled={!selectedBookmark}
-                      onClick={() => handleJumpToBookmark()}
+                      onClick={handleJumpToSelectedBookmark}
                       aria-label="Ugras a konyvjelzohoz"
                       title="Ugras a konyvjelzohoz"
                     >
@@ -3863,10 +5260,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                     <button
                       className={styles.bookmarkClearButton}
                       type="button"
-                      onClick={() => {
-                        if (!selectedBookmarkId) return;
-                        setBookmarks((prev) => prev.filter((entry) => entry.id !== selectedBookmarkId));
-                      }}
+                      onClick={handleDeleteSelectedBookmark}
                     >
                       Konyvjelzo torlese
                     </button>
@@ -3879,15 +5273,79 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               <div className={styles.activityGroupTitle}>Szerkesztes</div>
               <div className={styles.activityOptions}>
                 <button
+                  className={`${styles.activityIconButton} ${chapterAddMode ? styles.activeToggle : ""}`}
+                  type="button"
+                  aria-label={chapterAddMode ? "Fejezet-hozzaadas mod kikapcsolasa" : "Fejezet-hozzaadas mod bekapcsolasa"}
+                  title={chapterAddMode ? "Fejezet-hozzaadas mod kikapcsolasa" : "Fejezet-hozzaadas mod bekapcsolasa"}
+                  onClick={handleToggleChapterAddMode}
+                  disabled={chapterEditSaving || chapterDeleteSaving || chapterAddSaving || !isReady}
+                >
+                  <ToolIcon type="add" />
+                </button>
+                <button
                   className={`${styles.activityIconButton} ${desktopEditPanelOpen ? styles.activeToggle : ""}`}
                   type="button"
                   aria-label={desktopEditPanelOpen ? "Book edit panel elrejtese" : "Book edit panel megjelenitese"}
                   title={desktopEditPanelOpen ? "Book edit panel elrejtese" : "Book edit panel megjelenitese"}
-                  onClick={() => setDesktopEditPanelOpen((prev) => !prev)}
+                  onClick={handleToggleDesktopEditPanel}
                 >
                   <ToolIcon type="admin" />
                 </button>
+                <button
+                  className={styles.activityIconButton}
+                  type="button"
+                  aria-label="Tobb blokk generalasa"
+                  title={`Tobb blokk generalasa (${generationCapacityRemaining})`}
+                  onClick={() => void handleBatchGenerate("manual")}
+                  disabled={
+                    !isReady ||
+                    store.viewState !== "workbench" ||
+                    isBatchGenerating ||
+                    isEditorBusy ||
+                    generationCapacityRemaining <= 0
+                  }
+                >
+                  <ActionIcon type="generate" />
+                </button>
+                <button
+                  className={styles.activityIconButton}
+                  type="button"
+                  aria-label="Utolso szerkesztes visszavonasa"
+                  title={lastEditedPanelUndo ? `Utolso szerkesztes visszavonasa: ${lastEditedPanelUndo.actionLabel}` : "Nincs visszaallithato szerkesztes"}
+                  onClick={() => void handleUndoLastEditedPanelChange()}
+                  disabled={!isReady || !lastEditedPanelUndo || isEditorBusy}
+                >
+                  <ToolIcon type="back" />
+                </button>
+                <button
+                  className={`${styles.activityIconButton} ${autoGenerateOnScroll ? styles.activeToggle : ""}`}
+                  type="button"
+                  role="switch"
+                  aria-checked={autoGenerateOnScroll}
+                  aria-label="Gorgetes alapu auto-generalas kapcsolasa"
+                  title={autoGenerateOnScroll ? "Gorgetes alapu auto-generalas: ON" : "Gorgetes alapu auto-generalas: OFF"}
+                  onClick={() => setAutoGenerateOnScroll((prev) => !prev)}
+                >
+                  <ToolIcon type="sync" />
+                </button>
+                <button
+                  className={`${styles.activityIconButton} ${autoTranslateChapterTitles ? styles.activeToggle : ""}`}
+                  type="button"
+                  role="switch"
+                  aria-checked={autoTranslateChapterTitles}
+                  aria-label="Fejezetcim auto-forditas kapcsolasa"
+                  title={autoTranslateChapterTitles ? "Fejezetcim auto-forditas: ON" : "Fejezetcim auto-forditas: OFF"}
+                  onClick={() => setAutoTranslateChapterTitles((prev) => !prev)}
+                >
+                  <ActionIcon type="edit" />
+                </button>
               </div>
+              <div className={styles.activityMeta}>
+                Elfogadatlan generalt blokk: {generatedUnacceptedCount}/{MAX_UNACCEPTED_GENERATED_BLOCKS}
+              </div>
+              {lastEditedPanelUndo ? <div className={styles.activityMeta}>Visszaallithato: {lastEditedPanelUndo.actionLabel}</div> : null}
+              {batchFeedback ? <div className={styles.activityMeta}>{batchFeedback}</div> : null}
+              {undoFeedback ? <div className={styles.activityMeta}>{undoFeedback}</div> : null}
             </div>
 
           </section>
