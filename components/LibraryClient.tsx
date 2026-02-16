@@ -26,6 +26,12 @@ type SortMode =
   | "edited_ratio_desc"
   | "edited_ratio_asc";
 
+type LibraryClientProps = {
+  requireSession?: boolean;
+  showTools?: boolean;
+  showMobileToolsFab?: boolean;
+};
+
 function normalizeText(value: string | null | undefined) {
   return (value ?? "")
     .normalize("NFD")
@@ -68,7 +74,11 @@ function resolveCarouselVisibleCount(viewportWidth: number | null) {
   return 14;
 }
 
-export function LibraryClient() {
+export function LibraryClient({
+  requireSession = true,
+  showTools = true,
+  showMobileToolsFab = true,
+}: LibraryClientProps = {}) {
   const [state, setState] = useState<LoadState>({ status: "booting" });
   const [activeBookId, setActiveBookId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
@@ -83,15 +93,17 @@ export function LibraryClient() {
     let cancelled = false;
 
     async function loadBooks() {
-      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
-      if (sessionErr || !sessionData.session?.user?.id) {
-        if (!cancelled) {
-          setState({
-            status: "error",
-            message: sessionErr?.message ?? "Nincs aktiv munkamenet. Lepj be vagy indits vendeg munkamenetet.",
-          });
+      if (requireSession) {
+        const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+        if (sessionErr || !sessionData.session?.user?.id) {
+          if (!cancelled) {
+            setState({
+              status: "error",
+              message: sessionErr?.message ?? "Nincs aktiv munkamenet. Lepj be vagy indits vendeg munkamenetet.",
+            });
+          }
+          return;
         }
-        return;
       }
 
       const { data, error } = await supabase
@@ -116,7 +128,7 @@ export function LibraryClient() {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [supabase]);
+  }, [requireSession, supabase]);
 
   useEffect(() => {
     if (state.status !== "ready") return;
@@ -340,12 +352,14 @@ export function LibraryClient() {
 
   return (
     <div className="library-layout">
-      <section
-        className="library-prototype-tools library-toolbar-desktop"
-        aria-label="Konyvespolc szures es sorbarendezes prototipus"
-      >
-        {renderToolsContent()}
-      </section>
+      {showTools ? (
+        <section
+          className="library-prototype-tools library-toolbar-desktop"
+          aria-label="Konyvespolc szures es sorbarendezes prototipus"
+        >
+          {renderToolsContent()}
+        </section>
+      ) : null}
 
       <section className="library-carousel-shell" aria-label="Konyvlista">
         <button
@@ -411,17 +425,19 @@ export function LibraryClient() {
         ))}
       </div>
 
-      <button
-        type="button"
-        className="mobile-tools-fab"
-        aria-label="Tool panel megnyitasa"
-        aria-expanded={mobileToolsOpen}
-        onClick={() => setMobileToolsOpen(true)}
-      >
-        <Icon name="admin" size={20} />
-      </button>
+      {showMobileToolsFab && showTools ? (
+        <button
+          type="button"
+          className="mobile-tools-fab"
+          aria-label="Tool panel megnyitasa"
+          aria-expanded={mobileToolsOpen}
+          onClick={() => setMobileToolsOpen(true)}
+        >
+          <Icon name="admin" size={20} />
+        </button>
+      ) : null}
 
-      {mobileToolsOpen ? (
+      {mobileToolsOpen && showMobileToolsFab && showTools ? (
         <>
           <button
             type="button"

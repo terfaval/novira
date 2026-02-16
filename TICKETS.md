@@ -61,6 +61,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-LANDING-SEPARATE-ROUTE-TOPBAR-AUTH-BUTTONS-AND-HOME-REDIRECT
+- Goal: Move unauthenticated first entry to dedicated `/landing` route, place top-bar auth buttons (`Belepes`, `Vendeg`) on the right-center alignment, and implement a structured marketing landing with reused home carousel.
+- Files modified: `app/page.tsx`, `app/landing/page.tsx`, `app/globals.css`, `components/TopBar.tsx`, `components/LibraryClient.tsx`, `TICKETS.md`
+- Commit hash: `a262f8e8ddd91687a8c0ddc04982152c4c2b03c5` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-AUTH-LANDING-PASSWORD-GUEST-ROLE-GATING
 - Goal: Add first-visit landing auth flow (password login + guest session), guest session lifecycle actions (save account / delete and exit), and admin-only visibility/enforcement for upload/import/admin tools.
 - Files modified: `app/page.tsx`, `app/globals.css`, `components/TopBar.tsx`, `components/GuestSessionActions.tsx`, `components/LibraryClient.tsx`, `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `app/upload/page.tsx`, `app/api/upload/route.ts`, `app/api/import/external/route.ts`, `app/api/llm/route.ts`, `lib/auth/identity.ts`, `SPEC.md`, `DECISIONS.md`, `SECURITY.md`, `README.md`, `TICKETS.md`, `.env.example`
