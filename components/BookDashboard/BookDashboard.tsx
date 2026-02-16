@@ -5172,9 +5172,6 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   onDeleted={() => {
                     window.location.href = "/";
                   }}
-                  onUpgraded={() => {
-                    void loadDashboard({ keepCurrentView: true });
-                  }}
                 />
               ) : null}
               <Link className={styles.topBarBackButton} href="/" aria-label="Vissza a konyvtarba" title="Vissza a konyvtarba">

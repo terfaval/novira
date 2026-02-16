@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toSessionIdentity } from "@/lib/auth/identity";
@@ -7,55 +8,16 @@ import { toSessionIdentity } from "@/lib/auth/identity";
 type GuestSessionActionsProps = {
   className?: string;
   buttonClassName?: string;
-  onUpgraded?: () => void;
   onDeleted?: () => void;
 };
 
 export function GuestSessionActions({
   className,
   buttonClassName,
-  onUpgraded,
   onDeleted,
 }: GuestSessionActionsProps) {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
-  const [busy, setBusy] = useState<"upgrade" | "delete" | null>(null);
-
-  async function handleUpgrade() {
-    const email = window.prompt("Add meg a bejelentkezesi e-mail cimet:");
-    if (!email?.trim()) return;
-    const password = window.prompt("Adj meg egy jelszot (legalabb 8 karakter):");
-    if (!password || password.length < 8) {
-      window.alert("A jelszonak legalabb 8 karakteresnek kell lennie.");
-      return;
-    }
-
-    setBusy("upgrade");
-    try {
-      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
-      if (sessionErr || !sessionData.session) {
-        throw new Error(sessionErr?.message ?? "Nincs aktiv munkamenet.");
-      }
-
-      const identity = toSessionIdentity(sessionData.session);
-      if (!identity?.isAnonymous) {
-        throw new Error("Ez a munkamenet mar nem vendeg munkamenet.");
-      }
-
-      const { error } = await supabase.auth.updateUser({
-        email: email.trim(),
-        password,
-      });
-      if (error) throw new Error(error.message);
-
-      window.alert("A vendeg munkamenet mentve lett bejelentkezheto fiokka.");
-      onUpgraded?.();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Sikertelen fiokmentes.";
-      window.alert(message);
-    } finally {
-      setBusy(null);
-    }
-  }
+  const [busy, setBusy] = useState<"delete" | null>(null);
 
   async function handleDeleteAndLogout() {
     const confirmed = window.confirm(
@@ -96,14 +58,12 @@ export function GuestSessionActions({
 
   return (
     <div className={className}>
-      <button
-        type="button"
+      <Link
+        href="/login"
         className={buttonClassName ?? "btn"}
-        onClick={() => void handleUpgrade()}
-        disabled={busy !== null}
       >
-        {busy === "upgrade" ? "Mentese..." : "Belepes es mentes"}
-      </button>
+        Belepes
+      </Link>
       <button
         type="button"
         className={buttonClassName ?? "btn"}

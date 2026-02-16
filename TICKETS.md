@@ -61,6 +61,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-GUEST-LOGIN-ROUTE-AND-LOGIN-REGISTER-TOGGLE-FORM
+- Goal: Remove temporary home login button, route guest `Belepes` action to `/login`, and add a single-form login/register mode toggle on the login page.
+- Files modified: `app/page.tsx`, `components/GuestSessionActions.tsx`, `components/BookDashboard/BookDashboard.tsx`, `app/login/page.tsx`, `SPEC.md`, `TICKETS.md`
+- Commit hash: `5f61b99f471973abff39f843ca01e45631694bfc` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-HOME-TEMP-LOGIN-BUTTON
 - Goal: Add a temporary login navigation button on the main home page that routes to `/login`.
 - Files modified: `app/page.tsx`, `TICKETS.md`

@@ -30,7 +30,7 @@
 ## Access Model
 - First visit shows landing page with `Belepes` and `Vendeg` actions.
 - `Belepes`: password-based account session (email + password).
-- `Vendeg`: anonymous session that can be upgraded to password account (`Belepes es mentes`) or discarded (`Torles es kilepes`).
+- `Vendeg`: anonymous session that can be upgraded to password account from `/login` by switching to `Regisztracio` on the same form, or discarded (`Torles es kilepes`).
 - Admin-only functions (upload/import + admin-labeled tooling) are hidden for non-admin users and server-guarded on API routes.
 
 ## UI Icon Policy
