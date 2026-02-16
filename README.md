@@ -50,10 +50,11 @@ Linear reading + validation workflow.
 
 ## 🔐 Security Model (MVP)
 
-- No visible login UI
-- Anonymous background identity
+- Visible landing page with password login and guest session start
+- Guest session can be converted to permanent password account
 - Row-Level Security enabled
 - Server-side LLM access
+- Admin-only upload/import and admin tools
 - No secrets in client bundle
 
 See SECURITY.md for full details.

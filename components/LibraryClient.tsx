@@ -1,7 +1,6 @@
 "use client";
 
 import { type TouchEvent as ReactTouchEvent, useEffect, useMemo, useRef, useState } from "react";
-import { ensureAnonIdentity } from "@/lib/auth/anon";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { BookRow } from "@/lib/types";
 import { BookCard } from "@/components/BookCard";
@@ -84,9 +83,14 @@ export function LibraryClient() {
     let cancelled = false;
 
     async function loadBooks() {
-      const boot = await ensureAnonIdentity();
-      if (!boot.ok) {
-        if (!cancelled) setState({ status: "error", message: boot.reason });
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+      if (sessionErr || !sessionData.session?.user?.id) {
+        if (!cancelled) {
+          setState({
+            status: "error",
+            message: sessionErr?.message ?? "Nincs aktiv munkamenet. Lepj be vagy indits vendeg munkamenetet.",
+          });
+        }
         return;
       }
 
@@ -269,7 +273,7 @@ export function LibraryClient() {
         <div style={{ fontWeight: 650, marginBottom: 6 }}>Hiba tortent</div>
         <div style={{ color: "var(--muted)", lineHeight: 1.55 }}>{state.message}</div>
         <div style={{ marginTop: 10 }}>
-          <small>Ellenorizd a Supabase env valtozokat es az anon auth beallitast.</small>
+          <small>Ellenorizd a munkamenetet, majd probald ujra a landing oldalrol.</small>
         </div>
       </div>
     );

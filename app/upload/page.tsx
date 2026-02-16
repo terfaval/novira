@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ensureAnonIdentity } from "@/lib/auth/anon";
+import { useEffect, useMemo, useState } from "react";
+import { toSessionIdentity } from "@/lib/auth/identity";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Status = "idle" | "uploading" | "done" | "error";
@@ -10,6 +10,7 @@ type ImportMode = "file" | "project_gutenberg";
 
 export default function UploadPage() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const [accessState, setAccessState] = useState<"booting" | "allowed" | "forbidden" | "unauthenticated">("booting");
   const [importMode, setImportMode] = useState<ImportMode>("file");
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
@@ -20,17 +21,51 @@ export default function UploadPage() {
   const [error, setError] = useState<string | null>(null);
   const [bookId, setBookId] = useState<string | null>(null);
 
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      const { data, error: sessionErr } = await supabase.auth.getSession();
+      if (!active) return;
+      if (sessionErr || !data.session) {
+        setAccessState("unauthenticated");
+        return;
+      }
+      const identity = toSessionIdentity(data.session);
+      if (!identity) {
+        setAccessState("unauthenticated");
+        return;
+      }
+      setAccessState(identity.role === "admin" ? "allowed" : "forbidden");
+    };
+
+    void load();
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      const identity = toSessionIdentity(session);
+      if (!identity) {
+        setAccessState("unauthenticated");
+        return;
+      }
+      setAccessState(identity.role === "admin" ? "allowed" : "forbidden");
+    });
+
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   async function onImport() {
+    if (accessState !== "allowed") {
+      setStatus("error");
+      setError("Ehhez a funkciohoz admin jogosultsag kell.");
+      return;
+    }
+
     setStatus("uploading");
     setError(null);
     setBookId(null);
-
-    const boot = await ensureAnonIdentity();
-    if (!boot.ok) {
-      setStatus("error");
-      setError(boot.reason);
-      return;
-    }
 
     if (!title.trim()) {
       setStatus("error");
@@ -113,6 +148,42 @@ export default function UploadPage() {
 
     setStatus("done");
     setBookId(result.bookId ?? null);
+  }
+
+  if (accessState === "booting") {
+    return (
+      <div className="stack">
+        <div className="card">Jogosultsag ellenorzese...</div>
+      </div>
+    );
+  }
+
+  if (accessState === "unauthenticated") {
+    return (
+      <div className="stack">
+        <div className="card">
+          <div style={{ fontWeight: 650, marginBottom: 6 }}>Nincs aktiv munkamenet</div>
+          <p className="sub">Elobb jelentkezz be vagy indits vendeg munkamenetet a landing oldalon.</p>
+          <Link className="btn" href="/">
+            Vissza a landingre
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessState === "forbidden") {
+    return (
+      <div className="stack">
+        <div className="card">
+          <div style={{ fontWeight: 650, marginBottom: 6 }}>Admin jogosultsag szukseges</div>
+          <p className="sub">A konyvfeltoltes jelenleg admin-only funkcio.</p>
+          <Link className="btn" href="/">
+            Vissza a konyvtarba
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (

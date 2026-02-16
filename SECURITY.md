@@ -2,7 +2,7 @@
 
 Date: 2026-02-11
 
-## 1. Threat model (MVP, no email/password UI)
+## 1. Threat model (MVP, password + guest access)
 
 ### Key risks
 - **Public database abuse** if anonymous access is not controlled
@@ -13,13 +13,15 @@ Date: 2026-02-11
 
 ## 2. Mandatory security controls (MVP)
 
-### 2.1 Background identity (no login UI)
-- Use **anonymous identity** issued automatically (no email/password).
-- Store anon session securely (httpOnly cookie recommended).
-- All data rows are tied to `owner_user_id`.
+### 2.1 Identity model (visible login + guest)
+- Landing shows two explicit access paths:
+  - password login (email + password)
+  - guest session (anonymous auth)
+- Guest session may be upgraded to password account, or burned on exit.
+- All data rows are tied to authenticated user id (`auth.uid()`).
 
 ### 2.2 Row Level Security (RLS)
-- Enforce that a user can only access rows where `owner_user_id = auth.uid()`.
+- Enforce that a user can only access rows where owner/user columns match `auth.uid()`.
 - Books/Chapters/Blocks/Variants/Notes all protected via RLS.
 
 ### 2.3 Server-side LLM calls
@@ -28,7 +30,7 @@ Date: 2026-02-11
 - Use Next.js route handlers / server actions for model calls.
 
 ### 2.4 Rate limiting & cost controls
-- Rate limit per anon user + per IP on:
+- Rate limit per authenticated user (including guest sessions) + per IP on:
   - variant generation
   - note generation
   - summarization jobs
@@ -40,7 +42,12 @@ Date: 2026-02-11
 - Size caps (configurable)
 - Robust parsing with timeouts and safe failure states
 
-### 2.6 Data protection & retention
+### 2.6 Admin boundary
+- Upload/import endpoints must enforce admin role server-side.
+- Admin-only UI actions must be hidden for non-admin roles.
+- Admin checks must not rely on client-only gating.
+
+### 2.7 Data protection & retention
 - Soft-delete for Book/Chapter/Block/Variant/Note (optional MVP+)
 - Basic backups (Supabase daily backups or export-based recovery)
 

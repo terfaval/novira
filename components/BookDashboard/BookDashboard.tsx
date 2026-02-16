@@ -16,7 +16,8 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
-import { ensureAnonIdentity } from "@/lib/auth/anon";
+import { GuestSessionActions } from "@/components/GuestSessionActions";
+import { type AppRole, toSessionIdentity } from "@/lib/auth/identity";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   acceptBlockVariant,
@@ -40,7 +41,7 @@ import styles from "@/components/BookDashboard/BookDashboard.module.css";
 type LoadState =
   | { status: "booting" }
   | { status: "error"; message: string }
-  | { status: "ready"; userId: string; data: BookDashboardData };
+  | { status: "ready"; userId: string; role: AppRole; data: BookDashboardData };
 
 type BookEditForm = {
   title: string;
@@ -2237,15 +2238,19 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
   const loadDashboard = useCallback(
     async (opts?: { keepCurrentView?: boolean }) => {
-      const boot = await ensureAnonIdentity();
-      if (!boot.ok) {
-        setState({ status: "error", message: boot.reason });
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+      const identity = toSessionIdentity(sessionData.session ?? null);
+      if (sessionErr || !identity) {
+        setState({
+          status: "error",
+          message: sessionErr?.message ?? "Nincs aktiv munkamenet. Lepj be a landing oldalon.",
+        });
         return;
       }
 
       try {
         const data = await fetchBookDashboardData(supabase, bookId);
-        setState({ status: "ready", userId: boot.userId, data });
+        setState({ status: "ready", userId: identity.userId, role: identity.role, data });
         setEditForm(toBookEditForm(data));
 
         if (opts?.keepCurrentView) {
@@ -3224,8 +3229,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     setBookmarks((prev) => prev.filter((entry) => entry.id !== selectedBookmarkId));
   }, [selectedBookmarkId]);
   const handleToggleDesktopEditPanel = useCallback(() => {
+    if (state.status !== "ready" || state.role !== "admin") return;
     setDesktopEditPanelOpen((prev) => !prev);
-  }, []);
+  }, [state]);
   const handleToggleChapterAddMode = useCallback(() => {
     if (chapterEditSaving || chapterDeleteSaving || chapterAddSaving) return;
     setChapterEditError(null);
@@ -3242,7 +3248,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   }, [chapterAddSaving, chapterDeleteSaving, chapterEditSaving, isMobile]);
 
   const handleEditSubmit = useCallback(async () => {
-    if (state.status !== "ready") return;
+    if (state.status !== "ready" || state.role !== "admin") return;
 
     const title = editForm.title.trim();
     const author = editForm.author.trim();
@@ -3339,7 +3345,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   }, [bookId, editForm, loadDashboard, state, supabase]);
 
   const handleGenerateSummary = useCallback(async () => {
-    if (state.status !== "ready") return;
+    if (state.status !== "ready" || state.role !== "admin") return;
     setEditFeedback(null);
     setIsSummaryGenerating(true);
     try {
@@ -3352,10 +3358,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     } finally {
       setIsSummaryGenerating(false);
     }
-  }, [bookId, state.status, supabase]);
+  }, [bookId, state, supabase]);
 
   const handleInferPublicationYear = useCallback(async () => {
-    if (state.status !== "ready") return;
+    if (state.status !== "ready" || state.role !== "admin") return;
     setEditFeedback(null);
     setIsYearInferring(true);
     try {
@@ -3374,10 +3380,11 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     } finally {
       setIsYearInferring(false);
     }
-  }, [bookId, loadDashboard, state.status, supabase]);
+  }, [bookId, loadDashboard, state, supabase]);
 
   useEffect(() => {
     if (state.status !== "ready") return;
+    if (state.role !== "admin") return;
     if (autoYearInferenceAttemptedRef.current) return;
     if (hasBookStoredYear(state.data.book)) return;
 
@@ -4682,7 +4689,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
   const pageStyle = { "--panel-accent-color": panelAccentColor } as CSSProperties;
   const renderBookMetaSection = () => {
-    if (state.status !== "ready") return null;
+    if (state.status !== "ready" || state.role !== "admin") return null;
     const sourceName = state.data.book.source_name?.trim() || "lokalis_feltoltes";
     const sourceUrl = state.data.book.source_url?.trim() || null;
     const sourceRetrievedAt = state.data.book.source_retrieved_at?.trim() || null;
@@ -5158,6 +5165,18 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           }
           rightSlot={
             <div className={styles.topBarRight}>
+              {state.status === "ready" && state.role === "guest" ? (
+                <GuestSessionActions
+                  className={styles.topBarGuestActions}
+                  buttonClassName={styles.topBarGuestButton}
+                  onDeleted={() => {
+                    window.location.href = "/";
+                  }}
+                  onUpgraded={() => {
+                    void loadDashboard({ keepCurrentView: true });
+                  }}
+                />
+              ) : null}
               <Link className={styles.topBarBackButton} href="/" aria-label="Vissza a konyvtarba" title="Vissza a konyvtarba">
                 <ToolIcon type="back" />
               </Link>
@@ -5208,7 +5227,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             </div>
           </section>
           {renderDesktopInformationPanel()}
-          {desktopEditPanelOpen ? renderBookMetaSection() : null}
+          {desktopEditPanelOpen && state.status === "ready" && state.role === "admin" ? renderBookMetaSection() : null}
         </div>
       )}
     </main>
@@ -5339,15 +5358,17 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                 >
                   <ToolIcon type="add" />
                 </button>
-                <button
-                  className={`${styles.activityIconButton} ${desktopEditPanelOpen ? styles.activeToggle : ""}`}
-                  type="button"
-                  aria-label={desktopEditPanelOpen ? "Book edit panel elrejtese" : "Book edit panel megjelenitese"}
-                  title={desktopEditPanelOpen ? "Book edit panel elrejtese" : "Book edit panel megjelenitese"}
-                  onClick={handleToggleDesktopEditPanel}
-                >
-                  <ToolIcon type="admin" />
-                </button>
+                {state.role === "admin" ? (
+                  <button
+                    className={`${styles.activityIconButton} ${desktopEditPanelOpen ? styles.activeToggle : ""}`}
+                    type="button"
+                    aria-label={desktopEditPanelOpen ? "Book edit panel elrejtese" : "Book edit panel megjelenitese"}
+                    title={desktopEditPanelOpen ? "Book edit panel elrejtese" : "Book edit panel megjelenitese"}
+                    onClick={handleToggleDesktopEditPanel}
+                  >
+                    <ToolIcon type="admin" />
+                  </button>
+                ) : null}
                 <button
                   className={styles.activityIconButton}
                   type="button"

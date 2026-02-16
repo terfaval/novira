@@ -239,6 +239,61 @@ main {
   font-size: clamp(12px, 1.35vw, 14px);
   color: var(--muted);
 }
+.home-guest-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.home-guest-actions .btn {
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.auth-wireframe-shell {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px var(--shell-side-pad);
+}
+.auth-wireframe-card {
+  width: min(100%, 520px);
+  display: grid;
+  gap: 12px;
+}
+.auth-wireframe-field {
+  display: grid;
+  gap: 6px;
+}
+.auth-wireframe-field > span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.auth-wireframe-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.auth-wireframe-error {
+  margin: 0;
+  color: #9b2f2f;
+  font-size: 14px;
+}
+@media (max-width: 720px) {
+  .home-guest-actions {
+    gap: 6px;
+  }
+  .home-guest-actions .btn {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  .auth-wireframe-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
 
 .home-plus-button {
   width: 56px;

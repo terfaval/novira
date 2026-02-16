@@ -61,6 +61,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-AUTH-LANDING-PASSWORD-GUEST-ROLE-GATING
+- Goal: Add first-visit landing auth flow (password login + guest session), guest session lifecycle actions (save account / delete and exit), and admin-only visibility/enforcement for upload/import/admin tools.
+- Files modified: `app/page.tsx`, `app/globals.css`, `components/TopBar.tsx`, `components/GuestSessionActions.tsx`, `components/LibraryClient.tsx`, `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `app/upload/page.tsx`, `app/api/upload/route.ts`, `app/api/import/external/route.ts`, `app/api/llm/route.ts`, `lib/auth/identity.ts`, `SPEC.md`, `DECISIONS.md`, `SECURITY.md`, `README.md`, `TICKETS.md`, `.env.example`
+- Commit hash: `cb4e34669f5e9d15a635956c9d0dba8f19e053fd` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-BOOK-DESKTOP-EDITORIAL-NOTE-PANEL-IN-BOTTOM-MULTI-BLOCK-SECTION
 - Goal: Add a dedicated `Szerkesztoi jegyzet` panel to the Book Dashboard desktop bottom multi-panel block area, with live editorial workflow indicators.
 - Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`

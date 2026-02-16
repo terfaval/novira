@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/llm/rateLimit";
 import { OpenAiProvider } from "@/lib/llm/providers/openai";
 import { getLlmContextForBlock } from "@/lib/db/queries/llmContext";
 import { insertDraftVariant } from "@/lib/db/mutations/variants";
+import { isAdminUser } from "@/lib/auth/identity";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
@@ -115,6 +116,13 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
     }
 
     const userId = auth.data.user.id;
+    const adminOnlyAction = body.action === "generate_book_summary" || body.action === "infer_publication_year";
+    if (adminOnlyAction && !isAdminUser(auth.data.user)) {
+      return NextResponse.json(
+        { ok: false, error: err("UNAUTHORIZED", "Admin jogosultsag szukseges.") },
+        { status: 403 }
+      );
+    }
     const ip = getClientIp(req);
     const rlKey = `llm:${userId}:${ip}`;
 

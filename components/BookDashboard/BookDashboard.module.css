@@ -25,6 +25,21 @@
   align-items: center;
   gap: 12px;
 }
+.topBarGuestActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.topBarGuestButton {
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--brand-paper) 92%, transparent);
+  color: var(--brand-ink);
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
 
 .topBarBookIcon {
   width: clamp(38px, 4.4vw, 46px);

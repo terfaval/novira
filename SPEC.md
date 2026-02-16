@@ -14,7 +14,7 @@
 - Variant handling per block
 - Anchored notes
 - Markdown + DOCX export
-- Cloud persistence (anonymous identity)
+- Cloud persistence (password login + guest session)
 
 ## MVP Scope (OUT)
 - EPUB import (deferred)
@@ -26,6 +26,12 @@
 - Next.js server routes
 - Parsing imports (HTML/RTF/DOCX)
 - Server-side LLM calls
+
+## Access Model
+- First visit shows landing page with `Belepes` and `Vendeg` actions.
+- `Belepes`: password-based account session (email + password).
+- `Vendeg`: anonymous session that can be upgraded to password account (`Belepes es mentes`) or discarded (`Torles es kilepes`).
+- Admin-only functions (upload/import + admin-labeled tooling) are hidden for non-admin users and server-guarded on API routes.
 
 ## UI Icon Policy
 - UI icons must be rendered only through `src/ui/icons/Icon.tsx`.

@@ -5,8 +5,8 @@ Architectural and product decisions log.
 ---
 
 ## D-001 – Anonymous Background Identity (No Visible Login)
-Status: Accepted | Stage: M2
-Novira uses anonymous background identity in MVP. No visible login.
+Status: Superseded by D-018 | Stage: M2
+Replaced by visible landing auth model with guest session option.
 
 ---
 
@@ -138,3 +138,24 @@ Constraints:
 Rationale:
 - Keeps import automation simple for chapter/block pipeline by ingesting one bundled HTML source.
 - Aligns legal/compliance visibility with explicit source attribution in product UI.
+
+---
+
+## D-018 - Visible Login + Guest Session + Admin Gating
+Status: Accepted | Date: 2026-02-16
+
+Decision:
+- Use a visible landing page on first visit with two explicit actions: password `Belepes` and `Vendeg`.
+- Guest uses anonymous auth session and can either:
+  - upgrade to permanent password account (`Belepes es mentes`), or
+  - burn session data and exit (`Torles es kilepes`).
+- Enforce admin-only behavior for upload/import and admin-labeled tooling:
+  - hidden in UI for non-admin,
+  - server-enforced on related API routes.
+
+Role model (current):
+- `admin`
+- `editor` (default authenticated non-admin)
+- `guest` (anonymous session)
+
+Future role split (`reader` vs `editor`) remains planned but not activated in this ticket.
