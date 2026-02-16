@@ -308,7 +308,7 @@ main {
   min-height: 0;
   height: 100%;
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   overflow: hidden;
 }
 
@@ -587,6 +587,9 @@ main:has(.book-page-shell) {
   }
 
   .library-carousel-item.is-inactive .book-spine {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
     height: 100%;
     min-height: 100%;
     border-radius: 12px;
@@ -643,11 +646,14 @@ main:has(.book-page-shell) {
 
   .carousel-pagination {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 84px;
-    z-index: 30;
+    top: 50%;
+    right: max(6px, calc((100vw - min(100vw, var(--shell-main-max))) / 2 + 8px));
+    left: auto;
+    bottom: auto;
+    z-index: 40;
     margin: 0;
+    transform: translateY(-50%) rotate(90deg);
+    transform-origin: center;
     pointer-events: none;
   }
 
@@ -1021,7 +1027,7 @@ details[open] > .book-accordion-trigger::after {
   min-height: 0;
   height: 100%;
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   overflow: hidden;
 }
 
@@ -1074,6 +1080,7 @@ details[open] > .book-accordion-trigger::after {
   .home-layer-top,
   .home-layer-plus {
     left: max(4px, calc((100vw - min(100vw, var(--shell-main-max))) / 2 + 6px));
+    z-index: 10;
   }
 
   .home-plus-button {
@@ -1150,4 +1157,86 @@ details[open] > .book-accordion-trigger::after {
   color: var(--brand-paper);
   transform: scale(1.35);
   transform-origin: center;
+}
+
+/* Final mobile carousel overrides (must stay last to beat duplicated legacy blocks). */
+@media (max-width: 720px) {
+  .home-layer-plus {
+    display: none;
+  }
+
+  .home-layer-main {
+    padding: 74px 12px 12px;
+  }
+
+  .library-layout {
+    --mobile-carousel-stage-width: min(calc(100vw - 44px), 560px);
+  }
+
+  .library-carousel-shell {
+    justify-items: start;
+  }
+
+  .library-carousel-stage {
+    width: var(--mobile-carousel-stage-width);
+    max-width: var(--mobile-carousel-stage-width);
+    margin-inline: 0;
+    touch-action: pan-y;
+  }
+
+  .library-carousel-track {
+    width: 100%;
+    max-width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .library-carousel-item.is-inactive {
+    width: 100%;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .library-carousel-item.is-before-active {
+    order: 0;
+  }
+
+  .library-carousel-item.is-active {
+    order: 1;
+    width: 100%;
+    min-height: 60%;
+    height: 60%;
+  }
+
+  .library-carousel-item.is-after-active {
+    order: 2;
+  }
+
+  .library-carousel-item.is-active .book-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .library-carousel-item.is-inactive .book-spine {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .carousel-pagination {
+    position: absolute;
+    top: 50%;
+    left: auto;
+    right: 0px;
+    bottom: auto;
+    z-index: 40;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
 }

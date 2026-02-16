@@ -61,6 +61,81 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-HOME-MOBILE-CAROUSEL-ONE-SPINE-BEFORE-ACTIVE
+- Goal: Keep one spine before the active card on mobile carousel whenever a previous book exists, by adjusting visible window anchoring and mobile item ordering.
+- Files modified: `components/LibraryClient.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-PAGINATION-EDGE-COLUMN-POSITION-FIX
+- Goal: Fix mobile pagination edge placement by switching from rotated-row positioning to a right-edge vertical column layout with small padding.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-PAGINATION-EDGE-SPACING-AND-SWIPE-NAV
+- Goal: Keep mobile pagination on screen edge with small padding while bringing it visually closer to carousel by widening stage, and add touch swipe navigation on the home carousel.
+- Files modified: `app/globals.css`, `components/LibraryClient.tsx`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-PAGINATION-VISIBLE-RIGHT-OUTSIDE-FIX
+- Goal: Fix mobile pagination visibility by anchoring rotated pagination to the right edge of the layout (outside carousel but inside viewport).
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-HIDE-PLUS-LEFT-ALIGN-CAROUSEL-OUTSIDE-PAGINATION
+- Goal: On mobile home page hide the plus icon, left-align the carousel, and place rotated pagination outside next to the carousel.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-PAGINATION-ROTATE-TO-RIGHT-SIDE
+- Goal: On mobile home carousel, move pagination to the right side of the carousel and rotate it for vertical side placement.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-TOOLS-PANEL-NO-TITLE-HIGHER-Z-INDEX
+- Goal: Remove mobile tools panel title row (including gear icon) and raise panel/backdrop stacking above the floating plus button.
+- Files modified: `components/LibraryClient.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-SHELL-AND-CAROUSEL-SIDE-PADDING-INCREASE
+- Goal: Increase mobile side padding on the home shell and carousel by adding final overrides for `home-layer-main` horizontal padding and tighter carousel stage width.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-ACTIVE-CARD-MATCH-CAROUSEL-WIDTH
+- Goal: Force the active mobile book card to occupy full carousel width by adding final media overrides for active item and card width.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-SPINE-MATCH-STAGE-WIDTH-STRICT
+- Goal: Ensure mobile spine cards match carousel width exactly by re-asserting mobile stage width in the final CSS override block so later duplicate base rules cannot reset it.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-SPINE-WIDTH-OVERRIDE-LAST-BLOCK
+- Goal: Force full-width mobile spine cards by adding a final end-of-file media override that beats duplicated legacy carousel width rules.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-SPINE-FULL-CAROUSEL-WIDTH
+- Goal: On mobile carousel, make inactive spine cards exactly match carousel width by enforcing full-width border-box sizing.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-CAROUSEL-CENTER-ALIGN-ALL-SCREENS
+- Goal: Keep the home carousel horizontally centered across all screen sizes by forcing centered stage alignment in every active carousel style block.
+- Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-CAROUSEL-FIXED-VISIBLE-BOOK-COUNT-BY-BREAKPOINT
+- Goal: Make the home carousel render a fixed number of visible books per screen-width breakpoint so the displayed item count is deterministic across viewport limits.
+- Files modified: `components/LibraryClient.tsx`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-BATCH-AUTO-GENERATE-RECOVERY-AND-RUNTIME-ALERTS
+- Goal: Make translated-panel auto-generate continue chunk-by-chunk while near-bottom scrolling, add visible runtime popup alerts for stop/error states (including backend rate-limit feedback), and prevent editor-action lockups with LLM request timeout handling.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `3dc769abecc69762e52b14f9309559c90e677e6b` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-BOOK-DASHBOARD-EDITED-PANEL-UNDO-LAST-CHANGE
 - Goal: Add undo-safe recovery for edited-panel mutations by checkpointing block/variant state before generate/accept/delete/reject/manual-save actions, then restoring the last checkpoint from desktop/mobile tool controls.
 - Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`

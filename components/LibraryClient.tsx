@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type TouchEvent as ReactTouchEvent, useEffect, useMemo, useRef, useState } from "react";
 import { ensureAnonIdentity } from "@/lib/auth/anon";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { BookRow } from "@/lib/types";
@@ -63,6 +63,12 @@ function resolveEditedRatio(book: BookRow) {
   return Math.max(0, Math.min(100, raw));
 }
 
+function resolveCarouselVisibleCount(viewportWidth: number | null) {
+  if (viewportWidth !== null && viewportWidth <= 720) return 4;
+  if (viewportWidth !== null && viewportWidth <= 1100) return 11;
+  return 14;
+}
+
 export function LibraryClient() {
   const [state, setState] = useState<LoadState>({ status: "booting" });
   const [activeBookId, setActiveBookId] = useState<string | null>(null);
@@ -70,6 +76,8 @@ export function LibraryClient() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortMode, setSortMode] = useState<SortMode>("author_asc");
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState<number | null>(null);
+  const carouselTouchStartRef = useRef<{ x: number; y: number } | null>(null);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   useEffect(() => {
@@ -144,9 +152,23 @@ export function LibraryClient() {
   const activeIndex = filteredBooks.findIndex((book) => book.id === activeBookId);
   const effectiveActiveIndex = activeIndex >= 0 ? activeIndex : filteredBooks.length > 0 ? 0 : -1;
   const activeBook = effectiveActiveIndex >= 0 ? filteredBooks[effectiveActiveIndex] : null;
-  const visibleBooks = filteredBooks;
+  const isMobileViewport = viewportWidth !== null && viewportWidth <= 720;
+  const carouselVisibleCount = resolveCarouselVisibleCount(viewportWidth);
+  const visibleBooks = useMemo(() => {
+    if (effectiveActiveIndex < 0 || filteredBooks.length === 0) return [];
+    const windowSize = Math.min(filteredBooks.length, carouselVisibleCount);
+    const maxStart = filteredBooks.length - windowSize;
+    const preferredStart = isMobileViewport ? effectiveActiveIndex - 1 : effectiveActiveIndex - Math.floor(windowSize / 2);
+    const start = Math.max(0, Math.min(maxStart, preferredStart));
+    return filteredBooks.slice(start, start + windowSize);
+  }, [carouselVisibleCount, effectiveActiveIndex, filteredBooks, isMobileViewport]);
   const hasPrev = effectiveActiveIndex > 0;
   const hasNext = effectiveActiveIndex >= 0 && effectiveActiveIndex < filteredBooks.length - 1;
+  const bookIndexById = useMemo(() => {
+    const map = new Map<string, number>();
+    filteredBooks.forEach((book, index) => map.set(book.id, index));
+    return map;
+  }, [filteredBooks]);
 
   function activateByIndex(index: number) {
     const next = filteredBooks[index];
@@ -162,6 +184,39 @@ export function LibraryClient() {
   function goNext() {
     if (!hasNext) return;
     activateByIndex(effectiveActiveIndex + 1);
+  }
+
+  function handleCarouselTouchStart(event: ReactTouchEvent<HTMLDivElement>) {
+    if (!isMobileViewport) return;
+    const touch = event.touches[0];
+    if (!touch) return;
+    carouselTouchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }
+
+  function handleCarouselTouchEnd(event: ReactTouchEvent<HTMLDivElement>) {
+    if (!isMobileViewport) return;
+    const touchStart = carouselTouchStartRef.current;
+    carouselTouchStartRef.current = null;
+    if (!touchStart) return;
+
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    const deltaX = touch.clientX - touchStart.x;
+    const deltaY = touch.clientY - touchStart.y;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    const swipeThreshold = 32;
+
+    if (absX < swipeThreshold && absY < swipeThreshold) return;
+
+    if (absY > absX) {
+      if (deltaY < -swipeThreshold) goNext();
+      if (deltaY > swipeThreshold) goPrev();
+      return;
+    }
+
+    if (deltaX < -swipeThreshold) goNext();
+    if (deltaX > swipeThreshold) goPrev();
   }
 
   useEffect(() => {
@@ -193,11 +248,13 @@ export function LibraryClient() {
 
   useEffect(() => {
     function onResize() {
+      setViewportWidth(window.innerWidth);
       if (window.innerWidth > 720) {
         setMobileToolsOpen(false);
       }
     }
 
+    onResize();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -297,15 +354,25 @@ export function LibraryClient() {
           <span className="carousel-arrow-icon left" aria-hidden="true" />
         </button>
 
-        <div className="library-carousel-stage">
+        <div
+          className="library-carousel-stage"
+          onTouchStart={handleCarouselTouchStart}
+          onTouchEnd={handleCarouselTouchEnd}
+          onTouchCancel={() => {
+            carouselTouchStartRef.current = null;
+          }}
+        >
           {activeBook ? (
             <div className="library-carousel-track">
               {visibleBooks.map((book) => {
                 const isActive = book.id === activeBook.id;
+                const bookIndex = bookIndexById.get(book.id) ?? -1;
+                const isBeforeActive = bookIndex >= 0 && bookIndex < effectiveActiveIndex;
+                const isAfterActive = bookIndex > effectiveActiveIndex;
                 return (
                   <div
                     key={book.id}
-                    className={`library-carousel-item${isActive ? " is-active" : " is-inactive"}`}
+                    className={`library-carousel-item${isActive ? " is-active" : " is-inactive"}${isBeforeActive ? " is-before-active" : ""}${isAfterActive ? " is-after-active" : ""}`}
                   >
                     <BookCard book={book} isActive={isActive} onActivate={setActiveBookId} />
                   </div>
@@ -359,10 +426,6 @@ export function LibraryClient() {
             onClick={() => setMobileToolsOpen(false)}
           />
           <section className="mobile-tools-sheet" aria-label="Mobil tool panel">
-            <div className="mobile-tools-sheet-title">
-              <span>Tool panel</span>
-              <Icon name="admin" size={16} />
-            </div>
             {renderToolsContent()}
           </section>
         </>
@@ -370,4 +433,3 @@ export function LibraryClient() {
     </div>
   );
 }
-

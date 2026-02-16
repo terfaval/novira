@@ -180,6 +180,13 @@ type DashboardBookmarkPayload = {
 };
 
 type DashboardBookmarkKind = "progress" | "important";
+type RuntimeAlertTone = "error" | "info";
+
+type RuntimeAlertState = {
+  id: number;
+  tone: RuntimeAlertTone;
+  message: string;
+};
 
 type DashboardBookmarkEntry = {
   id: string;
@@ -420,6 +427,8 @@ const IMPORTANT_BOOKMARK_DEFAULT_COLOR_KEY = "rose";
 const MAX_UNACCEPTED_GENERATED_BLOCKS = 12;
 const BATCH_GENERATE_CHUNK_SIZE = 4;
 const AUTO_GENERATE_SCROLL_THRESHOLD_PX = 320;
+const LLM_REQUEST_TIMEOUT_MS = 45_000;
+const RUNTIME_ALERT_AUTO_DISMISS_MS = 7_000;
 
 function normalizeBookmarkColorKey(value: string | null | undefined): string {
   if (!value) return DEFAULT_BOOKMARK_COLOR_KEY;
@@ -747,8 +756,11 @@ function resolveTopbarIconSlug(book: BookDashboardData["book"]): string {
   return normalizeIconSlug(book.title ?? "");
 }
 
-function mapGenerateError(status: number, fallbackMessage?: string): string {
+function mapGenerateError(status: number, fallbackMessage?: string, retryAfterSeconds?: number | null): string {
   if (status === 429) {
+    if (retryAfterSeconds && retryAfterSeconds > 0) {
+      return `Tul sok generalasi keres erkezett. Probald ujra ${retryAfterSeconds} mp mulva.`;
+    }
     return "Tul sok generalasi keres erkezett. Varj egy kicsit, majd probald ujra.";
   }
   if (status === 400) {
@@ -761,6 +773,16 @@ function mapGenerateError(status: number, fallbackMessage?: string): string {
     return fallbackMessage;
   }
   return "Sikertelen generalas.";
+}
+
+function parseRetryAfterSeconds(value: string | null): number | null {
+  if (!value) return null;
+  const asNumber = Number.parseInt(value, 10);
+  if (Number.isFinite(asNumber) && asNumber > 0) return asNumber;
+  const asDate = Date.parse(value);
+  if (Number.isNaN(asDate)) return null;
+  const deltaSeconds = Math.ceil((asDate - Date.now()) / 1000);
+  return deltaSeconds > 0 ? deltaSeconds : null;
 }
 
 function mapNoteError(status: number, fallbackMessage?: string): string {
@@ -823,23 +845,37 @@ async function requestDraftGeneration(args: {
     throw new Error(sessionErr?.message ?? "Nem talalhato ervenyes munkamenet.");
   }
 
-  const response = await fetch("/api/llm", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
-      action: "translate_block",
-      bookId,
-      blockId,
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), LLM_REQUEST_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch("/api/llm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        action: "translate_block",
+        bookId,
+        blockId,
+      }),
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error(`A generalas timeout miatt megszakadt (${Math.round(LLM_REQUEST_TIMEOUT_MS / 1000)} mp).`);
+    }
+    throw new Error("A generalasi keres kuldese nem sikerult. Probald ujra.");
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 
   const payload = (await response.json().catch(() => null)) as LlmResponse | null;
   if (!response.ok || !payload?.ok) {
     const fallbackMessage = payload && !payload.ok ? payload.error.message : undefined;
-    throw new Error(mapGenerateError(response.status, fallbackMessage));
+    const retryAfterSeconds = parseRetryAfterSeconds(response.headers.get("Retry-After"));
+    throw new Error(mapGenerateError(response.status, fallbackMessage, retryAfterSeconds));
   }
   if (!("variant" in payload) || !payload.variant?.text?.trim()) {
     throw new Error("A generalas ures valasszal tert vissza.");
@@ -2127,6 +2163,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const [generateError, setGenerateError] = useState<GenerateErrorState | null>(null);
   const [batchFeedback, setBatchFeedback] = useState<string | null>(null);
   const [undoFeedback, setUndoFeedback] = useState<string | null>(null);
+  const [runtimeAlert, setRuntimeAlert] = useState<RuntimeAlertState | null>(null);
   const [lastEditedPanelUndo, setLastEditedPanelUndo] = useState<EditedPanelUndoSnapshot | null>(null);
   const [isUndoApplying, setIsUndoApplying] = useState(false);
   const [isBatchGenerating, setIsBatchGenerating] = useState(false);
@@ -2175,6 +2212,13 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const translatedPanelRef = useRef<HTMLDivElement | null>(null);
   const syncLock = useRef<"original" | "translated" | null>(null);
   const autoBatchLockRef = useRef(false);
+  const runtimeAlertSeqRef = useRef(0);
+  const autoStopNoticeKeyRef = useRef<string | null>(null);
+
+  const showRuntimeAlert = useCallback((message: string, tone: RuntimeAlertTone = "error") => {
+    runtimeAlertSeqRef.current += 1;
+    setRuntimeAlert({ id: runtimeAlertSeqRef.current, tone, message });
+  }, []);
 
   const applyViewDefaults = useCallback((data: BookDashboardData) => {
     setStore((prev) => {
@@ -2234,7 +2278,18 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   useEffect(() => {
     setLastEditedPanelUndo(null);
     setUndoFeedback(null);
+    setRuntimeAlert(null);
+    autoStopNoticeKeyRef.current = null;
   }, [bookId]);
+
+  useEffect(() => {
+    if (!runtimeAlert) return;
+    const alertId = runtimeAlert.id;
+    const timer = window.setTimeout(() => {
+      setRuntimeAlert((prev) => (prev && prev.id === alertId ? null : prev));
+    }, RUNTIME_ALERT_AUTO_DISMISS_MS);
+    return () => window.clearTimeout(timer);
+  }, [runtimeAlert]);
 
   useEffect(() => {
     const updateViewport = () => {
@@ -2607,10 +2662,12 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     async (block: DashboardBlock) => {
       if (state.status !== "ready") return;
       if (!hasGeneratedEditedContent(block) && !block.isAccepted && remainingGenerateSlots <= 0) {
+        const message = `Elerted a ${MAX_UNACCEPTED_GENERATED_BLOCKS} elfogadatlan generalt blokk limitet. Elobb fogadj el vagy utasits el javaslatokat.`;
         setGenerateError({
           blockId: block.id,
-          message: `Elerted a ${MAX_UNACCEPTED_GENERATED_BLOCKS} elfogadatlan generalt blokk limitet. Elobb fogadj el vagy utasits el javaslatokat.`,
+          message,
         });
+        showRuntimeAlert(message, "info");
         return;
       }
       setGenerateError(null);
@@ -2636,6 +2693,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       } catch (error) {
         const message = error instanceof Error ? error.message : "Sikertelen generalas.";
         setGenerateError({ blockId: block.id, message });
+        showRuntimeAlert(message);
       } finally {
         setGeneratingBlockId(null);
       }
@@ -2648,6 +2706,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       remainingGenerateSlots,
       state.status,
       supabase,
+      showRuntimeAlert,
       translateChapterTitlesFromGeneratedBlocks,
     ],
   );
@@ -2658,15 +2717,22 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       if (autoBatchLockRef.current || isBatchGenerating || isEditorBusy) return;
 
       if (remainingGenerateSlots <= 0 || generationCandidates.length === 0) {
+        const message =
+          remainingGenerateSlots <= 0
+            ? `Elerted a ${MAX_UNACCEPTED_GENERATED_BLOCKS} elfogadatlan generalt blokk limitet.`
+            : "Nincs tovabbi generalhato blokk.";
+        const reasonKey = remainingGenerateSlots <= 0 ? "limit-reached" : "no-candidates";
         if (source === "manual") {
-          const message =
-            remainingGenerateSlots <= 0
-              ? `Elerted a ${MAX_UNACCEPTED_GENERATED_BLOCKS} elfogadatlan generalt blokk limitet.`
-              : "Nincs tovabbi generalhato blokk.";
           setBatchFeedback(message);
+          showRuntimeAlert(message, "info");
+        } else if (autoStopNoticeKeyRef.current !== reasonKey) {
+          autoStopNoticeKeyRef.current = reasonKey;
+          setBatchFeedback(message);
+          showRuntimeAlert(message, "info");
         }
         return;
       }
+      autoStopNoticeKeyRef.current = null;
 
       autoBatchLockRef.current = true;
       setIsBatchGenerating(true);
@@ -2727,6 +2793,13 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               : `Generalas kesz: ${successCount} blokk.`,
           );
         }
+        if (failureCount > 0) {
+          showRuntimeAlert(
+            failureCount > 1
+              ? `A blokk-generalas reszben sikertelen (${failureCount} hiba).`
+              : "A blokk-generalas kozben hiba tortent.",
+          );
+        }
       } finally {
         setGeneratingBlockId(null);
         setIsBatchGenerating(false);
@@ -2743,6 +2816,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       remainingGenerateSlots,
       state.status,
       supabase,
+      showRuntimeAlert,
       translateChapterTitlesFromGeneratedBlocks,
     ],
   );
@@ -3365,6 +3439,25 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     if (remaining > AUTO_GENERATE_SCROLL_THRESHOLD_PX) return;
     void handleBatchGenerate("scroll");
   }, [autoGenerateOnScroll, handleBatchGenerate, state.status, store.viewState, syncPanels]);
+
+  useEffect(() => {
+    if (!autoGenerateOnScroll || state.status !== "ready" || store.viewState !== "workbench") return;
+    if (isBatchGenerating || isEditorBusy || autoBatchLockRef.current) return;
+    const panel = translatedPanelRef.current;
+    if (!panel) return;
+    const remaining = panel.scrollHeight - panel.scrollTop - panel.clientHeight;
+    if (remaining > AUTO_GENERATE_SCROLL_THRESHOLD_PX) return;
+    void handleBatchGenerate("scroll");
+  }, [
+    autoGenerateOnScroll,
+    generationCandidates.length,
+    generatedUnacceptedCount,
+    handleBatchGenerate,
+    isBatchGenerating,
+    isEditorBusy,
+    state.status,
+    store.viewState,
+  ]);
   const handlePanelBodyClick = useCallback(() => {
     if (!isMobile) return;
     setActiveMobileBlockId(null);
@@ -5064,6 +5157,27 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     );
   };
 
+  const renderRuntimeAlert = () => {
+    if (!runtimeAlert) return null;
+    return (
+      <section
+        className={`${styles.runtimeAlert} ${runtimeAlert.tone === "info" ? styles.runtimeAlertInfo : styles.runtimeAlertError}`}
+        role="alert"
+        aria-live="assertive"
+      >
+        <p>{runtimeAlert.message}</p>
+        <button
+          type="button"
+          className={styles.runtimeAlertClose}
+          onClick={() => setRuntimeAlert(null)}
+          aria-label="Uzenet bezarasa"
+        >
+          X
+        </button>
+      </section>
+    );
+  };
+
   return (
     <div
       className={`book-page-shell ${styles.pageShell}`}
@@ -5353,6 +5467,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       ) : null}
       {renderOnboardingGuide()}
       {renderOnboardingPopup()}
+      {renderRuntimeAlert()}
       {renderMobileToolPanel()}
   </div>
 );
