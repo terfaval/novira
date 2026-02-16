@@ -17,6 +17,11 @@ import {
   Bookmark,
   ListTree,
   ScrollText,
+  Languages,
+  Microscope,
+  School,
+  Building2,
+  BookHeart,
 } from "lucide-react";
 
 export type IconName =
@@ -37,7 +42,13 @@ export type IconName =
   | "onboarding"
   | "bookmark"
   | "toc"
-  | "notes";
+  | "notes"
+  | "student"
+  | "reader_group"
+  | "translator"
+  | "researcher"
+  | "teacher"
+  | "institution";
 
 const ICON_MAP = {
   generate: Sparkles,
@@ -58,6 +69,12 @@ const ICON_MAP = {
   bookmark: Bookmark,
   toc: ListTree,
   notes: ScrollText,
+  student: GraduationCap,
+  reader_group: BookHeart,
+  translator: Languages,
+  researcher: Microscope,
+  teacher: School,
+  institution: Building2,
 } as const;
 
 type Props = {

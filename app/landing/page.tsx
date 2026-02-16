@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TopBar } from "@/components/TopBar";
@@ -12,7 +11,7 @@ import { Icon } from "@/src/ui/icons/Icon";
 type AudienceCard = {
   title: string;
   description: string;
-  icon: "reader" | "workbench" | "onboarding" | "notes" | "bookmark" | "admin";
+  icon: "student" | "reader_group" | "translator" | "researcher" | "teacher" | "institution";
 };
 
 const AUDIENCE_CARDS: AudienceCard[] = [
@@ -20,34 +19,34 @@ const AUDIENCE_CARDS: AudienceCard[] = [
     title: "Diakoknak",
     description:
       "Ha egy szoveg tul suru vagy nehezen kovetheto, a Novira segit tisztabban latni - az eredeti hang megtartasaval.",
-    icon: "onboarding",
+    icon: "student",
   },
   {
     title: "Olvasoknak",
     description:
       "Ha egy klasszikus mu kozel all hozzad, de a nyelv tavolinak hat, itt ujraolvashatova valik.",
-    icon: "reader",
+    icon: "reader_group",
   },
   {
     title: "Forditoknak",
     description:
       "Stiluserzekeny atiratok es alternativ megfogalmazasok segitik a dontest, blokkonkent.",
-    icon: "workbench",
+    icon: "translator",
   },
   {
     title: "Kutatoknak",
     description: "Valtozatok es jegyzetek strukturaltan, egymas mellett.",
-    icon: "notes",
+    icon: "researcher",
   },
   {
     title: "Oktatoknak",
     description: "Osszetett szovegek tanithatobb formaban, kontextus-megtartassal.",
-    icon: "bookmark",
+    icon: "teacher",
   },
   {
     title: "Intezmenyeknek",
     description: "Modernizalt szoveg-elokeszites szerkesztoi kontroll mellett.",
-    icon: "admin",
+    icon: "institution",
   },
 ];
 
@@ -266,9 +265,6 @@ export default function LandingPage() {
           <p>Tobb klasszikus mu mar feldolgozhato a muhelyben.</p>
           <div className="landing-carousel-wrap">
             <LibraryClient requireSession={false} showTools={false} showMobileToolsFab={false} />
-          </div>
-          <div className="landing-works-link-wrap">
-            <Link href="/">Minden mu megtekintese -&gt;</Link>
           </div>
         </section>
 

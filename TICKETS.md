@@ -61,6 +61,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-LANDING-PANEL-SPACING-REMOVE-ALL-WORKS-LINK-AND-NEW-AUDIENCE-ICONS
+- Goal: Increase vertical spacing between landing sections, remove the `Minden mu megtekintese` link under carousel, and apply a new dedicated icon set for the `Kinek keszult?` cards.
+- Files modified: `app/landing/page.tsx`, `app/globals.css`, `src/ui/icons/Icon.tsx`, `TICKETS.md`
+- Commit hash: `8501d752c66474e072da81e8466ee987957a34d6` (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-LOGIN-ROUTE-FIRST-ENTRY-THEN-LIBRARY
 - Goal: Add dedicated `/login` entry route and make unauthenticated app start redirect to login first, then proceed to library after successful login/session.
 - Files modified: `app/login/page.tsx`, `app/page.tsx`, `app/landing/page.tsx`, `app/upload/page.tsx`, `components/LibraryClient.tsx`, `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`

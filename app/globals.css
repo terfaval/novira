@@ -115,9 +115,10 @@ body {
   margin: 0;
   background-color: var(--bg);
   background-image: var(--page-scrim), var(--page-bg-image);
-  background-position: center top, center top;
+  background-position: center center, center center;
   background-repeat: no-repeat, no-repeat;
   background-size: cover, cover;
+  background-attachment: fixed, fixed;
   color: var(--text);
   font-family: var(--font-body), "Source Serif Pro", "Times New Roman", Georgia, serif;
 }
@@ -1484,7 +1485,7 @@ details[open] > .book-accordion-trigger::after {
   margin: 0 auto;
   padding: 48px var(--shell-side-pad) 80px;
   display: grid;
-  gap: 74px;
+  gap: 112px;
 }
 
 .landing-hero {
@@ -1602,16 +1603,6 @@ details[open] > .book-accordion-trigger::after {
   min-height: 480px;
 }
 
-.landing-works-link-wrap {
-  margin-top: 14px;
-}
-
-.landing-works-link-wrap a {
-  color: var(--brand-ink);
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 2px;
-}
-
 .landing-audience-grid {
   margin-top: 18px;
   display: grid;
@@ -1668,7 +1659,7 @@ details[open] > .book-accordion-trigger::after {
   }
 
   .landing-main {
-    gap: 54px;
+    gap: 72px;
     padding-top: 30px;
   }
 
