@@ -92,7 +92,7 @@ export default function Page() {
             rightSlot={
               <div className="home-auth-actions">
                 {showAdminUpload ? (
-                  <Link className="btn" href="/admin">
+                  <Link className="btn home-auth-button" href="/admin">
                     Admin
                   </Link>
                 ) : null}
@@ -102,7 +102,7 @@ export default function Page() {
                     onDeleted={() => router.replace("/landing")}
                   />
                 ) : (
-                  <button type="button" className="btn" onClick={() => void handleLogout()} disabled={logoutBusy}>
+                  <button type="button" className="btn home-auth-button" onClick={() => void handleLogout()} disabled={logoutBusy}>
                     {logoutBusy ? "Kilepes..." : "Kilepes"}
                   </button>
                 )}

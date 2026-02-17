@@ -201,42 +201,6 @@ export default function LandingPage() {
             </button>
           </div>
           <p className="landing-helper">Ingyenes es nyitott hasznalat.</p>
-
-          {showLoginForm ? (
-            <section className="card landing-login-card" aria-label="Belepesi urlap">
-              <label className="landing-login-field">
-                <span>E-mail</span>
-                <input
-                  className="input"
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  autoComplete="email"
-                  placeholder="nev@pelda.hu"
-                />
-              </label>
-              <label className="landing-login-field">
-                <span>Jelszo</span>
-                <input
-                  className="input"
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  autoComplete="current-password"
-                  placeholder="********"
-                />
-              </label>
-              <div className="landing-login-actions">
-                <button type="button" className="btn" onClick={() => void runLoginFlow()} disabled={loginBusy || guestBusy}>
-                  {loginBusy ? "Folyamatban..." : "Belepes"}
-                </button>
-                <button type="button" className="btn" onClick={() => setShowLoginForm(false)} disabled={loginBusy || guestBusy}>
-                  Mégse
-                </button>
-              </div>
-              {loginError ? <p className="auth-wireframe-error">{loginError}</p> : null}
-            </section>
-          ) : null}
         </section>
 
         <section className="landing-intro">
@@ -321,6 +285,52 @@ export default function LandingPage() {
           </p>
         </section>
       </div>
+
+      {showLoginForm ? (
+        <div
+          className="landing-login-overlay"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !loginBusy) {
+              setShowLoginForm(false);
+            }
+          }}
+        >
+          <section className="card landing-login-card" role="dialog" aria-modal="true" aria-label="Belepesi urlap">
+            <label className="landing-login-field">
+              <span>E-mail</span>
+              <input
+                className="input"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="email"
+                placeholder="nev@pelda.hu"
+              />
+            </label>
+            <label className="landing-login-field">
+              <span>Jelszo</span>
+              <input
+                className="input"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                placeholder="********"
+              />
+            </label>
+            <div className="landing-login-actions">
+              <button type="button" className="btn" onClick={() => void runLoginFlow()} disabled={loginBusy || guestBusy}>
+                {loginBusy ? "Folyamatban..." : "Belepes"}
+              </button>
+              <button type="button" className="btn" onClick={() => setShowLoginForm(false)} disabled={loginBusy || guestBusy}>
+                Megse
+              </button>
+            </div>
+            {loginError ? <p className="auth-wireframe-error">{loginError}</p> : null}
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1445,7 +1445,19 @@ details[open] > .book-accordion-trigger::after {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
+  margin-left: auto;
+  gap: 18px;
   min-height: 40px;
+}
+
+.home-auth-actions > * {
+  flex: 0 0 auto;
+}
+
+.home-auth-button {
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 92px;
 }
 
 .landing-page-shell {
@@ -1529,10 +1541,22 @@ details[open] > .book-accordion-trigger::after {
 
 .landing-login-card {
   width: min(100%, 560px);
-  margin-top: 6px;
+  max-height: min(82dvh, 560px);
+  overflow: auto;
   text-align: left;
   display: grid;
   gap: 10px;
+}
+
+.landing-login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  background: color-mix(in srgb, #000 56%, transparent);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  backdrop-filter: blur(3px);
 }
 
 .landing-login-field {
@@ -1675,6 +1699,14 @@ details[open] > .book-accordion-trigger::after {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .landing-login-overlay {
+    padding: 14px;
+  }
+
+  .landing-login-card {
+    width: min(100%, 100%);
   }
 
   .landing-pillars,

@@ -61,6 +61,31 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-LANDING-LOGIN-POPUP-OVERLAY
+- Goal: Make landing page `Belepes` open the login form as a centered popup modal above a darkened overlay.
+- Files modified: `app/landing/page.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-HOME-TOPBAR-ADMIN-AND-LOGOUT-VISUAL-UNIFY
+- Goal: Make both `Admin` and `Kilepes` buttons use the same explicit topbar button styling on the home page.
+- Files modified: app/page.tsx, app/globals.css, TICKETS.md
+- Commit hash: 493775f94efc30447a82ee8ad1edb7410947dd35 (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-ACTIVITY-PANEL-ADMIN-ONLY-EDIT-BUTTONS
+- Goal: Restrict Activity panel edit controls so only admin sees all Szerkesztes buttons, while non-admin keeps only `Utolso szerkesztes visszavonasa`.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `TICKETS.md`
+- Commit hash: `493775f94efc30447a82ee8ad1edb7410947dd35` (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-HOME-TOPBAR-RIGHT-ALIGNED-AUTH-ACTIONS-LARGER-GAP
+- Goal: Keep main home topbar auth actions right-aligned and increase spacing between buttons.
+- Files modified: app/globals.css, TICKETS.md
+- Commit hash: 493775f94efc30447a82ee8ad1edb7410947dd35 (workspace base head; no new commit created in this session)
+
+- Ticket: ADHOC-BOOK-ACTIVITY-SCROLL-AND-ADMIN-SOURCE-EDIT-TOGGLE
+- Goal: Make desktop activity panel scrollable and add an ADMIN toggle in Szerkesztes so admin can edit source text through the Szerkesztett panel.
+- Files modified: components/BookDashboard/BookDashboard.tsx, components/BookDashboard/BookDashboard.module.css, TICKETS.md
+- Commit hash: 493775f94efc30447a82ee8ad1edb7410947dd35 (workspace base head; no new commit created in this session)
+
 - Ticket: ADHOC-GUEST-LOGIN-ROUTE-AND-LOGIN-REGISTER-TOGGLE-FORM
 - Goal: Remove temporary home login button, route guest `Belepes` action to `/login`, and add a single-form login/register mode toggle on the login page.
 - Files modified: `app/page.tsx`, `components/GuestSessionActions.tsx`, `components/BookDashboard/BookDashboard.tsx`, `app/login/page.tsx`, `SPEC.md`, `TICKETS.md`

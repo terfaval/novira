@@ -34,7 +34,7 @@ export class OpenAiProvider implements LlmProvider {
 
     const { system, user } = buildTranslateBlockPrompt(input);
     const maxOutputTokens = input.options?.maxOutputTokens ?? 450;
-    const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+    const model = process.env.OPENAI_MODEL ?? "gpt-5-mini";
 
     const resp = await client.chat.completions.create({
       model,
@@ -61,7 +61,7 @@ export class OpenAiProvider implements LlmProvider {
 
     const { system, user } = buildGenerateNotePrompt(input);
     const maxOutputTokens = input.options?.maxOutputTokens ?? 220;
-    const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+    const model = process.env.OPENAI_MODEL ?? "gpt-5-mini";
 
     const resp = await client.chat.completions.create({
       model,
@@ -86,7 +86,7 @@ export class OpenAiProvider implements LlmProvider {
     const OpenAI = require("openai");
     const client = new OpenAI({ apiKey });
 
-    const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+    const model = process.env.OPENAI_MODEL ?? "gpt-5-mini";
     const chapterList =
       input.chapterTitles && input.chapterTitles.length > 0
         ? input.chapterTitles.slice(0, 8).map((title, index) => `${index + 1}. ${title}`).join("\n")
@@ -132,7 +132,7 @@ export class OpenAiProvider implements LlmProvider {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const OpenAI = require("openai");
     const client = new OpenAI({ apiKey });
-    const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+    const model = process.env.OPENAI_MODEL ?? "gpt-5-mini";
     const { system, user } = buildInferPublicationYearPrompt(input);
 
     const resp = await client.chat.completions.create({

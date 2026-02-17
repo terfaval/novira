@@ -662,6 +662,10 @@
   background: transparent;
   box-shadow: none;
   padding: 0;
+  max-height: calc(100dvh - 150px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
 }
 
 .activityGroup {
@@ -720,6 +724,18 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px var(--shadow);
+}
+.adminModeToggle {
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.adminModeToggleActive {
+  border-color: color-mix(in srgb, #ad6413 55%, var(--line));
+  background: color-mix(in srgb, #f0bf7a 42%, var(--brand-paper));
+  color: color-mix(in srgb, #1f1306 94%, #000000);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #ad6413 36%, transparent),
+    0 4px 12px var(--shadow);
 }
 
 .actionIconButton[data-tone="bookmark"] {

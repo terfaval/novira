@@ -222,6 +222,7 @@ type ChapterBlockListProps = {
   isMobile: boolean;
   activeMobileBlockId: string | null;
   onMobileActivate: (blockId: string | null) => void;
+  isAdminSourceEditMode: boolean;
   bookmarksByMarkerId: Map<string, DashboardBookmarkEntry[]>;
   bookmarkColorByKey: Record<string, string>;
   acceptingBlockId: string | null;
@@ -280,6 +281,7 @@ type ChapterSectionProps = {
   isMobile: boolean;
   activeMobileBlockId: string | null;
   onMobileActivate: (blockId: string | null) => void;
+  isAdminSourceEditMode: boolean;
   bookmarksByMarkerId: Map<string, DashboardBookmarkEntry[]>;
   bookmarkColorByKey: Record<string, string>;
   acceptingBlockId: string | null;
@@ -1660,6 +1662,7 @@ const BlockCard = memo(function BlockCard({
   isMobile,
   mobileActionsVisible,
   onMobileActivate,
+  isAdminSourceEditMode,
   bookmarksBeforeBlock,
 }: {
   block: DashboardBlock;
@@ -1697,6 +1700,7 @@ const BlockCard = memo(function BlockCard({
   isMobile: boolean;
   mobileActionsVisible: boolean;
   onMobileActivate: (blockId: string) => void;
+  isAdminSourceEditMode: boolean;
   bookmarksBeforeBlock: DashboardBookmarkEntry[];
 }) {
   const [selectionRange, setSelectionRange] = useState<BlockSelectionRange | null>(null);
@@ -1704,22 +1708,25 @@ const BlockCard = memo(function BlockCard({
   const [manualDraftText, setManualDraftText] = useState("");
   const textRef = useRef<HTMLParagraphElement | null>(null);
   const text = useMemo(
-    () => (textMode === "original" ? block.originalText : block.translatedText?.trim() || block.originalText),
-    [block.originalText, block.translatedText, textMode],
+    () =>
+      textMode === "original" || isAdminSourceEditMode
+        ? block.originalText
+        : block.translatedText?.trim() || block.originalText,
+    [block.originalText, block.translatedText, isAdminSourceEditMode, textMode],
   );
   const notesForCurrentText = useMemo(
     () =>
-      textMode === "translated"
+      textMode === "translated" && !isAdminSourceEditMode
         ? block.inlineNotes.filter((note) => note.anchorStart >= 0 && note.anchorEnd <= text.length)
         : [],
-    [block.inlineNotes, text.length, textMode],
+    [block.inlineNotes, isAdminSourceEditMode, text.length, textMode],
   );
   const suggestedRanges = useMemo(
     () =>
-      textMode === "translated"
+      textMode === "translated" && !isAdminSourceEditMode
         ? findSuggestedRanges(text, block.footnoteSuggestions, dismissedSuggestionNumbers)
         : [],
-    [block.footnoteSuggestions, dismissedSuggestionNumbers, text, textMode],
+    [block.footnoteSuggestions, dismissedSuggestionNumbers, isAdminSourceEditMode, text, textMode],
   );
   const remainingSuggestionCount = useMemo(
     () => block.footnoteSuggestions.filter((item) => !dismissedSuggestionNumbers.has(item.number)).length,
@@ -1748,9 +1755,13 @@ const BlockCard = memo(function BlockCard({
   const hasTranslatedContent = Boolean(translatedTrim);
   const hasEditedContent =
     textMode === "translated" &&
+    !isAdminSourceEditMode &&
     hasTranslatedContent &&
     translatedTrim !== block.originalText.trim();
-  const needsAttention = textMode === "translated" && (block.workflowStatus === "rejected" || generateError !== null);
+  const needsAttention =
+    textMode === "translated" &&
+    !isAdminSourceEditMode &&
+    (block.workflowStatus === "rejected" || generateError !== null);
   const tone = blockTone({ block, hasError: needsAttention });
   const hasProgressBookmarkAtThisBlock = bookmarksBeforeBlock.some((entry) => entry.kind === "progress");
   const importantBookmarkCountAtThisBlock = bookmarksBeforeBlock.filter((entry) => entry.kind === "important").length;
@@ -1795,9 +1806,13 @@ const BlockCard = memo(function BlockCard({
   }, [positionTooltipForMarker]);
 
   const openManualEdit = useCallback(() => {
-    setManualDraftText(textMode === "translated" ? (block.translatedText?.trim() || block.originalText) : block.originalText);
+    setManualDraftText(
+      textMode === "translated" && !isAdminSourceEditMode
+        ? block.translatedText?.trim() || block.originalText
+        : block.originalText,
+    );
     setManualEditOpen(true);
-  }, [block.originalText, block.translatedText, textMode]);
+  }, [block.originalText, block.translatedText, isAdminSourceEditMode, textMode]);
 
   return (
     <article
@@ -1880,7 +1895,7 @@ const BlockCard = memo(function BlockCard({
             className={styles.manualEditTextarea}
             value={manualDraftText}
             onChange={(event) => setManualDraftText(event.target.value)}
-            placeholder="Tisztitott blokk szoveg"
+            placeholder={isAdminSourceEditMode ? "Forras blokk szoveg" : "Tisztitott blokk szoveg"}
           />
           <div className={styles.manualEditActions}>
             <button
@@ -1935,6 +1950,7 @@ const ChapterBlockList = memo(function ChapterBlockList({
   isMobile,
   activeMobileBlockId,
   onMobileActivate,
+  isAdminSourceEditMode,
   bookmarksByMarkerId,
   bookmarkColorByKey,
   acceptingBlockId,
@@ -2021,6 +2037,7 @@ const ChapterBlockList = memo(function ChapterBlockList({
               isMobile={isMobile}
               mobileActionsVisible={isMobile && showControls && activeMobileBlockId === block.id}
               onMobileActivate={onMobileActivate}
+              isAdminSourceEditMode={isAdminSourceEditMode}
               bookmarksBeforeBlock={markerEntries}
             />
             {showMergeHandles && showControls && nextBlock ? (
@@ -2049,6 +2066,7 @@ const ChapterSection = memo(function ChapterSection({
   isMobile,
   activeMobileBlockId,
   onMobileActivate,
+  isAdminSourceEditMode,
   bookmarksByMarkerId,
   bookmarkColorByKey,
   acceptingBlockId,
@@ -2098,6 +2116,7 @@ const ChapterSection = memo(function ChapterSection({
         isMobile={isMobile}
         activeMobileBlockId={activeMobileBlockId}
         onMobileActivate={onMobileActivate}
+        isAdminSourceEditMode={isAdminSourceEditMode}
         bookmarksByMarkerId={bookmarksByMarkerId}
         bookmarkColorByKey={bookmarkColorByKey}
         acceptingBlockId={acceptingBlockId}
@@ -2235,6 +2254,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const [mobilePage, setMobilePage] = useState<MobileDashboardPage>("translated");
   const [mobileToolPanelOpen, setMobileToolPanelOpen] = useState(false);
   const [desktopEditPanelOpen, setDesktopEditPanelOpen] = useState(false);
+  const [adminSourceEditMode, setAdminSourceEditMode] = useState(false);
   const [activeMobileBlockId, setActiveMobileBlockId] = useState<string | null>(null);
   const [expandedNoteIds, setExpandedNoteIds] = useState<Set<string>>(() => new Set());
   const [bookmarks, setBookmarks] = useState<DashboardBookmarkEntry[]>([]);
@@ -3056,7 +3076,6 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         setManualEditError({ blockId: block.id, message: "A blokk szovege nem lehet ures." });
         return false;
       }
-
       setManualEditError(null);
       setManualSavingBlockId(block.id);
       try {
@@ -3064,6 +3083,20 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           blocks: [block],
           actionLabel: `Kezi javitas mentes (${block.blockIndex}. blokk)`,
         });
+        if (adminSourceEditMode && state.role === "admin") {
+          const blocksTable = supabase.from("blocks") as any;
+          const { error: updateError } = await blocksTable
+            .update({ original_text: cleaned })
+            .eq("id", block.id)
+            .eq("book_id", block.bookId);
+          if (updateError) {
+            throw new Error(updateError.message || "Sikertelen forras szoveg mentes.");
+          }
+          await loadDashboard({ keepCurrentView: true });
+          setLastEditedPanelUndo(undoSnapshot);
+          setUndoFeedback(null);
+          return true;
+        }
         const variantsTable = supabase.from("variants") as any;
         const { data: latestVariantRows, error: latestVariantError } = await variantsTable
           .select("variant_index")
@@ -3073,7 +3106,6 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         if (latestVariantError) {
           throw new Error(latestVariantError.message || "Sikertelen varians lekerdezes.");
         }
-
         const nextIndex = ((latestVariantRows as Array<{ variant_index: number }> | null)?.[0]?.variant_index ?? 0) + 1;
         const payload = {
           owner_id: state.userId,
@@ -3088,7 +3120,6 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         if (insertError) {
           throw new Error(insertError.message || "Sikertelen kezi javitas mentes.");
         }
-
         await loadDashboard({ keepCurrentView: true });
         setLastEditedPanelUndo(undoSnapshot);
         setUndoFeedback(null);
@@ -3101,9 +3132,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         setManualSavingBlockId(null);
       }
     },
-    [captureEditedPanelUndoSnapshot, loadDashboard, state, supabase],
+    [adminSourceEditMode, captureEditedPanelUndoSnapshot, loadDashboard, state, supabase],
   );
-
   const handleSetBookmarkBeforeBlock = useCallback((block: DashboardBlock, kind: DashboardBookmarkKind) => {
     const markerId = bookmarkBeforeKey(block);
     if (kind === "progress") {
@@ -3285,6 +3315,14 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     if (state.status !== "ready" || state.role !== "admin") return;
     setDesktopEditPanelOpen((prev) => !prev);
   }, [state]);
+  const handleToggleAdminSourceEditMode = useCallback(() => {
+    if (state.status !== "ready" || state.role !== "admin") return;
+    setAdminSourceEditMode((prev) => !prev);
+    setStore((prev) => ({ ...prev, viewState: "workbench", activePanel: "translated" }));
+    if (isMobile) {
+      setMobilePage("translated");
+    }
+  }, [isMobile, state]);
   const handleToggleChapterAddMode = useCallback(() => {
     if (chapterEditSaving || chapterDeleteSaving || chapterAddSaving) return;
     setChapterEditError(null);
@@ -4467,6 +4505,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             isMobile={isMobile}
             activeMobileBlockId={activeMobileBlockId}
             onMobileActivate={setActiveMobileBlockId}
+            isAdminSourceEditMode={adminSourceEditMode}
             bookmarksByMarkerId={bookmarksByMarkerId}
             bookmarkColorByKey={bookmarkColorByKey}
             acceptingBlockId={acceptingBlockId}
@@ -5136,15 +5175,29 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                 </section>
                 <section className={styles.mobileActivityGroup}>
                   <div className={styles.mobileActivityGroupTitle}>Szerkesztes</div>
-                  <button
-                    className={`${styles.mobileToolRow} ${chapterAddMode ? styles.mobileToolRowActive : ""}`}
-                    type="button"
-                    onClick={handleToggleChapterAddMode}
-                    disabled={chapterEditSaving || chapterDeleteSaving || chapterAddSaving || !isReady}
-                  >
-                    <span>{chapterAddMode ? "Fejezet +: aktiv" : "Fejezet +"}</span>
-                    <ToolIcon type="add" />
-                  </button>
+                  {state.role === "admin" ? (
+                    <button
+                      className={`${styles.mobileToolRow} ${styles.adminModeToggle} ${adminSourceEditMode ? styles.adminModeToggleActive : ""}`}
+                      type="button"
+                      role="switch"
+                      aria-checked={adminSourceEditMode}
+                      onClick={handleToggleAdminSourceEditMode}
+                    >
+                      <span>{adminSourceEditMode ? "ADMIN: source aktiv" : "ADMIN: source off"}</span>
+                      <ToolIcon type="admin" />
+                    </button>
+                  ) : null}
+                  {state.role === "admin" ? (
+                    <button
+                      className={`${styles.mobileToolRow} ${chapterAddMode ? styles.mobileToolRowActive : ""}`}
+                      type="button"
+                      onClick={handleToggleChapterAddMode}
+                      disabled={chapterEditSaving || chapterDeleteSaving || chapterAddSaving || !isReady}
+                    >
+                      <span>{chapterAddMode ? "Fejezet +: aktiv" : "Fejezet +"}</span>
+                      <ToolIcon type="add" />
+                    </button>
+                  ) : null}
                   <button
                     className={styles.mobileToolRow}
                     type="button"
@@ -5560,43 +5613,78 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             <div className={styles.activityGroup}>
               <div className={styles.activityGroupTitle}>Szerkesztes</div>
               <div className={styles.activityOptions}>
-                <button
-                  className={`${styles.activityIconButton} ${chapterAddMode ? styles.activeToggle : ""}`}
-                  type="button"
-                  aria-label={chapterAddMode ? "Fejezet-hozzaadas mod kikapcsolasa" : "Fejezet-hozzaadas mod bekapcsolasa"}
-                  title={chapterAddMode ? "Fejezet-hozzaadas mod kikapcsolasa" : "Fejezet-hozzaadas mod bekapcsolasa"}
-                  onClick={handleToggleChapterAddMode}
-                  disabled={chapterEditSaving || chapterDeleteSaving || chapterAddSaving || !isReady}
-                >
-                  <ToolIcon type="add" />
-                </button>
                 {state.role === "admin" ? (
-                  <button
-                    className={`${styles.activityIconButton} ${desktopEditPanelOpen ? styles.activeToggle : ""}`}
-                    type="button"
-                    aria-label={desktopEditPanelOpen ? "Book edit panel elrejtese" : "Book edit panel megjelenitese"}
-                    title={desktopEditPanelOpen ? "Book edit panel elrejtese" : "Book edit panel megjelenitese"}
-                    onClick={handleToggleDesktopEditPanel}
-                  >
-                    <ToolIcon type="admin" />
-                  </button>
+                  <>
+                    <button
+                      className={`${styles.activityIconButton} ${styles.adminModeToggle} ${adminSourceEditMode ? styles.adminModeToggleActive : ""}`}
+                      type="button"
+                      role="switch"
+                      aria-checked={adminSourceEditMode}
+                      aria-label={adminSourceEditMode ? "Admin source szerkesztes kikapcsolasa" : "Admin source szerkesztes bekapcsolasa"}
+                      title={adminSourceEditMode ? "Admin source szerkesztes kikapcsolasa" : "Admin source szerkesztes bekapcsolasa"}
+                      onClick={handleToggleAdminSourceEditMode}
+                    >
+                      ADMIN
+                    </button>
+                    <button
+                      className={`${styles.activityIconButton} ${chapterAddMode ? styles.activeToggle : ""}`}
+                      type="button"
+                      aria-label={chapterAddMode ? "Fejezet-hozzaadas mod kikapcsolasa" : "Fejezet-hozzaadas mod bekapcsolasa"}
+                      title={chapterAddMode ? "Fejezet-hozzaadas mod kikapcsolasa" : "Fejezet-hozzaadas mod bekapcsolasa"}
+                      onClick={handleToggleChapterAddMode}
+                      disabled={chapterEditSaving || chapterDeleteSaving || chapterAddSaving || !isReady}
+                    >
+                      <ToolIcon type="add" />
+                    </button>
+                    <button
+                      className={`${styles.activityIconButton} ${desktopEditPanelOpen ? styles.activeToggle : ""}`}
+                      type="button"
+                      aria-label={desktopEditPanelOpen ? "Book edit panel elrejtese" : "Book edit panel megjelenitese"}
+                      title={desktopEditPanelOpen ? "Book edit panel elrejtese" : "Book edit panel megjelenitese"}
+                      onClick={handleToggleDesktopEditPanel}
+                    >
+                      <ToolIcon type="admin" />
+                    </button>
+                    <button
+                      className={styles.activityIconButton}
+                      type="button"
+                      aria-label="Tobb blokk generalasa"
+                      title={`Tobb blokk generalasa (${generationCapacityRemaining})`}
+                      onClick={() => void handleBatchGenerate("manual")}
+                      disabled={
+                        !isReady ||
+                        store.viewState !== "workbench" ||
+                        isBatchGenerating ||
+                        isEditorBusy ||
+                        generationCapacityRemaining <= 0
+                      }
+                    >
+                      <ActionIcon type="generate" />
+                    </button>
+                    <button
+                      className={`${styles.activityIconButton} ${autoGenerateOnScroll ? styles.activeToggle : ""}`}
+                      type="button"
+                      role="switch"
+                      aria-checked={autoGenerateOnScroll}
+                      aria-label="Gorgetes alapu auto-generalas kapcsolasa"
+                      title={autoGenerateOnScroll ? "Gorgetes alapu auto-generalas: ON" : "Gorgetes alapu auto-generalas: OFF"}
+                      onClick={() => setAutoGenerateOnScroll((prev) => !prev)}
+                    >
+                      <ToolIcon type="sync" />
+                    </button>
+                    <button
+                      className={`${styles.activityIconButton} ${autoTranslateChapterTitles ? styles.activeToggle : ""}`}
+                      type="button"
+                      role="switch"
+                      aria-checked={autoTranslateChapterTitles}
+                      aria-label="Fejezetcim auto-forditas kapcsolasa"
+                      title={autoTranslateChapterTitles ? "Fejezetcim auto-forditas: ON" : "Fejezetcim auto-forditas: OFF"}
+                      onClick={() => setAutoTranslateChapterTitles((prev) => !prev)}
+                    >
+                      <ActionIcon type="edit" />
+                    </button>
+                  </>
                 ) : null}
-                <button
-                  className={styles.activityIconButton}
-                  type="button"
-                  aria-label="Tobb blokk generalasa"
-                  title={`Tobb blokk generalasa (${generationCapacityRemaining})`}
-                  onClick={() => void handleBatchGenerate("manual")}
-                  disabled={
-                    !isReady ||
-                    store.viewState !== "workbench" ||
-                    isBatchGenerating ||
-                    isEditorBusy ||
-                    generationCapacityRemaining <= 0
-                  }
-                >
-                  <ActionIcon type="generate" />
-                </button>
                 <button
                   className={styles.activityIconButton}
                   type="button"
@@ -5606,28 +5694,6 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   disabled={!isReady || !lastEditedPanelUndo || isEditorBusy}
                 >
                   <ToolIcon type="back" />
-                </button>
-                <button
-                  className={`${styles.activityIconButton} ${autoGenerateOnScroll ? styles.activeToggle : ""}`}
-                  type="button"
-                  role="switch"
-                  aria-checked={autoGenerateOnScroll}
-                  aria-label="Gorgetes alapu auto-generalas kapcsolasa"
-                  title={autoGenerateOnScroll ? "Gorgetes alapu auto-generalas: ON" : "Gorgetes alapu auto-generalas: OFF"}
-                  onClick={() => setAutoGenerateOnScroll((prev) => !prev)}
-                >
-                  <ToolIcon type="sync" />
-                </button>
-                <button
-                  className={`${styles.activityIconButton} ${autoTranslateChapterTitles ? styles.activeToggle : ""}`}
-                  type="button"
-                  role="switch"
-                  aria-checked={autoTranslateChapterTitles}
-                  aria-label="Fejezetcim auto-forditas kapcsolasa"
-                  title={autoTranslateChapterTitles ? "Fejezetcim auto-forditas: ON" : "Fejezetcim auto-forditas: OFF"}
-                  onClick={() => setAutoTranslateChapterTitles((prev) => !prev)}
-                >
-                  <ActionIcon type="edit" />
                 </button>
               </div>
               <div className={styles.activityMeta}>
@@ -5648,4 +5714,3 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   </div>
 );
 }
-
