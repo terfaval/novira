@@ -5566,7 +5566,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   );
 
   const renderBottomBookActions = () => {
-    if (state.status !== "ready" || state.role === "guest") return null;
+    if (isMobile || state.status !== "ready" || state.role === "guest") return null;
     const canDeleteThisBook = state.role === "admin" || !isSourceBook;
 
     return (
@@ -5605,6 +5605,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
   const renderMobileToolPanel = () => {
     if (!isMobile || state.status !== "ready") return null;
+    const canDeleteThisBook = state.role === "admin" || !isSourceBook;
 
     return (
       <>
@@ -5786,6 +5787,37 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                     </>
                   ) : null}
                 </section>
+                {state.role !== "guest" ? (
+                  <section className={styles.mobileActivityGroup}>
+                    <div className={styles.mobileActivityGroupTitle}>Könyv</div>
+                    <button
+                      className={styles.mobileToolRow}
+                      type="button"
+                      onClick={() => void handleRestoreBookFromSource()}
+                      disabled={!hasSourceBook || isEditorBusy}
+                      title={hasSourceBook ? "Eredeti könyv visszaállítása" : "Ehhez a könyvhöz nincs forráskönyv linkelve"}
+                    >
+                      <span>{isSourceRestoreInFlight ? "Forrás visszaállítása..." : "Eredeti könyv visszaállítása"}</span>
+                      <ToolIcon type="undo" />
+                    </button>
+                    <button
+                      className={`${styles.mobileToolRow} ${styles.bottomBookActionDanger}`}
+                      type="button"
+                      onClick={() => void handleDeleteCurrentBook()}
+                      disabled={!canDeleteThisBook || isEditorBusy}
+                      title={
+                        canDeleteThisBook
+                          ? isSourceBook
+                            ? "Forráskönyv törlése (admin jelszó szükséges)"
+                            : "Saját könyv törlése"
+                          : "Forráskönyvet csak admin törölhet"
+                      }
+                    >
+                      <span>{isBookDeleteInFlight ? "Könyv törlése..." : "Könyv törlése"}</span>
+                      <ActionIcon type="delete" />
+                    </button>
+                  </section>
+                ) : null}
               </div>
             </section>
           </>
