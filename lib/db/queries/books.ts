@@ -60,6 +60,14 @@ export type DashboardFootnoteSuggestion = {
   text: string;
 };
 
+export type DashboardVariantOption = {
+  id: string;
+  text: string;
+  status: VariantStatus;
+  variantIndex: number;
+  updatedAt: string;
+};
+
 export type DashboardBlock = {
   id: string;
   bookId: string;
@@ -74,6 +82,7 @@ export type DashboardBlock = {
   isAccepted: boolean;
   hasAcceptableVariant: boolean;
   workflowStatus: VariantStatus;
+  variants: DashboardVariantOption[];
   inlineNotes: DashboardInlineNote[];
   footnoteSuggestions: DashboardFootnoteSuggestion[];
 };
@@ -439,6 +448,7 @@ export async function fetchBookDashboardData(
   const latestAcceptedByBlock = new Map<string, VariantQueryRow>();
   const latestVariantByBlock = new Map<string, VariantQueryRow>();
   const latestNonRejectedByBlock = new Map<string, VariantQueryRow>();
+  const variantsByBlock = new Map<string, DashboardVariantOption[]>();
   for (const row of (variantRows ?? []) as VariantQueryRow[]) {
     if (!latestVariantByBlock.has(row.block_id)) {
       latestVariantByBlock.set(row.block_id, row);
@@ -448,6 +458,21 @@ export async function fetchBookDashboardData(
     }
     if (row.status !== "rejected" && !latestNonRejectedByBlock.has(row.block_id)) {
       latestNonRejectedByBlock.set(row.block_id, row);
+    }
+    const text = row.text?.trim();
+    if (row.status === "rejected" || !text) continue;
+    const bucket = variantsByBlock.get(row.block_id);
+    const variantOption = {
+      id: row.id,
+      text,
+      status: row.status,
+      variantIndex: row.variant_index,
+      updatedAt: row.updated_at,
+    } satisfies DashboardVariantOption;
+    if (bucket) {
+      bucket.push(variantOption);
+    } else {
+      variantsByBlock.set(row.block_id, [variantOption]);
     }
   }
 
@@ -513,6 +538,7 @@ export async function fetchBookDashboardData(
         isAccepted: Boolean(acceptedVariant),
         hasAcceptableVariant,
         workflowStatus,
+        variants: (variantsByBlock.get(row.id) ?? []).sort((a, b) => a.variantIndex - b.variantIndex),
         inlineNotes,
         footnoteSuggestions,
       } satisfies DashboardBlock;
