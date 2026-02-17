@@ -8,6 +8,8 @@
 import type {
   GenerateBookSummaryInput,
   GenerateBookSummaryOutput,
+  GenerateChapterTitleInput,
+  GenerateChapterTitleOutput,
   InferPublicationYearInput,
   InferPublicationYearOutput,
   GenerateNoteInput,
@@ -167,4 +169,58 @@ export class OpenAiProvider implements LlmProvider {
     }
     return { year: parsedYear };
   }
+
+  async generateChapterTitle(input: GenerateChapterTitleInput): Promise<GenerateChapterTitleOutput> {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const OpenAI = require("openai");
+    const client = new OpenAI({ apiKey });
+    const model = process.env.OPENAI_MODEL ?? "gpt-5-mini";
+    const maxOutputTokens = input.options?.maxOutputTokens ?? 80;
+    const { system, user } = buildGenerateChapterTitlePrompt(input);
+
+    const resp = await client.chat.completions.create({
+      model,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      temperature: 0.2,
+      max_tokens: maxOutputTokens,
+    });
+
+    const chapterTitle = (resp?.choices?.[0]?.message?.content ?? "").replace(/^["'`]+|["'`]+$/g, "").trim();
+    if (!chapterTitle) throw new Error("Empty model output");
+    return { chapterTitle: chapterTitle.slice(0, 160).trim() || `Fejezet ${input.chapterIndex}` };
+  }
+}
+
+function buildGenerateChapterTitlePrompt(input: GenerateChapterTitleInput): { system: string; user: string } {
+  const currentTitle = (input.chapterTitle ?? "").trim();
+  const sampleText = (input.sampleText ?? "").replace(/\s+/g, " ").trim();
+  const sampleSnippet = sampleText ? sampleText.slice(0, 1800) : "Nincs blokkszoveg.";
+
+  const system = [
+    "Te egy magyar irodalmi szerkeszto vagy.",
+    "Feladatod: magyar, rovid fejezetcim javaslasa.",
+    "Ha a meglevo cim ertelmes es csak forditani kell, add meg rovid magyar forditasat.",
+    "Ha a cim hianyzik, csak szam, vagy altalanos fejezet-sorszam, adj uj rovid cimet a fejezet tartalma alapjan.",
+    "A kimenet csak egyetlen cim legyen, magyarazat nelkul.",
+    "A cim 2-8 szobol alljon, max 64 karakterrel.",
+  ].join("\n");
+
+  const userParts = [
+    `Konyv: ${input.bookTitle ?? "Ismeretlen cim"}`,
+    `Szerzo: ${input.author ?? "Ismeretlen szerzo"}`,
+    `Fejezet index: ${input.chapterIndex}`,
+    `Aktualis fejezetcim: ${currentTitle || "(nincs)"}`,
+    `Felhasznaloi komment: ${(input.userComment ?? "").trim() || "(nincs)"}`,
+    "Fejezet blokk-reszlet:",
+    sampleSnippet,
+    "Adj egyetlen vegso cimet.",
+  ];
+
+  return { system, user: userParts.join("\n\n") };
 }

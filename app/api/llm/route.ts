@@ -31,6 +31,7 @@ const TranslateBlockSchema = z
         style: z.literal("modernize_hu").optional(),
         tone: z.literal("editorial").optional(),
         maxOutputTokens: z.number().int().positive().max(MAX_OUTPUT_TOKENS_CAP).optional(),
+        userComment: z.string().trim().max(600).optional(),
       })
       .optional(),
   })
@@ -65,11 +66,26 @@ const InferPublicationYearSchema = z
   })
   .strict();
 
+const GenerateChapterTitleSchema = z
+  .object({
+    action: z.literal("generate_chapter_title"),
+    bookId: z.string().uuid(),
+    chapterId: z.string().uuid(),
+    options: z
+      .object({
+        userComment: z.string().trim().max(600).optional(),
+        maxOutputTokens: z.number().int().positive().max(MAX_OUTPUT_TOKENS_CAP).optional(),
+      })
+      .optional(),
+  })
+  .strict();
+
 const LlmRequestSchema = z.discriminatedUnion("action", [
   TranslateBlockSchema,
   GenerateNoteSchema,
   GenerateBookSummarySchema,
   InferPublicationYearSchema,
+  GenerateChapterTitleSchema,
 ]);
 
 function getAccessToken(req: NextRequest): string {
@@ -274,6 +290,70 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
       return NextResponse.json({ ok: true, inferredYear: out.year, persisted: true }, { status: 200 });
     }
 
+    if (body.action === "generate_chapter_title") {
+      const { data: bookRow, error: bookErr } = await supabase
+        .from("books")
+        .select("id,title,author")
+        .eq("id", body.bookId)
+        .eq("user_id", userId)
+        .single();
+      if (bookErr || !bookRow) {
+        return NextResponse.json(
+          { ok: false, error: err("BAD_REQUEST", "A konyv nem talalhato a felhasznalohoz.") },
+          { status: 400 }
+        );
+      }
+
+      const { data: chapterRow, error: chapterErr } = await supabase
+        .from("chapters")
+        .select("id,title,chapter_index")
+        .eq("id", body.chapterId)
+        .eq("book_id", body.bookId)
+        .single();
+      if (chapterErr || !chapterRow) {
+        return NextResponse.json(
+          { ok: false, error: err("BAD_REQUEST", "A fejezet nem talalhato a konyvben.") },
+          { status: 400 }
+        );
+      }
+
+      const { data: blockRows, error: blockErr } = await supabase
+        .from("blocks")
+        .select("original_text,block_index")
+        .eq("book_id", body.bookId)
+        .eq("chapter_id", body.chapterId)
+        .order("block_index", { ascending: true })
+        .limit(8);
+      if (blockErr) {
+        return NextResponse.json(
+          { ok: false, error: err("INTERNAL", blockErr.message ?? "Nem sikerult beolvasni a fejezet blokkjait.") },
+          { status: 500 }
+        );
+      }
+
+      const sampleText = ((blockRows ?? []) as Array<{ original_text: string | null }>)
+        .map((row) => (row.original_text ?? "").trim())
+        .filter((text) => text.length > 0)
+        .join("\n\n");
+
+      try {
+        const out = await provider.generateChapterTitle({
+          chapterTitle: chapterRow.title ?? null,
+          chapterIndex: chapterRow.chapter_index,
+          bookTitle: bookRow.title,
+          author: bookRow.author,
+          sampleText,
+          userComment: body.options?.userComment ?? null,
+          options: {
+            maxOutputTokens: body.options?.maxOutputTokens,
+          },
+        });
+        return NextResponse.json({ ok: true, chapterTitle: out.chapterTitle }, { status: 200 });
+      } catch (providerError) {
+        return NextResponse.json({ ok: false, error: mapProviderError(providerError) }, { status: 500 });
+      }
+    }
+
     const ctx = await getLlmContextForBlock(supabase, { bookId: body.bookId, blockId: body.blockId });
     if (ctx.originalText.length > INPUT_CHAR_CAP) {
       return NextResponse.json(
@@ -290,6 +370,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
           chapterTitle: ctx.chapterTitle,
           bookTitle: ctx.bookTitle,
           author: ctx.author,
+          userComment: body.options?.userComment ?? null,
           prevText: ctx.prevText,
           nextText: ctx.nextText,
           options: body.options,

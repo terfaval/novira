@@ -193,6 +193,16 @@ type RuntimeAlertState = {
   message: string;
 };
 
+type ChapterTitleErrorState = {
+  chapterId: string;
+  message: string;
+};
+
+type PendingGenerationRequest =
+  | { kind: "block"; block: DashboardBlock }
+  | { kind: "batch"; source: "manual" | "scroll" }
+  | { kind: "chapter"; group: ChapterGroup };
+
 type DashboardBookmarkEntry = {
   id: string;
   markerId: string;
@@ -288,6 +298,8 @@ type ChapterSectionProps = {
   dismissedSuggestions: Record<string, Set<number>>;
   chapterEdit: { chapterId: string; chapterIndex: number; title: string } | null;
   chapterActionsBusy: boolean;
+  chapterTitleGeneratingId: string | null;
+  chapterTitleError: ChapterTitleErrorState | null;
   chapterAddMode: boolean;
   chapterAddBusy: boolean;
   chapterEditError: string | null;
@@ -302,6 +314,7 @@ type ChapterSectionHandlers = {
   onChapterEditSave: () => void;
   onChapterEditCancel: () => void;
   onChapterDelete: (group: ChapterGroup) => void;
+  onChapterTitleGenerate: (group: ChapterGroup) => void;
   onAccept: (block: DashboardBlock) => void;
   onGenerate: (block: DashboardBlock) => void;
   onDelete: (block: DashboardBlock) => void;
@@ -824,6 +837,22 @@ function mapSummaryError(status: number, fallbackMessage?: string): string {
   return "Sikertelen leirasgeneralas.";
 }
 
+function mapChapterTitleError(status: number, fallbackMessage?: string): string {
+  if (status === 429) {
+    return "Tul sok fejezetcim-generalasi keres erkezett. Varj egy kicsit, majd probald ujra.";
+  }
+  if (status === 400) {
+    return "A fejezetcim most nem generalhato ehhez a fejezethez.";
+  }
+  if (status >= 500) {
+    return "A fejezetcim-generalas most nem elerheto. Probald meg par perc mulva.";
+  }
+  if (fallbackMessage && fallbackMessage.trim()) {
+    return fallbackMessage;
+  }
+  return "Sikertelen fejezetcim-generalas.";
+}
+
 function mapYearInferenceError(status: number, fallbackMessage?: string): string {
   if (status === 429) {
     return "Tul sok evbecslesi keres erkezett. Varj egy kicsit, majd probald ujra.";
@@ -844,8 +873,9 @@ async function requestDraftGeneration(args: {
   supabase: ReturnType<typeof getSupabaseBrowserClient>;
   bookId: string;
   blockId: string;
+  userComment?: string;
 }): Promise<string> {
-  const { supabase, bookId, blockId } = args;
+  const { supabase, bookId, blockId, userComment } = args;
   const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;
   if (sessionErr || !accessToken) {
@@ -867,6 +897,9 @@ async function requestDraftGeneration(args: {
         action: "translate_block",
         bookId,
         blockId,
+        options: {
+          userComment: userComment?.trim() || undefined,
+        },
       }),
     });
   } catch (error) {
@@ -888,6 +921,45 @@ async function requestDraftGeneration(args: {
     throw new Error("A generalas ures valasszal tert vissza.");
   }
   return payload.variant.text.trim();
+}
+
+async function requestChapterTitleGeneration(args: {
+  supabase: ReturnType<typeof getSupabaseBrowserClient>;
+  bookId: string;
+  chapterId: string;
+  userComment?: string;
+}): Promise<string> {
+  const { supabase, bookId, chapterId, userComment } = args;
+  const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (sessionErr || !accessToken) {
+    throw new Error(sessionErr?.message ?? "Nem talalhato ervenyes munkamenet.");
+  }
+
+  const response = await fetch("/api/llm", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      action: "generate_chapter_title",
+      bookId,
+      chapterId,
+      options: {
+        userComment: userComment?.trim() || undefined,
+      },
+    }),
+  });
+
+  const payload = (await response.json().catch(() => null)) as LlmResponse | null;
+  if (!response.ok || !payload?.ok || !("chapterTitle" in payload)) {
+    const fallbackMessage = payload && !payload.ok ? payload.error.message : undefined;
+    throw new Error(mapChapterTitleError(response.status, fallbackMessage));
+  }
+  const title = payload.chapterTitle.trim();
+  if (!title) throw new Error("Ures fejezetcim erkezett.");
+  return title.slice(0, 160);
 }
 
 async function requestSelectionNote(args: {
@@ -1243,7 +1315,7 @@ function deriveChapterTitleFromGeneratedText(args: {
   const compact = base.replace(/[.!?]+$/g, "").trim();
   if (!compact) return `Fejezet ${args.chapterIndex}`;
   if (compact.length <= maxLength) return compact;
-  return `${compact.slice(0, maxLength - 1).trimEnd()}…`;
+  return `${compact.slice(0, maxLength - 1).trimEnd()}...`;
 }
 
 function blockTone(args: { block: DashboardBlock; hasError: boolean }): "generate" | "accept" | "delete" {
@@ -1518,24 +1590,30 @@ const ChapterHeader = memo(function ChapterHeader({
   isEditing,
   editTitle,
   actionBusy,
+  titleGenerating,
   error,
+  titleGenerateError,
   onStartEdit,
   onEditTitle,
   onSaveEdit,
   onCancelEdit,
   onDelete,
+  onGenerateTitle,
 }: {
   group: ChapterGroup;
   showActions: boolean;
   isEditing: boolean;
   editTitle: string;
   actionBusy: boolean;
+  titleGenerating: boolean;
   error: string | null;
+  titleGenerateError: string | null;
   onStartEdit: (group: ChapterGroup) => void;
   onEditTitle: (value: string) => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
   onDelete: (group: ChapterGroup) => void;
+  onGenerateTitle: (group: ChapterGroup) => void;
 }) {
   return (
     <div className={styles.chapterSticky} data-onboarding-id="onb-chapter-header">
@@ -1552,8 +1630,23 @@ const ChapterHeader = memo(function ChapterHeader({
             {error ? <div className={styles.chapterInlineError}>{error}</div> : null}
           </>
         ) : (
-          <strong>{group.chapterTitle}</strong>
+          <div className={styles.chapterTitleValueRow}>
+            <strong>{group.chapterTitle}</strong>
+            {showActions ? (
+              <button
+                className={styles.chapterTitleGenerateButton}
+                type="button"
+                onClick={() => onGenerateTitle(group)}
+                disabled={actionBusy || titleGenerating}
+                aria-label={`Fejezet ${group.chapterIndex} cimenek generalasa`}
+                title="Fejezet cim generalasa"
+              >
+                <ActionIcon type="generate" />
+              </button>
+            ) : null}
+          </div>
         )}
+        {titleGenerateError ? <div className={styles.chapterInlineError}>{titleGenerateError}</div> : null}
       </div>
       {showActions ? (
         <div className={styles.chapterHeaderActions}>
@@ -2057,6 +2150,8 @@ const ChapterSection = memo(function ChapterSection({
   dismissedSuggestions,
   chapterEdit,
   chapterActionsBusy,
+  chapterTitleGeneratingId,
+  chapterTitleError,
   chapterAddMode,
   chapterAddBusy,
   chapterEditError,
@@ -2065,6 +2160,7 @@ const ChapterSection = memo(function ChapterSection({
   handlers,
 }: ChapterSectionProps) {
   const isEditing = chapterEdit?.chapterId === group.chapterId;
+  const titleGenerateError = chapterTitleError?.chapterId === group.chapterId ? chapterTitleError.message : null;
 
   return (
     <section
@@ -2078,12 +2174,15 @@ const ChapterSection = memo(function ChapterSection({
         isEditing={isEditing}
         editTitle={isEditing ? chapterEdit.title : group.chapterTitle}
         actionBusy={chapterActionsBusy}
+        titleGenerating={chapterTitleGeneratingId === group.chapterId}
         error={chapterEditError}
+        titleGenerateError={titleGenerateError}
         onStartEdit={handlers.onChapterEditOpen}
         onEditTitle={(value) => handlers.onChapterEditTitleChange(group.chapterId, value)}
         onSaveEdit={handlers.onChapterEditSave}
         onCancelEdit={handlers.onChapterEditCancel}
         onDelete={handlers.onChapterDelete}
+        onGenerateTitle={handlers.onChapterTitleGenerate}
       />
       <ChapterBlockList
         group={group}
@@ -2216,6 +2315,11 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const [chapterAddMode, setChapterAddMode] = useState(false);
   const [chapterAddSaving, setChapterAddSaving] = useState(false);
   const [chapterEditError, setChapterEditError] = useState<string | null>(null);
+  const [chapterTitleGeneratingId, setChapterTitleGeneratingId] = useState<string | null>(null);
+  const [chapterTitleError, setChapterTitleError] = useState<ChapterTitleErrorState | null>(null);
+  const [generationCommentOpen, setGenerationCommentOpen] = useState(false);
+  const [generationCommentDraft, setGenerationCommentDraft] = useState("");
+  const [pendingGenerationRequest, setPendingGenerationRequest] = useState<PendingGenerationRequest | null>(null);
   const [mergingPairKey, setMergingPairKey] = useState<string | null>(null);
   const [mergeError, setMergeError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(false);
@@ -2512,6 +2616,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     chapterEditSaving ||
     chapterDeleteSaving ||
     chapterAddSaving ||
+    chapterTitleGeneratingId !== null ||
     mergingPairKey !== null ||
     isUndoApplying ||
     isRedoApplying ||
@@ -2807,7 +2912,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   );
 
   const handleGenerate = useCallback(
-    async (block: DashboardBlock) => {
+    async (block: DashboardBlock, userComment?: string) => {
       if (state.status !== "ready") return;
       if (!hasGeneratedEditedContent(block) && !block.isAccepted && remainingGenerateSlots <= 0) {
         const message = `Elerted a ${MAX_UNACCEPTED_GENERATED_BLOCKS} elfogadatlan generalt blokk limitet. Elobb fogadj el vagy utasits el javaslatokat.`;
@@ -2830,6 +2935,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           supabase,
           bookId,
           blockId: block.id,
+          userComment,
         });
         await translateChapterTitlesFromGeneratedBlocks([
           { chapterId: block.chapterId, chapterIndex: block.chapterIndex, translatedText },
@@ -2861,7 +2967,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   );
 
   const handleBatchGenerate = useCallback(
-    async (source: "manual" | "scroll" = "manual") => {
+    async (source: "manual" | "scroll" = "manual", userComment?: string) => {
       if (state.status !== "ready") return;
       if (autoBatchLockRef.current || isBatchGenerating || isEditorBusy) return;
 
@@ -2908,6 +3014,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               supabase,
               bookId,
               blockId: block.id,
+              userComment,
             });
             generatedForChapterTitles.push({
               chapterId: block.chapterId,
@@ -2969,6 +3076,89 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       showRuntimeAlert,
       translateChapterTitlesFromGeneratedBlocks,
     ],
+  );
+
+  const handleGenerateChapterTitle = useCallback(
+    async (group: ChapterGroup, userComment?: string) => {
+      if (state.status !== "ready") return;
+      setChapterTitleError(null);
+      setChapterTitleGeneratingId(group.chapterId);
+      try {
+        const nextTitle = await requestChapterTitleGeneration({
+          supabase,
+          bookId,
+          chapterId: group.chapterId,
+          userComment,
+        });
+        const chaptersTable = supabase.from("chapters") as any;
+        const { error } = await chaptersTable.update({ title: nextTitle }).eq("id", group.chapterId).eq("book_id", bookId);
+        if (error) throw new Error(error.message || "Sikertelen fejezetcim-mentes.");
+        await loadDashboard({ keepCurrentView: true });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Sikertelen fejezetcim-generalas.";
+        setChapterTitleError({ chapterId: group.chapterId, message });
+        showRuntimeAlert(message);
+      } finally {
+        setChapterTitleGeneratingId(null);
+      }
+    },
+    [bookId, loadDashboard, showRuntimeAlert, state.status, supabase],
+  );
+
+  const openGenerationCommentModal = useCallback((request: PendingGenerationRequest) => {
+    setPendingGenerationRequest(request);
+    setGenerationCommentDraft("");
+    setGenerationCommentOpen(true);
+  }, []);
+
+  const closeGenerationCommentModal = useCallback(() => {
+    setGenerationCommentOpen(false);
+    setPendingGenerationRequest(null);
+    setGenerationCommentDraft("");
+  }, []);
+
+  const handleConfirmGenerationComment = useCallback(async () => {
+    if (!pendingGenerationRequest) return;
+    const comment = generationCommentDraft.trim();
+    const request = pendingGenerationRequest;
+    closeGenerationCommentModal();
+    if (request.kind === "block") {
+      await handleGenerate(request.block, comment);
+      return;
+    }
+    if (request.kind === "batch") {
+      await handleBatchGenerate(request.source, comment);
+      return;
+    }
+    await handleGenerateChapterTitle(request.group, comment);
+  }, [
+    closeGenerationCommentModal,
+    generationCommentDraft,
+    handleBatchGenerate,
+    handleGenerate,
+    handleGenerateChapterTitle,
+    pendingGenerationRequest,
+  ]);
+
+  const handleRequestBlockGenerate = useCallback(
+    (block: DashboardBlock) => {
+      if (isEditorBusy) return;
+      openGenerationCommentModal({ kind: "block", block });
+    },
+    [isEditorBusy, openGenerationCommentModal],
+  );
+
+  const handleRequestBatchGenerate = useCallback(() => {
+    if (isEditorBusy) return;
+    openGenerationCommentModal({ kind: "batch", source: "manual" });
+  }, [isEditorBusy, openGenerationCommentModal]);
+
+  const handleRequestChapterTitleGenerate = useCallback(
+    (group: ChapterGroup) => {
+      if (isEditorBusy) return;
+      openGenerationCommentModal({ kind: "chapter", group });
+    },
+    [isEditorBusy, openGenerationCommentModal],
   );
 
   const handleCreateNote = useCallback(
@@ -4732,8 +4922,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       onChapterEditSave: handleChapterEditSubmit,
       onChapterEditCancel: handleChapterEditCancel,
       onChapterDelete: handleChapterDelete,
+      onChapterTitleGenerate: handleRequestChapterTitleGenerate,
       onAccept: handleAccept,
-      onGenerate: handleGenerate,
+      onGenerate: handleRequestBlockGenerate,
       onDelete: handleDeleteBlock,
       onSaveManualEdit: handleSaveManualEdit,
       onRejectToOriginal: handleRejectToOriginal,
@@ -4751,9 +4942,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       handleChapterEditOpen,
       handleChapterEditSubmit,
       handleChapterEditTitleChange,
+      handleRequestChapterTitleGenerate,
       handleCreateNote,
       handleDeleteBlock,
-      handleGenerate,
+      handleRequestBlockGenerate,
       handleMergeBlocks,
       handleRejectSuggestion,
       handleRejectToOriginal,
@@ -4771,7 +4963,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   }) => {
     const { kind, showControls, showSwap } = args;
     const isOriginal = kind === "original";
-    const chapterActionsBusy = chapterEditSaving || chapterDeleteSaving || chapterAddSaving;
+    const chapterActionsBusy = chapterEditSaving || chapterDeleteSaving || chapterAddSaving || chapterTitleGeneratingId !== null;
 
     return (
       <DashboardPanelShell
@@ -4811,6 +5003,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             dismissedSuggestions={dismissedSuggestions}
             chapterEdit={chapterEdit}
             chapterActionsBusy={chapterActionsBusy}
+            chapterTitleGeneratingId={chapterTitleGeneratingId}
+            chapterTitleError={chapterTitleError}
             chapterAddMode={chapterAddMode}
             chapterAddBusy={chapterAddSaving}
             chapterEditError={chapterEditError}
@@ -5664,6 +5858,60 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     );
   };
 
+  const renderGenerationCommentModal = () => {
+    if (!generationCommentOpen || !pendingGenerationRequest) return null;
+
+    let title = "Generalasi komment";
+    let description = "Adj opcionalis kommentet a generalashoz.";
+    if (pendingGenerationRequest.kind === "block") {
+      title = `Blokk generalas (${pendingGenerationRequest.block.blockIndex}. blokk)`;
+      description = "Adj indulasi kommentet a blokk generalashoz.";
+    } else if (pendingGenerationRequest.kind === "batch") {
+      title = "Tobb blokk generalasa";
+      description = "Adj kozos indulasi kommentet a blokkok generalasahoz.";
+    } else if (pendingGenerationRequest.kind === "chapter") {
+      title = `Fejezet cim generalasa (${pendingGenerationRequest.group.chapterIndex}. fejezet)`;
+      description = "Adj kommentet a fejezetcim forditasahoz vagy ujracimzeshez.";
+    }
+
+    return (
+      <section className={styles.generationCommentOverlay} role="dialog" aria-modal="true" aria-label={title}>
+        <div className={styles.generationCommentCard}>
+          <div className={styles.generationCommentHeader}>
+            <strong>{title}</strong>
+            <button
+              type="button"
+              className={styles.generationCommentClose}
+              onClick={closeGenerationCommentModal}
+              aria-label="Generalasi komment ablak bezarasa"
+            >
+              X
+            </button>
+          </div>
+          <p className={styles.generationCommentHint}>{description}</p>
+          <textarea
+            className={styles.generationCommentTextarea}
+            value={generationCommentDraft}
+            onChange={(event) => setGenerationCommentDraft(event.target.value)}
+            placeholder="pl. Tartsd meg az ironikus hangot, legyen tomor."
+            autoFocus
+            rows={5}
+            maxLength={600}
+          />
+          <div className={styles.generationCommentMeta}>{generationCommentDraft.trim().length}/600</div>
+          <div className={styles.generationCommentActions}>
+            <button type="button" className="btn" onClick={() => void handleConfirmGenerationComment()}>
+              Generalas inditasa
+            </button>
+            <button type="button" className="btn" onClick={closeGenerationCommentModal}>
+              Megse
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  };
+
   return (
     <div
       className={`book-page-shell ${styles.pageShell}`}
@@ -5916,7 +6164,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       type="button"
                       aria-label="Tobb blokk generalasa"
                       title={`Tobb blokk generalasa (${generationCapacityRemaining})`}
-                      onClick={() => void handleBatchGenerate("manual")}
+                      onClick={handleRequestBatchGenerate}
                       disabled={
                         !isReady ||
                         store.viewState !== "workbench" ||
@@ -5989,6 +6237,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       {renderOnboardingGuide()}
       {renderOnboardingPopup()}
       {renderRuntimeAlert()}
+      {renderGenerationCommentModal()}
       {renderMobileToolPanel()}
   </div>
 );

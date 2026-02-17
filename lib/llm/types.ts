@@ -1,4 +1,9 @@
-export type LlmAction = "translate_block" | "generate_note" | "generate_book_summary";
+export type LlmAction =
+  | "translate_block"
+  | "generate_note"
+  | "generate_book_summary"
+  | "infer_publication_year"
+  | "generate_chapter_title";
 
 export type LlmErrorCode =
   | "BAD_REQUEST"
@@ -17,6 +22,7 @@ export type TranslateBlockOptions = {
   style?: "modernize_hu";
   tone?: "editorial";
   maxOutputTokens?: number;
+  userComment?: string;
 };
 
 export type GenerateNoteOptions = {
@@ -45,6 +51,15 @@ export type LlmRequest =
   | {
       action: "infer_publication_year";
       bookId: string;
+    }
+  | {
+      action: "generate_chapter_title";
+      bookId: string;
+      chapterId: string;
+      options?: {
+        maxOutputTokens?: number;
+        userComment?: string;
+      };
     };
 
 export type VariantStatus = "draft" | "accepted" | "rejected";
@@ -77,6 +92,11 @@ export type LlmPublicationYearSuccessResponse = {
   persisted: boolean;
 };
 
+export type LlmChapterTitleSuccessResponse = {
+  ok: true;
+  chapterTitle: string;
+};
+
 export type LlmErrorResponse = {
   ok: false;
   error: LlmError;
@@ -87,4 +107,5 @@ export type LlmResponse =
   | LlmNoteSuccessResponse
   | LlmBookSummarySuccessResponse
   | LlmPublicationYearSuccessResponse
+  | LlmChapterTitleSuccessResponse
   | LlmErrorResponse;

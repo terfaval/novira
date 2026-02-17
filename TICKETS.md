@@ -61,6 +61,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-BOOK-CHAPTER-GENERATE-COMMENT-MODAL-AND-SPACING
+- Goal: Add larger chapter-block spacing, chapter-title hover generate action (translate or content-based title), and pre-generation comment modal before block/chapter generation.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `app/api/llm/route.ts`, `lib/llm/types.ts`, `lib/llm/providers/provider.ts`, `lib/llm/providers/openai.ts`, `lib/llm/prompts/translateBlock.ts`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
 - Ticket: ADHOC-BOOK-COVER-ICON-DEFAULT-SVG-FALLBACK
 - Goal: Use `icon_default.svg` as fallback whenever a book-specific cover icon SVG cannot be loaded.
 - Files modified: `components/BookCoverIcon.tsx`, `TICKETS.md`

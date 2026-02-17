@@ -9,6 +9,7 @@ export type TranslateBlockInput = {
 
   bookTitle?: string | null;
   author?: string | null;
+  userComment?: string | null;
 
   options?: TranslateBlockOptions;
 };
@@ -59,10 +60,27 @@ export type InferPublicationYearOutput = {
   year: number | null;
 };
 
+export type GenerateChapterTitleInput = {
+  chapterTitle?: string | null;
+  chapterIndex: number;
+  bookTitle?: string | null;
+  author?: string | null;
+  sampleText?: string | null;
+  userComment?: string | null;
+  options?: {
+    maxOutputTokens?: number;
+  };
+};
+
+export type GenerateChapterTitleOutput = {
+  chapterTitle: string;
+};
+
 export interface LlmProvider {
   name: string;
   translateBlock(input: TranslateBlockInput): Promise<TranslateBlockOutput>;
   generateNote(input: GenerateNoteInput): Promise<GenerateNoteOutput>;
   generateBookSummary(input: GenerateBookSummaryInput): Promise<GenerateBookSummaryOutput>;
   inferPublicationYear(input: InferPublicationYearInput): Promise<InferPublicationYearOutput>;
+  generateChapterTitle(input: GenerateChapterTitleInput): Promise<GenerateChapterTitleOutput>;
 }
