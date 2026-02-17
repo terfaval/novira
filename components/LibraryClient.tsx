@@ -1,6 +1,6 @@
 "use client";
 
-import { type TouchEvent as ReactTouchEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toSessionIdentity } from "@/lib/auth/identity";
 import type { BookRow } from "@/lib/types";
@@ -87,7 +87,6 @@ export function LibraryClient({
   const [sortMode, setSortMode] = useState<SortMode>("author_asc");
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
   const [viewportWidth, setViewportWidth] = useState<number | null>(null);
-  const carouselTouchStartRef = useRef<{ x: number; y: number } | null>(null);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   useEffect(() => {
@@ -185,12 +184,24 @@ export function LibraryClient({
     if (effectiveActiveIndex < 0 || filteredBooks.length === 0) return [];
     const windowSize = Math.min(filteredBooks.length, carouselVisibleCount);
     const maxStart = filteredBooks.length - windowSize;
-    const preferredStart = isMobileViewport ? effectiveActiveIndex - 1 : effectiveActiveIndex - Math.floor(windowSize / 2);
+    const preferredStart = effectiveActiveIndex - Math.floor(windowSize / 2);
     const start = Math.max(0, Math.min(maxStart, preferredStart));
     return filteredBooks.slice(start, start + windowSize);
-  }, [carouselVisibleCount, effectiveActiveIndex, filteredBooks, isMobileViewport]);
+  }, [carouselVisibleCount, effectiveActiveIndex, filteredBooks]);
+  const renderedCarouselBooks = isMobileViewport ? filteredBooks : visibleBooks;
   const hasPrev = effectiveActiveIndex > 0;
   const hasNext = effectiveActiveIndex >= 0 && effectiveActiveIndex < filteredBooks.length - 1;
+  const paginationStep = Math.max(1, Math.min(carouselVisibleCount, filteredBooks.length));
+  const paginationStarts = useMemo(() => {
+    if (filteredBooks.length === 0) return [];
+    const starts: number[] = [];
+    for (let index = 0; index < filteredBooks.length; index += paginationStep) {
+      starts.push(index);
+    }
+    return starts;
+  }, [filteredBooks.length, paginationStep]);
+  const activePaginationIndex =
+    effectiveActiveIndex >= 0 ? Math.floor(effectiveActiveIndex / paginationStep) : -1;
   const bookIndexById = useMemo(() => {
     const map = new Map<string, number>();
     filteredBooks.forEach((book, index) => map.set(book.id, index));
@@ -205,45 +216,16 @@ export function LibraryClient({
 
   function goPrev() {
     if (!hasPrev) return;
-    activateByIndex(effectiveActiveIndex - 1);
+    const remaining = effectiveActiveIndex;
+    const step = Math.min(paginationStep, remaining);
+    activateByIndex(effectiveActiveIndex - step);
   }
 
   function goNext() {
     if (!hasNext) return;
-    activateByIndex(effectiveActiveIndex + 1);
-  }
-
-  function handleCarouselTouchStart(event: ReactTouchEvent<HTMLDivElement>) {
-    if (!isMobileViewport) return;
-    const touch = event.touches[0];
-    if (!touch) return;
-    carouselTouchStartRef.current = { x: touch.clientX, y: touch.clientY };
-  }
-
-  function handleCarouselTouchEnd(event: ReactTouchEvent<HTMLDivElement>) {
-    if (!isMobileViewport) return;
-    const touchStart = carouselTouchStartRef.current;
-    carouselTouchStartRef.current = null;
-    if (!touchStart) return;
-
-    const touch = event.changedTouches[0];
-    if (!touch) return;
-    const deltaX = touch.clientX - touchStart.x;
-    const deltaY = touch.clientY - touchStart.y;
-    const absX = Math.abs(deltaX);
-    const absY = Math.abs(deltaY);
-    const swipeThreshold = 32;
-
-    if (absX < swipeThreshold && absY < swipeThreshold) return;
-
-    if (absY > absX) {
-      if (deltaY < -swipeThreshold) goNext();
-      if (deltaY > swipeThreshold) goPrev();
-      return;
-    }
-
-    if (deltaX < -swipeThreshold) goNext();
-    if (deltaX > swipeThreshold) goPrev();
+    const remaining = filteredBooks.length - 1 - effectiveActiveIndex;
+    const step = Math.min(paginationStep, remaining);
+    activateByIndex(effectiveActiveIndex + step);
   }
 
   useEffect(() => {
@@ -260,18 +242,18 @@ export function LibraryClient({
 
       if (event.key === "ArrowLeft" && hasPrev) {
         event.preventDefault();
-        activateByIndex(effectiveActiveIndex - 1);
+        goPrev();
       }
 
       if (event.key === "ArrowRight" && hasNext) {
         event.preventDefault();
-        activateByIndex(effectiveActiveIndex + 1);
+        goNext();
       }
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [effectiveActiveIndex, hasNext, hasPrev, filteredBooks]);
+  }, [goNext, goPrev, hasNext, hasPrev]);
 
   useEffect(() => {
     function onResize() {
@@ -385,16 +367,11 @@ export function LibraryClient({
 
         <div
           className="library-carousel-stage"
-          onTouchStart={handleCarouselTouchStart}
-          onTouchEnd={handleCarouselTouchEnd}
-          onTouchCancel={() => {
-            carouselTouchStartRef.current = null;
-          }}
         >
           {activeBook ? (
             <div className="library-carousel-track">
-              {visibleBooks.map((book) => {
-                const isActive = book.id === activeBook.id;
+              {renderedCarouselBooks.map((book) => {
+                const isActive = isMobileViewport ? false : book.id === activeBook.id;
                 const bookIndex = bookIndexById.get(book.id) ?? -1;
                 const isBeforeActive = bookIndex >= 0 && bookIndex < effectiveActiveIndex;
                 const isAfterActive = bookIndex > effectiveActiveIndex;
@@ -402,8 +379,22 @@ export function LibraryClient({
                   <div
                     key={book.id}
                     className={`library-carousel-item${isActive ? " is-active" : " is-inactive"}${isBeforeActive ? " is-before-active" : ""}${isAfterActive ? " is-after-active" : ""}`}
+                    onMouseEnter={() => {
+                      if (isMobileViewport || isActive) return;
+                      setActiveBookId(book.id);
+                    }}
+                    onFocusCapture={() => {
+                      if (isMobileViewport) return;
+                      if (isActive) return;
+                      setActiveBookId(book.id);
+                    }}
                   >
-                    <BookCard book={book} isActive={isActive} onActivate={setActiveBookId} />
+                    <BookCard
+                      book={book}
+                      isActive={isActive}
+                      onActivate={setActiveBookId}
+                      openOnInactive={isMobileViewport}
+                    />
                   </div>
                 );
               })}
@@ -425,15 +416,17 @@ export function LibraryClient({
       </section>
 
       <div className="carousel-pagination" aria-label="Konyv oldalak">
-        {filteredBooks.map((book, index) => (
-          <button
-            key={book.id}
-            type="button"
-            className={`carousel-dot${book.id === activeBook?.id ? " is-active" : ""}`}
-            aria-label={`${index + 1}. konyv: ${book.title}`}
-            onClick={() => activateByIndex(index)}
+        {paginationStarts.map((startIndex, pageIndex) => {
+          const pageEnd = Math.min(filteredBooks.length, startIndex + paginationStep);
+          return (
+          <span
+            key={`${startIndex}-${pageEnd}`}
+            className={`carousel-dot${pageIndex === activePaginationIndex ? " is-active" : ""}`}
+            aria-label={`${startIndex + 1}-${pageEnd}. konyvoldal`}
+            aria-hidden="true"
           />
-        ))}
+          );
+        })}
       </div>
 
       {showMobileToolsFab && showTools ? (

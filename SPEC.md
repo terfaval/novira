@@ -31,7 +31,8 @@
 - First visit shows landing page with `Belepes` and `Vendeg` actions.
 - `Belepes`: password-based account session (email + password).
 - `Vendeg`: anonymous session that can be upgraded to password account from `/login` by switching to `Regisztracio` on the same form, or discarded (`Torles es kilepes`).
-- Admin-only functions (upload/import + admin-labeled tooling) are hidden for non-admin users and server-guarded on API routes.
+- Upload/import is available for authenticated non-guest users and server-guarded on API routes.
+- Admin-labeled tooling remains hidden for non-admin users and server-guarded on API routes.
 - Dedicated admin page: `/admin` lists all books and allows toggling `is_public` visibility.
 - Library visibility rules:
   - unauthenticated visitors see only `is_public = true` and `ready` books,

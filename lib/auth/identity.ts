@@ -36,6 +36,11 @@ function isAnonymousUser(user: User): boolean {
   return user.app_metadata?.provider === "anonymous";
 }
 
+export function isGuestUser(user: User | Pick<User, "app_metadata"> | null | undefined): boolean {
+  if (!user) return false;
+  return isAnonymousUser(user as User);
+}
+
 export function isAdminUser(user: Pick<User, "id" | "email"> | null | undefined): boolean {
   if (!user) return false;
   if (ADMIN_USER_IDS.has(user.id.toLowerCase())) return true;

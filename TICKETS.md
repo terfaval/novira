@@ -61,6 +61,31 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-HOME-REGISTERED-USER-PLUS-ADD-BOOK-ACCESS
+- Goal: Make Home `+` add-book action available to registered users (non-guest), including mobile visibility, and allow upload/import endpoints for non-guest authenticated users.
+- Files modified: `app/page.tsx`, `app/upload/page.tsx`, `app/api/upload/route.ts`, `app/api/import/external/route.ts`, `app/globals.css`, `lib/auth/identity.ts`, `SPEC.md`, `DECISIONS.md`, `SECURITY.md`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-HOME-MOBILE-CAROUSEL-SPINE-LIST-NO-ACTIVE-CARD
+- Goal: On mobile Home carousel remove active card mode, render touch-scrollable inactive spine list only, and open book page directly on spine click.
+- Files modified: `components/LibraryClient.tsx`, `components/BookCard.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-HOME-CAROUSEL-PAGINATION-INDICATOR-ONLY
+- Goal: Make Home carousel pagination dots indicator-only so page changes happen only via carousel arrow controls.
+- Files modified: `components/LibraryClient.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-HOME-CAROUSEL-HOVER-ACTIVE-AND-PAGINATION-PAGE-STEP
+- Goal: Make Home carousel cards activate on hover, and make carousel pagination/navigation step by visible-page size with edge-aware remaining-step behavior.
+- Files modified: `components/LibraryClient.tsx`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-LANDING-LOGIN-POPUP-REGISTER-MODE-AND-BUTTON-UNIFY
+- Goal: Make landing `Belepes` open a popup auth form with login/register mode toggle and unify landing/topbar auth button visuals with the `Vissza` button style.
+- Files modified: `app/landing/page.tsx`, `app/page.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
 - Ticket: ADHOC-LANDING-LOGIN-POPUP-OVERLAY
 - Goal: Make landing page `Belepes` open the login form as a centered popup modal above a darkened overlay.
 - Files modified: `app/landing/page.tsx`, `app/globals.css`, `TICKETS.md`

@@ -36,7 +36,7 @@ export default function UploadPage() {
         setAccessState("unauthenticated");
         return;
       }
-      setAccessState(identity.role === "admin" ? "allowed" : "forbidden");
+      setAccessState(identity.role === "guest" ? "forbidden" : "allowed");
     };
 
     void load();
@@ -47,7 +47,7 @@ export default function UploadPage() {
         setAccessState("unauthenticated");
         return;
       }
-      setAccessState(identity.role === "admin" ? "allowed" : "forbidden");
+      setAccessState(identity.role === "guest" ? "forbidden" : "allowed");
     });
 
     return () => {
@@ -59,7 +59,7 @@ export default function UploadPage() {
   async function onImport() {
     if (accessState !== "allowed") {
       setStatus("error");
-      setError("Ehhez a funkciohoz admin jogosultsag kell.");
+      setError("Ehhez a funkciohoz regisztralt felhasznalo kell.");
       return;
     }
 
@@ -176,8 +176,8 @@ export default function UploadPage() {
     return (
       <div className="stack">
         <div className="card">
-          <div style={{ fontWeight: 650, marginBottom: 6 }}>Admin jogosultsag szukseges</div>
-          <p className="sub">A konyvfeltoltes jelenleg admin-only funkcio.</p>
+          <div style={{ fontWeight: 650, marginBottom: 6 }}>Regisztracio szukseges</div>
+          <p className="sub">A konyvfeltoltes csak regisztralt felhasznaloknak erheto el.</p>
           <Link className="btn" href="/">
             Vissza a konyvtarba
           </Link>

@@ -8,6 +8,8 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toSessionIdentity } from "@/lib/auth/identity";
 import { Icon } from "@/src/ui/icons/Icon";
 
+type AuthMode = "login" | "register";
+
 type AudienceCard = {
   title: string;
   description: string;
@@ -54,9 +56,11 @@ export default function LandingPage() {
   const router = useRouter();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [showLoginForm, setShowLoginForm] = useState(false);
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [loginBusy, setLoginBusy] = useState(false);
   const [guestBusy, setGuestBusy] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginMessage, setLoginMessage] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -88,21 +92,33 @@ export default function LandingPage() {
 
     setLoginBusy(true);
     setLoginError(null);
+    setLoginMessage(null);
     try {
-      const signIn = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
-      if (!signIn.error) {
+      if (authMode === "login") {
+        const signIn = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+        if (signIn.error) {
+          throw new Error(signIn.error.message);
+        }
         router.push("/");
         return;
       }
 
-      const normalizedError = signIn.error.message.toLowerCase();
-      const canTrySignUp =
-        normalizedError.includes("invalid login credentials") ||
-        normalizedError.includes("email not confirmed") ||
-        normalizedError.includes("not found");
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        throw new Error(sessionError.message);
+      }
+      const identity = toSessionIdentity(sessionData.session ?? null);
 
-      if (!canTrySignUp) {
-        throw new Error(signIn.error.message);
+      if (identity?.isAnonymous) {
+        const { error: updateError } = await supabase.auth.updateUser({
+          email: normalizedEmail,
+          password,
+        });
+        if (updateError) {
+          throw new Error(updateError.message);
+        }
+        router.push("/");
+        return;
       }
 
       const signUp = await supabase.auth.signUp({ email: normalizedEmail, password });
@@ -110,7 +126,8 @@ export default function LandingPage() {
         throw new Error(signUp.error.message);
       }
       if (!signUp.data.session) {
-        throw new Error("A fiok letrejott, de az e-mail megerosites meg szukseges lehet.");
+        setLoginMessage("A fiok letrejott. Lehet, hogy e-mail megerosites szukseges a belepeshez.");
+        return;
       }
 
       router.push("/");
@@ -123,6 +140,8 @@ export default function LandingPage() {
 
   async function handleLoginClick() {
     setLoginError(null);
+    setLoginMessage(null);
+    setAuthMode("login");
     const { data } = await supabase.auth.getSession();
     const identity = toSessionIdentity(data.session ?? null);
     if (identity) {
@@ -135,6 +154,7 @@ export default function LandingPage() {
   async function handleGuestClick() {
     setGuestBusy(true);
     setLoginError(null);
+    setLoginMessage(null);
     try {
       const { data } = await supabase.auth.getSession();
       const identity = toSessionIdentity(data.session ?? null);
@@ -163,12 +183,7 @@ export default function LandingPage() {
                 <button type="button" className="btn" onClick={() => void handleLoginClick()} disabled={loginBusy || guestBusy}>
                   Belepes
                 </button>
-                <button
-                  type="button"
-                  className="btn landing-ghost-button"
-                  onClick={() => void handleGuestClick()}
-                  disabled={loginBusy || guestBusy}
-                >
+                <button type="button" className="btn" onClick={() => void handleGuestClick()} disabled={loginBusy || guestBusy}>
                   Vendeg
                 </button>
               </div>
@@ -191,12 +206,7 @@ export default function LandingPage() {
             <button type="button" className="btn" onClick={() => void handleLoginClick()} disabled={loginBusy || guestBusy}>
               {loginBusy ? "Belepes..." : "Belepes"}
             </button>
-            <button
-              type="button"
-              className="btn landing-ghost-button"
-              onClick={() => void handleGuestClick()}
-              disabled={loginBusy || guestBusy}
-            >
+            <button type="button" className="btn" onClick={() => void handleGuestClick()} disabled={loginBusy || guestBusy}>
               {guestBusy ? "Vendeg munkamenet..." : "Vendeg mod kiprobalasa"}
             </button>
           </div>
@@ -296,7 +306,17 @@ export default function LandingPage() {
             }
           }}
         >
-          <section className="card landing-login-card" role="dialog" aria-modal="true" aria-label="Belepesi urlap">
+          <form
+            className="card landing-login-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Belepesi urlap"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void runLoginFlow();
+            }}
+          >
+            <h1 className="h1">{authMode === "login" ? "Belepes" : "Regisztracio"}</h1>
             <label className="landing-login-field">
               <span>E-mail</span>
               <input
@@ -315,20 +335,33 @@ export default function LandingPage() {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
-                placeholder="********"
+                autoComplete={authMode === "login" ? "current-password" : "new-password"}
+                placeholder="legalabb 8 karakter"
               />
             </label>
             <div className="landing-login-actions">
-              <button type="button" className="btn" onClick={() => void runLoginFlow()} disabled={loginBusy || guestBusy}>
-                {loginBusy ? "Folyamatban..." : "Belepes"}
+              <button type="submit" className="btn" disabled={loginBusy || guestBusy}>
+                {loginBusy ? "Folyamatban..." : authMode === "login" ? "Belepes" : "Regisztracio"}
               </button>
               <button type="button" className="btn" onClick={() => setShowLoginForm(false)} disabled={loginBusy || guestBusy}>
-                Megse
+                Vissza
               </button>
             </div>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setAuthMode(authMode === "login" ? "register" : "login");
+                setLoginError(null);
+                setLoginMessage(null);
+              }}
+              disabled={loginBusy || guestBusy}
+            >
+              {authMode === "login" ? "Nincs fiok? Regisztracio" : "Van fiok? Belepes"}
+            </button>
             {loginError ? <p className="auth-wireframe-error">{loginError}</p> : null}
-          </section>
+            {loginMessage ? <p className="sub" style={{ margin: 0 }}>{loginMessage}</p> : null}
+          </form>
         </div>
       ) : null}
     </div>

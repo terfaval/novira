@@ -43,7 +43,8 @@ Date: 2026-02-11
 - Robust parsing with timeouts and safe failure states
 
 ### 2.6 Admin boundary
-- Upload/import endpoints must enforce admin role server-side.
+- Upload/import endpoints must enforce authenticated non-guest role server-side.
+- Upload/import UI actions must be hidden for guest role.
 - Admin-only UI actions must be hidden for non-admin roles.
 - Admin checks must not rely on client-only gating.
 - Book visibility (`is_public`) changes are admin-only and enforced by DB policy.

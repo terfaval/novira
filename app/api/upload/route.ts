@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminUser } from "@/lib/auth/identity";
+import { isGuestUser } from "@/lib/auth/identity";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { extractAndAnchorFootnotes } from "@/lib/upload/footnotes";
 import {
@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
   if (authErr || !authData.user) {
     return NextResponse.json({ ok: false, message: "Ervenytelen munkamenet." }, { status: 401 });
   }
-  if (!isAdminUser(authData.user)) {
-    return NextResponse.json({ ok: false, message: "Admin jogosultsag szukseges." }, { status: 403 });
+  if (isGuestUser(authData.user)) {
+    return NextResponse.json({ ok: false, message: "Regisztralt felhasznalo szukseges." }, { status: 403 });
   }
 
   const userId = authData.user.id;

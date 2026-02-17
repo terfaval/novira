@@ -108,10 +108,12 @@ export function BookCard({
   book,
   isActive = true,
   onActivate,
+  openOnInactive = false,
 }: {
   book: BookRow;
   isActive?: boolean;
   onActivate?: (bookId: string) => void;
+  openOnInactive?: boolean;
 }) {
   const router = useRouter();
   const href = `/book/${book.id}`;
@@ -135,7 +137,7 @@ export function BookCard({
   }
 
   function primaryAction() {
-    if (isActive) {
+    if (isActive || openOnInactive) {
       navigate();
       return;
     }

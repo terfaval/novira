@@ -455,8 +455,9 @@ main {
   border-radius: 999px;
   border: 0;
   background: rgba(47, 54, 85, 0.28);
-  cursor: pointer;
+  cursor: default;
   padding: 0;
+  display: inline-block;
 }
 
 .carousel-dot.is-active {
@@ -1217,10 +1218,6 @@ details[open] > .book-accordion-trigger::after {
 
 /* Final mobile carousel overrides (must stay last to beat duplicated legacy blocks). */
 @media (max-width: 720px) {
-  .home-layer-plus {
-    display: none;
-  }
-
   .home-layer-main {
     padding: 74px 12px 12px;
   }
@@ -1238,19 +1235,27 @@ details[open] > .book-accordion-trigger::after {
     max-width: var(--mobile-carousel-stage-width);
     margin-inline: 0;
     touch-action: pan-y;
+    align-items: flex-start;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .library-carousel-track {
     width: 100%;
+    height: auto;
     max-width: 100%;
     flex-direction: column;
     align-items: stretch;
+    overflow: visible;
+    padding-bottom: 4px;
   }
 
   .library-carousel-item.is-inactive {
     width: 100%;
     align-items: stretch;
     justify-content: stretch;
+    min-height: 56px;
+    height: auto;
   }
 
   .library-carousel-item.is-before-active {
@@ -1281,19 +1286,7 @@ details[open] > .book-accordion-trigger::after {
   }
 
   .carousel-pagination {
-    position: absolute;
-    top: 50%;
-    left: auto;
-    right: 0px;
-    bottom: auto;
-    z-index: 40;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    transform: translateY(-50%);
-    pointer-events: none;
+    display: none;
   }
 }
 
@@ -1454,12 +1447,6 @@ details[open] > .book-accordion-trigger::after {
   flex: 0 0 auto;
 }
 
-.home-auth-button {
-  appearance: none;
-  -webkit-appearance: none;
-  min-width: 92px;
-}
-
 .landing-page-shell {
   width: 100%;
   min-height: 100dvh;
@@ -1487,11 +1474,6 @@ details[open] > .book-accordion-trigger::after {
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-}
-
-.landing-ghost-button {
-  background: transparent;
-  border: 1px solid var(--line);
 }
 
 .landing-main {
@@ -1677,11 +1659,6 @@ details[open] > .book-accordion-trigger::after {
 
   .landing-top-auth-actions {
     gap: 6px;
-  }
-
-  .landing-top-auth-actions .btn {
-    padding: 6px 8px;
-    font-size: 11px;
   }
 
   .landing-main {

@@ -82,6 +82,7 @@ export default function Page() {
 
   const { identity } = authState;
   const showAdminUpload = identity.role === "admin";
+  const showCreateBook = identity.role !== "guest";
   const isGuest = identity.role === "guest";
 
   return (
@@ -92,7 +93,7 @@ export default function Page() {
             rightSlot={
               <div className="home-auth-actions">
                 {showAdminUpload ? (
-                  <Link className="btn home-auth-button" href="/admin">
+                  <Link className="btn" href="/admin">
                     Admin
                   </Link>
                 ) : null}
@@ -102,7 +103,7 @@ export default function Page() {
                     onDeleted={() => router.replace("/landing")}
                   />
                 ) : (
-                  <button type="button" className="btn home-auth-button" onClick={() => void handleLogout()} disabled={logoutBusy}>
+                  <button type="button" className="btn" onClick={() => void handleLogout()} disabled={logoutBusy}>
                     {logoutBusy ? "Kilepes..." : "Kilepes"}
                   </button>
                 )}
@@ -118,7 +119,7 @@ export default function Page() {
         </div>
       </div>
 
-      {showAdminUpload ? (
+      {showCreateBook ? (
         <div className="home-layer-plus">
           <Link className="home-plus-button" href="/upload" aria-label="Add new book">
             <Icon name="add" size={22} />

@@ -149,7 +149,8 @@ Decision:
 - Guest uses anonymous auth session and can either:
   - upgrade to permanent password account (`Belepes es mentes`), or
   - burn session data and exit (`Torles es kilepes`).
-- Enforce admin-only behavior for upload/import and admin-labeled tooling:
+- Allow upload/import for authenticated non-guest users; guests are blocked in UI and API guards.
+- Keep admin-labeled tooling admin-only:
   - hidden in UI for non-admin,
   - server-enforced on related API routes.
 
