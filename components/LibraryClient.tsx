@@ -420,15 +420,6 @@ export function LibraryClient({
                   <div
                     key={book.id}
                     className={`library-carousel-item${isActive ? " is-active" : " is-inactive"}${isBeforeActive ? " is-before-active" : ""}${isAfterActive ? " is-after-active" : ""}`}
-                    onMouseEnter={() => {
-                      if (isMobileViewport || isActive) return;
-                      setActiveBookId(book.id);
-                    }}
-                    onFocusCapture={() => {
-                      if (isMobileViewport) return;
-                      if (isActive) return;
-                      setActiveBookId(book.id);
-                    }}
                   >
                     <BookCard
                       book={book}

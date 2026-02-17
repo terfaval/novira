@@ -1089,3 +1089,8 @@ Step board:
 - Goal: Add accent marks and correct Hungarian spelling across existing Hungarian UI copy, and document the orthography rule for future UI texts.
 - Files modified: `components/TopBar.tsx`, `app/upload/page.tsx`, `components/LibraryClient.tsx`, `components/GuestSessionActions.tsx`, `app/login/page.tsx`, `app/landing/page.tsx`, `app/admin/page.tsx`, `components/BookCard.tsx`, `components/BookDashboard/BookDashboard.tsx`, `DECISIONS.md`, `TICKETS.md`
 - Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-HOME-CAROUSEL-DESKTOP-ARROW-ONLY-NO-HOVER-AUTO-ACTIVATE
+- Goal: On desktop Home/Landing carousel, stop hover/focus auto-activation so book/page changes happen only via left/right arrow controls (and keyboard arrows).
+- Files modified: `components/LibraryClient.tsx`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
