@@ -61,6 +61,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-ADMIN-PERSONAL-VS-GLOBAL-FAVORITE-BOUNDARY
+- Goal: Split favorite handling into user-scoped personal favorites and separately gated global admin favorites, so admin default edits are private unless explicit privileged action is used.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `components/LibraryClient.tsx`, `lib/db/queries/books.ts`, `lib/types.ts`, `supabase/migrations/supabase_migrations_0010_book_personal_favorites.sql`, `SPEC.md`, `SECURITY.md`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
 - Ticket: ADHOC-BOOK-CHAPTER-GENERATE-COMMENT-MODAL-AND-SPACING
 - Goal: Add larger chapter-block spacing, chapter-title hover generate action (translate or content-based title), and pre-generation comment modal before block/chapter generation.
 - Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `app/api/llm/route.ts`, `lib/llm/types.ts`, `lib/llm/providers/provider.ts`, `lib/llm/providers/openai.ts`, `lib/llm/prompts/translateBlock.ts`, `TICKETS.md`
@@ -1078,4 +1083,9 @@ Step board:
 - Ticket: ADHOC-UNIFIED-TEXT-BUTTON-FONT-WITH-HOME-TOPBAR-ADMIN
 - Goal: Make text button typography consistent across the system by aligning shared `.btn` font rendering to the home topbar `Admin` button style.
 - Files modified: `app/globals.css`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-HU-UI-ORTHOGRAPHY-ACCENTS
+- Goal: Add accent marks and correct Hungarian spelling across existing Hungarian UI copy, and document the orthography rule for future UI texts.
+- Files modified: `components/TopBar.tsx`, `app/upload/page.tsx`, `components/LibraryClient.tsx`, `components/GuestSessionActions.tsx`, `app/login/page.tsx`, `app/landing/page.tsx`, `app/admin/page.tsx`, `components/BookCard.tsx`, `components/BookDashboard/BookDashboard.tsx`, `DECISIONS.md`, `TICKETS.md`
 - Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)

@@ -21,7 +21,7 @@ export function GuestSessionActions({
 
   async function handleDeleteAndLogout() {
     const confirmed = window.confirm(
-      "Biztosan torlod az osszes vendeg adatot es kilepsz? Ez nem visszavonhato.",
+      "Biztosan törlöd az összes vendég adatot és kilépsz? Ez nem visszavonható.",
     );
     if (!confirmed) return;
 
@@ -29,27 +29,27 @@ export function GuestSessionActions({
     try {
       const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
       if (sessionErr || !sessionData.session?.user) {
-        throw new Error(sessionErr?.message ?? "Nincs aktiv munkamenet.");
+        throw new Error(sessionErr?.message ?? "Nincs aktív munkamenet.");
       }
 
       const identity = toSessionIdentity(sessionData.session);
       if (!identity?.isAnonymous) {
-        throw new Error("Ez a munkamenet mar nem vendeg munkamenet.");
+        throw new Error("Ez a munkamenet már nem vendég munkamenet.");
       }
 
       const booksTable = supabase.from("books") as any;
       const byUserId = await booksTable.delete().eq("user_id", identity.userId);
-      if (byUserId.error) throw new Error(byUserId.error.message ?? "Sikertelen adattorles.");
+      if (byUserId.error) throw new Error(byUserId.error.message ?? "Sikertelen adattörlés.");
 
       const byOwnerId = await booksTable.delete().eq("owner_id", identity.userId);
-      if (byOwnerId.error) throw new Error(byOwnerId.error.message ?? "Sikertelen adattorles.");
+      if (byOwnerId.error) throw new Error(byOwnerId.error.message ?? "Sikertelen adattörlés.");
 
       const { error: signOutErr } = await supabase.auth.signOut();
       if (signOutErr) throw new Error(signOutErr.message);
 
       onDeleted?.();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Sikertelen torles/kilepes.";
+      const message = error instanceof Error ? error.message : "Sikertelen törlés/kilépés.";
       window.alert(message);
     } finally {
       setBusy(null);
@@ -62,7 +62,7 @@ export function GuestSessionActions({
         href="/login"
         className={buttonClassName ?? "btn"}
       >
-        Belepes
+        Belépés
       </Link>
       <button
         type="button"
@@ -70,7 +70,7 @@ export function GuestSessionActions({
         onClick={() => void handleDeleteAndLogout()}
         disabled={busy !== null}
       >
-        {busy === "delete" ? "Torles..." : "Torles es kilepes"}
+        {busy === "delete" ? "Törlés..." : "Törlés és kilépés"}
       </button>
     </div>
   );

@@ -73,6 +73,13 @@ function isFavorite(book: BookRow) {
   return book.is_favorite === true;
 }
 
+function hasMissingRelationError(error: { message?: string } | null, relationName: string): boolean {
+  const normalized = `${error?.message ?? ""}`.toLowerCase();
+  const needle = relationName.trim().toLowerCase();
+  if (!needle) return false;
+  return normalized.includes("relation") && normalized.includes(needle);
+}
+
 function resolveCarouselVisibleCount(viewportWidth: number | null) {
   if (viewportWidth !== null && viewportWidth <= 720) return 4;
   if (viewportWidth !== null && viewportWidth <= 1100) return 11;
@@ -105,7 +112,7 @@ export function LibraryClient({
           if (!cancelled) {
             setState({
               status: "error",
-              message: sessionErr?.message ?? "Nincs aktiv munkamenet. Lepj be vagy indits vendeg munkamenetet.",
+              message: sessionErr?.message ?? "Nincs aktív munkamenet. Lépj be vagy indíts vendég munkamenetet.",
             });
           }
           return;
@@ -130,8 +137,34 @@ export function LibraryClient({
         return;
       }
 
+      let personalFavoriteBookIds = new Set<string>();
+      if (identity?.userId) {
+        const favoritesTable = supabase.from("book_favorites") as any;
+        const { data: favoriteRows, error: favoriteError } = await favoritesTable
+          .select("book_id")
+          .eq("user_id", identity.userId);
+        if (favoriteError && !hasMissingRelationError(favoriteError, "book_favorites")) {
+          if (!cancelled) setState({ status: "error", message: favoriteError.message });
+          return;
+        }
+        personalFavoriteBookIds = new Set(
+          ((favoriteRows as Array<{ book_id: string }> | null) ?? []).map((entry) => entry.book_id),
+        );
+      }
+
+      const mergedBooks = ((data ?? []) as BookRow[]).map((book) => {
+        const isGlobalFavorite = book.is_favorite === true;
+        const isPersonalFavorite = identity?.userId ? personalFavoriteBookIds.has(book.id) : false;
+        return {
+          ...book,
+          is_global_favorite: isGlobalFavorite,
+          is_personal_favorite: isPersonalFavorite,
+          is_favorite: isGlobalFavorite || isPersonalFavorite,
+        } satisfies BookRow;
+      });
+
       if (!cancelled) {
-        setState({ status: "ready", books: (data ?? []) as BookRow[] });
+        setState({ status: "ready", books: mergedBooks });
       }
     }
 
@@ -277,16 +310,16 @@ export function LibraryClient({
   }, []);
 
   if (state.status === "booting") {
-    return <div className="card">Betoltes...</div>;
+    return <div className="card">Betöltés...</div>;
   }
 
   if (state.status === "error") {
     return (
       <div className="card">
-        <div style={{ fontWeight: 650, marginBottom: 6 }}>Hiba tortent</div>
+        <div style={{ fontWeight: 650, marginBottom: 6 }}>Hiba történt</div>
         <div style={{ color: "var(--muted)", lineHeight: 1.55 }}>{state.message}</div>
         <div style={{ marginTop: 10 }}>
-          <small>Ellenorizd a munkamenetet, majd probald ujra a landing oldalrol.</small>
+          <small>Ellenőrizd a munkamenetet, majd próbáld újra a landing oldalról.</small>
         </div>
       </div>
     );
@@ -301,18 +334,18 @@ export function LibraryClient({
   const renderToolsContent = () => (
     <div className="library-tools-grid">
       <label className="library-tool-field">
-        <span className="library-tool-label">Szures</span>
+        <span className="library-tool-label">Szűrés</span>
         <input
           className="input"
           type="text"
-          placeholder="Cim, szerzo, leiras..."
+          placeholder="Cím, szerző, leírás..."
           value={searchText}
           onChange={(event) => setSearchText(event.target.value)}
         />
       </label>
 
       <label className="library-tool-field">
-        <span className="library-tool-label">Statusz</span>
+        <span className="library-tool-label">Státusz</span>
         <select
           className="input"
           value={statusFilter}
@@ -328,24 +361,24 @@ export function LibraryClient({
       </label>
 
       <label className="library-tool-field">
-        <span className="library-tool-label">Sorbarendezes</span>
+        <span className="library-tool-label">Sorbarendezés</span>
         <select
           className="input"
           value={sortMode}
           onChange={(event) => setSortMode(event.target.value as SortMode)}
         >
-          <option value="updated_desc">Frissites (uj -&gt; regi)</option>
-          <option value="updated_asc">Frissites (regi -&gt; uj)</option>
-          <option value="title_asc">Cim (A-Z)</option>
-          <option value="title_desc">Cim (Z-A)</option>
-          <option value="author_asc">Szerzo (A-Z)</option>
-          <option value="author_desc">Szerzo (Z-A)</option>
-          <option value="year_desc">Ev (uj -&gt; regi)</option>
-          <option value="year_asc">Ev (regi -&gt; uj)</option>
-          <option value="length_desc">Hossz (hosszu -&gt; rovid)</option>
-          <option value="length_asc">Hossz (rovid -&gt; hosszu)</option>
-          <option value="edited_ratio_desc">Szerkesztettseg (magas -&gt; alacsony)</option>
-          <option value="edited_ratio_asc">Szerkesztettseg (alacsony -&gt; magas)</option>
+          <option value="updated_desc">Frissítés (új -&gt; régi)</option>
+          <option value="updated_asc">Frissítés (régi -&gt; új)</option>
+          <option value="title_asc">Cím (A-Z)</option>
+          <option value="title_desc">Cím (Z-A)</option>
+          <option value="author_asc">Szerző (A-Z)</option>
+          <option value="author_desc">Szerző (Z-A)</option>
+          <option value="year_desc">Év (új -&gt; régi)</option>
+          <option value="year_asc">Év (régi -&gt; új)</option>
+          <option value="length_desc">Hossz (hosszú -&gt; rövid)</option>
+          <option value="length_asc">Hossz (rövid -&gt; hosszú)</option>
+          <option value="edited_ratio_desc">Szerkesztettség (magas -&gt; alacsony)</option>
+          <option value="edited_ratio_asc">Szerkesztettség (alacsony -&gt; magas)</option>
         </select>
       </label>
     </div>
@@ -356,19 +389,19 @@ export function LibraryClient({
       {showTools ? (
         <section
           className="library-prototype-tools library-toolbar-desktop"
-          aria-label="Konyvespolc szures es sorbarendezes prototipus"
+          aria-label="Könyvespolc szűrés és sorbarendezés prototípus"
         >
           {renderToolsContent()}
         </section>
       ) : null}
 
-      <section className="library-carousel-shell" aria-label="Konyvlista">
+      <section className="library-carousel-shell" aria-label="Könyvlista">
         <button
           type="button"
           className="carousel-arrow"
           onClick={goPrev}
           disabled={!hasPrev}
-          aria-label="Elozo konyv"
+          aria-label="Előző könyv"
         >
           <span className="carousel-arrow-icon left" aria-hidden="true" />
         </button>
@@ -408,7 +441,7 @@ export function LibraryClient({
               })}
             </div>
           ) : (
-            <div className="card">Nincs talalat a jelenlegi szuresre.</div>
+            <div className="card">Nincs találat a jelenlegi szűrésre.</div>
           )}
         </div>
 
@@ -417,20 +450,20 @@ export function LibraryClient({
           className="carousel-arrow"
           onClick={goNext}
           disabled={!hasNext}
-          aria-label="Kovetkezo konyv"
+          aria-label="Következő könyv"
         >
           <span className="carousel-arrow-icon right" aria-hidden="true" />
         </button>
       </section>
 
-      <div className="carousel-pagination" aria-label="Konyv oldalak">
+      <div className="carousel-pagination" aria-label="Könyv oldalak">
         {paginationStarts.map((startIndex, pageIndex) => {
           const pageEnd = Math.min(filteredBooks.length, startIndex + paginationStep);
           return (
           <span
             key={`${startIndex}-${pageEnd}`}
             className={`carousel-dot${pageIndex === activePaginationIndex ? " is-active" : ""}`}
-            aria-label={`${startIndex + 1}-${pageEnd}. konyvoldal`}
+            aria-label={`${startIndex + 1}-${pageEnd}. könyvoldal`}
             aria-hidden="true"
           />
           );
@@ -441,7 +474,7 @@ export function LibraryClient({
         <button
           type="button"
           className="mobile-tools-fab"
-          aria-label="Tool panel megnyitasa"
+          aria-label="Tool panel megnyitása"
           aria-expanded={mobileToolsOpen}
           onClick={() => setMobileToolsOpen(true)}
         >
@@ -454,7 +487,7 @@ export function LibraryClient({
           <button
             type="button"
             className="mobile-tools-backdrop"
-            aria-label="Tool panel bezarasa"
+            aria-label="Tool panel bezárása"
             onClick={() => setMobileToolsOpen(false)}
           />
           <section className="mobile-tools-sheet" aria-label="Mobil tool panel">

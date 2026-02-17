@@ -7,7 +7,7 @@ export function TopBar({ rightSlot }: { rightSlot?: ReactNode }) {
       className="home-topbar-shell"
       href="/"
       title="NOVIRA"
-      subtitle="Az olvashato irodalom muhelye"
+      subtitle="Az olvasható irodalom műhelye"
       ariaLabel="Novira home"
       rightSlot={rightSlot}
     />

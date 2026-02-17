@@ -118,6 +118,13 @@ function hasMissingColumnError(error: { message?: string } | null, columnName: s
   return normalized.includes("column") && normalized.includes(needle);
 }
 
+function hasMissingRelationError(error: { message?: string } | null, relationName: string): boolean {
+  const normalized = `${error?.message ?? ""}`.toLowerCase();
+  const needle = relationName.trim().toLowerCase();
+  if (!needle) return false;
+  return normalized.includes("relation") && normalized.includes(needle);
+}
+
 type ChapterCloneRow = {
   id: string;
   chapter_index: number;
@@ -366,6 +373,7 @@ export async function ensureUserBookContext(args: {
 export async function fetchBookDashboardData(
   supabase: SupabaseClient,
   bookId: string,
+  viewerUserId?: string,
 ): Promise<BookDashboardData> {
   const { data: bookData, error: bookError } = await supabase
     .from("books")
@@ -412,6 +420,21 @@ export async function fetchBookDashboardData(
     .eq("book_id", bookId);
 
   if (footnoteAnchorError) throw new Error(errorMessage(footnoteAnchorError));
+
+  let isPersonalFavorite = false;
+  if (viewerUserId) {
+    const favoritesTable = supabase.from("book_favorites") as any;
+    const { data: favoriteRows, error: favoriteError } = await favoritesTable
+      .select("book_id")
+      .eq("user_id", viewerUserId)
+      .eq("book_id", bookId)
+      .limit(1);
+
+    if (favoriteError && !hasMissingRelationError(favoriteError, "book_favorites")) {
+      throw new Error(errorMessage(favoriteError));
+    }
+    isPersonalFavorite = ((favoriteRows as Array<{ book_id: string }> | null) ?? []).length > 0;
+  }
 
   const latestAcceptedByBlock = new Map<string, VariantQueryRow>();
   const latestVariantByBlock = new Map<string, VariantQueryRow>();
@@ -503,8 +526,16 @@ export async function fetchBookDashboardData(
   const total = blocks.length;
   const ratio = total === 0 ? 0 : accepted / total;
 
+  const isGlobalFavorite = (bookData as { is_favorite?: boolean } | null)?.is_favorite === true;
+  const mergedBook = {
+    ...(bookData as BookRow),
+    is_personal_favorite: isPersonalFavorite,
+    is_global_favorite: isGlobalFavorite,
+    is_favorite: isGlobalFavorite || isPersonalFavorite,
+  } satisfies BookRow;
+
   return {
-    book: bookData as BookRow,
+    book: mergedBook,
     blocks,
     completion: {
       accepted,

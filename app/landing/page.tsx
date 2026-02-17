@@ -18,36 +18,36 @@ type AudienceCard = {
 
 const AUDIENCE_CARDS: AudienceCard[] = [
   {
-    title: "Diakoknak",
+    title: "Diákoknak",
     description:
-      "Ha egy szoveg tul suru vagy nehezen kovetheto, a Novira segit tisztabban latni - az eredeti hang megtartasaval.",
+      "Ha egy szöveg túl sűrű vagy nehezen követhető, a Novira segít tisztábban látni - az eredeti hang megtartásával.",
     icon: "student",
   },
   {
-    title: "Olvasoknak",
+    title: "Olvasóknak",
     description:
-      "Ha egy klasszikus mu kozel all hozzad, de a nyelv tavolinak hat, itt ujraolvashatova valik.",
+      "Ha egy klasszikus mű közel áll hozzád, de a nyelv távolinak hat, itt újraolvashatóvá válik.",
     icon: "reader_group",
   },
   {
-    title: "Forditoknak",
+    title: "Fordítóknak",
     description:
-      "Stiluserzekeny atiratok es alternativ megfogalmazasok segitik a dontest, blokkonkent.",
+      "Stílusérzékeny átiratok és alternatív megfogalmazások segítik a döntést, blokkonként.",
     icon: "translator",
   },
   {
-    title: "Kutatoknak",
-    description: "Valtozatok es jegyzetek strukturaltan, egymas mellett.",
+    title: "Kutatóknak",
+    description: "Változatok és jegyzetek strukturáltan, egymás mellett.",
     icon: "researcher",
   },
   {
-    title: "Oktatoknak",
-    description: "Osszetett szovegek tanithatobb formaban, kontextus-megtartassal.",
+    title: "Oktatóknak",
+    description: "Összetett szövegek taníthatóbb formában, kontextus-megtartással.",
     icon: "teacher",
   },
   {
-    title: "Intezmenyeknek",
-    description: "Modernizalt szoveg-elokeszites szerkesztoi kontroll mellett.",
+    title: "Intézményeknek",
+    description: "Modernizált szöveg-előkészítés szerkesztői kontroll mellett.",
     icon: "institution",
   },
 ];
@@ -82,11 +82,11 @@ export default function LandingPage() {
   async function runLoginFlow() {
     const normalizedEmail = email.trim();
     if (!normalizedEmail) {
-      setLoginError("Az e-mail cim kotelezo.");
+      setLoginError("Az e-mail cím kötelező.");
       return;
     }
     if (password.length < 8) {
-      setLoginError("A jelszonak legalabb 8 karakteresnek kell lennie.");
+      setLoginError("A jelszónak legalább 8 karakteresnek kell lennie.");
       return;
     }
 
@@ -126,13 +126,13 @@ export default function LandingPage() {
         throw new Error(signUp.error.message);
       }
       if (!signUp.data.session) {
-        setLoginMessage("A fiok letrejott. Lehet, hogy e-mail megerosites szukseges a belepeshez.");
+        setLoginMessage("A fiók létrejött. Lehet, hogy e-mail megerősítés szükséges a belépéshez.");
         return;
       }
 
       router.push("/");
     } catch (error) {
-      setLoginError(error instanceof Error ? error.message : "Sikertelen bejelentkezes.");
+      setLoginError(error instanceof Error ? error.message : "Sikertelen bejelentkezés.");
     } finally {
       setLoginBusy(false);
     }
@@ -167,7 +167,7 @@ export default function LandingPage() {
       if (error) throw new Error(error.message);
       router.push("/");
     } catch (error) {
-      setLoginError(error instanceof Error ? error.message : "Sikertelen vendeg belepes.");
+      setLoginError(error instanceof Error ? error.message : "Sikertelen vendég belépés.");
     } finally {
       setGuestBusy(false);
     }
@@ -181,10 +181,10 @@ export default function LandingPage() {
             rightSlot={
               <div className="landing-top-auth-actions">
                 <button type="button" className="btn" onClick={() => void handleLoginClick()} disabled={loginBusy || guestBusy}>
-                  Belepes
+                  Belépés
                 </button>
                 <button type="button" className="btn" onClick={() => void handleGuestClick()} disabled={loginBusy || guestBusy}>
-                  Vendeg
+                  Vendég
                 </button>
               </div>
             }
@@ -195,48 +195,48 @@ export default function LandingPage() {
       <div className="landing-main">
         <section className="landing-hero">
           <h1 className="landing-hero-title">
-            <span>Klasszikus szovegek.</span>
-            <span>Mai olvashatosag.</span>
-            <span>Megorzott hang.</span>
+            <span>Klasszikus szövegek.</span>
+            <span>Mai olvashatóság.</span>
+            <span>Megőrzött hang.</span>
           </h1>
           <p className="landing-hero-sub">
-            A Novira digitalis irodalmi muhely. Teljes muveket tesz erthetobbe - a stilus es jelentes megorzesevel.
+            A Novira digitális irodalmi műhely. Teljes műveket tesz érthetőbbé - a stílus és jelentés megőrzésével.
           </p>
           <div className="landing-cta-row">
             <button type="button" className="btn" onClick={() => void handleLoginClick()} disabled={loginBusy || guestBusy}>
-              {loginBusy ? "Belepes..." : "Belepes"}
+              {loginBusy ? "Belépés..." : "Belépés"}
             </button>
             <button type="button" className="btn" onClick={() => void handleGuestClick()} disabled={loginBusy || guestBusy}>
-              {guestBusy ? "Vendeg munkamenet..." : "Vendeg mod kiprobalasa"}
+              {guestBusy ? "Vendég munkamenet..." : "Vendég mód kipróbálása"}
             </button>
           </div>
-          <p className="landing-helper">Ingyenes es nyitott hasznalat.</p>
+          <p className="landing-helper">Ingyenes és nyitott használat.</p>
         </section>
 
         <section className="landing-intro">
           <p className="landing-lead">
-            A Novira nem egyszerusit. <br />
-            Atvezet.
+            A Novira nem egyszerűsít. <br />
+            Átvezet.
           </p>
           <div className="landing-pillars">
             <article className="card landing-pillar-card">
-              <h3>Olvashatosag</h3>
-              <p>A regies vagy nehezen kovetheto szovegek tisztabb, gordulekenyebb valtozata.</p>
+              <h3>Olvashatóság</h3>
+              <p>A régies vagy nehezen követhető szövegek tisztább, gördülékenyebb változata.</p>
             </article>
             <article className="card landing-pillar-card">
-              <h3>Huseg</h3>
-              <p>A hang, a korszak es a retegzettseg megorzese.</p>
+              <h3>Hűség</h3>
+              <p>A hang, a korszak és a rétegzettség megőrzése.</p>
             </article>
             <article className="card landing-pillar-card">
               <h3>Kontroll</h3>
-              <p>A valtoztatasok blokkonkent kovethetok. A vegso dontes a felhasznaloe.</p>
+              <p>A változtatások blokkonként követhetők. A végső döntés a felhasználóé.</p>
             </article>
           </div>
         </section>
 
         <section className="landing-works" id="elerheto-muvek">
-          <h2>Elerheto muvek</h2>
-          <p>Tobb klasszikus mu mar feldolgozhato a muhelyben.</p>
+          <h2>Elérhető művek</h2>
+          <p>Több klasszikus mű már feldolgozható a műhelyben.</p>
           <div className="landing-carousel-wrap">
             <LibraryClient requireSession={false} showTools={false} showMobileToolsFab={false} />
           </div>
@@ -245,22 +245,22 @@ export default function LandingPage() {
         <section className="landing-intro">
           <div className="landing-pillars">
             <article className="card landing-pillar-card">
-              <h3>Kozkincs muvek</h3>
-              <p>Elsosorban kozkincs irodalmi szovegekkel dolgozik, a mai magyar olvaso szamara.</p>
+              <h3>Közkincs művek</h3>
+              <p>Elsősorban közkincs irodalmi szövegekkel dolgozik, a mai magyar olvasó számára.</p>
             </article>
             <article className="card landing-pillar-card">
-              <h3>Mai magyar olvasas</h3>
-              <p>A klasszikus muvek ujraolvashatova valnak a jelen nyelvi kozegeben.</p>
+              <h3>Mai magyar olvasás</h3>
+              <p>A klasszikus művek újraolvashatóvá válnak a jelen nyelvi közegében.</p>
             </article>
             <article className="card landing-pillar-card">
-              <h3>Kiserleti forditas</h3>
-              <p>Idegen nyelvu muvek feldolgozasa elerheto, de a vegleges valtozat szakmai lektoralast igenyel.</p>
+              <h3>Kísérleti fordítás</h3>
+              <p>Idegen nyelvű művek feldolgozása elérhető, de a végleges változat szakmai lektorálást igényel.</p>
             </article>
           </div>
         </section>
 
         <section className="landing-audience">
-          <h2>Kinek keszult?</h2>
+          <h2>Kinek készült?</h2>
           <div className="landing-audience-grid">
             {AUDIENCE_CARDS.map((card) => (
               <article key={card.title} className="card landing-audience-card">
@@ -275,23 +275,23 @@ export default function LandingPage() {
         </section>
 
         <section className="landing-how">
-          <h2>A muhely mukodese</h2>
+          <h2>A műhely működése</h2>
           <p>
-            A Novira blokk-alapu szerkesztovel dolgozik. Az eredeti szoveg es az atirat egymas alatt jelenik meg, igy a
-            valtoztatasok kozvetlenul osszevethetok.
+            A Novira blokk-alapú szerkesztővel dolgozik. Az eredeti szöveg és az átirat egymás alatt jelenik meg, így a
+            változtatások közvetlenül összevethetők.
           </p>
           <p>
-            A rendszer nyelvi elemzest alkalmaz a szoveg szerkezetenek feltarasara, de a vegso dontes minden esetben a
-            felhasznalo kezeben marad.
+            A rendszer nyelvi elemzést alkalmaz a szöveg szerkezetének feltárására, de a végső döntés minden esetben a
+            felhasználó kezében marad.
           </p>
-          <p>Jegyzetek es alternativ valtozatok kulon kezelhetok, a modositasok visszakovethetok.</p>
+          <p>Jegyzetek és alternatív változatok külön kezelhetők, a módosítások visszakövethetők.</p>
         </section>
 
         <section className="landing-final-cta">
           <p className="landing-final-statement">
             A klasszikus irodalom nem elavul.
             <br />
-            Csak ujra kell olvasni.
+            Csak újra kell olvasni.
           </p>
         </section>
       </div>
@@ -310,13 +310,13 @@ export default function LandingPage() {
             className="card landing-login-card"
             role="dialog"
             aria-modal="true"
-            aria-label="Belepesi urlap"
+            aria-label="Belépési űrlap"
             onSubmit={(event) => {
               event.preventDefault();
               void runLoginFlow();
             }}
           >
-            <h1 className="h1">{authMode === "login" ? "Belepes" : "Regisztracio"}</h1>
+            <h1 className="h1">{authMode === "login" ? "Belépés" : "Regisztráció"}</h1>
             <label className="landing-login-field">
               <span>E-mail</span>
               <input
@@ -329,19 +329,19 @@ export default function LandingPage() {
               />
             </label>
             <label className="landing-login-field">
-              <span>Jelszo</span>
+              <span>Jelszó</span>
               <input
                 className="input"
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 autoComplete={authMode === "login" ? "current-password" : "new-password"}
-                placeholder="legalabb 8 karakter"
+                placeholder="legalább 8 karakter"
               />
             </label>
             <div className="landing-login-actions">
               <button type="submit" className="btn" disabled={loginBusy || guestBusy}>
-                {loginBusy ? "Folyamatban..." : authMode === "login" ? "Belepes" : "Regisztracio"}
+                {loginBusy ? "Folyamatban..." : authMode === "login" ? "Belépés" : "Regisztráció"}
               </button>
               <button type="button" className="btn" onClick={() => setShowLoginForm(false)} disabled={loginBusy || guestBusy}>
                 Vissza
@@ -357,7 +357,7 @@ export default function LandingPage() {
               }}
               disabled={loginBusy || guestBusy}
             >
-              {authMode === "login" ? "Nincs fiok? Regisztracio" : "Van fiok? Belepes"}
+              {authMode === "login" ? "Nincs fiók? Regisztráció" : "Van fiók? Belépés"}
             </button>
             {loginError ? <p className="auth-wireframe-error">{loginError}</p> : null}
             {loginMessage ? <p className="sub" style={{ margin: 0 }}>{loginMessage}</p> : null}

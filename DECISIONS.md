@@ -160,3 +160,15 @@ Role model (current):
 - `guest` (anonymous session)
 
 Future role split (`reader` vs `editor`) remains planned but not activated in this ticket.
+
+---
+
+## D-019 - Hungarian UI Orthography Discipline
+Status: Accepted | Date: 2026-02-17
+
+Decision:
+All Hungarian UI copy must use correct Hungarian orthography, including full accent marks (diacritics), across labels, button texts, helper texts, alerts, and user-facing error messages.
+
+Scope:
+- Applies to all user-facing Hungarian text in web UI.
+- Technical identifiers, enum values, and database keys remain unchanged unless separately ticketed.

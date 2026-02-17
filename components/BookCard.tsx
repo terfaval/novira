@@ -22,14 +22,14 @@ function inferOriginalBookYear(book: BookRow) {
 function statusMeta(status: BookRow["status"]) {
   switch (status) {
     case "uj":
-      return { label: "Uj", color: "#A2672D" };
+      return { label: "Új", color: "#A2672D" };
     case "feldolgozas":
     case "processing":
-      return { label: "Feldolgozas", color: "#2F6AA8" };
+      return { label: "Feldolgozás", color: "#2F6AA8" };
     case "szerkesztes":
-      return { label: "Szerkesztes", color: "#B08D57" };
+      return { label: "Szerkesztés", color: "#B08D57" };
     case "kesz":
-      return { label: "Kesz", color: "#2D8A4F" };
+      return { label: "Kész", color: "#2D8A4F" };
     case "ready":
       return { label: "Új", color: "#2A7A66" };
     case "hiba":
@@ -121,7 +121,7 @@ export function BookCard({
   const progress = typeof book.progress === "number" ? Math.max(0, Math.min(100, book.progress)) : 0;
   const coverSlug = toCoverSlug(book);
   const backgroundSlug = toBackgroundSlug(book, coverSlug);
-  const author = book.author?.trim() || "Ismeretlen szerzo";
+  const author = book.author?.trim() || "Ismeretlen szerző";
   const spineColor = authorSpineColor(author);
   const cardBackgroundImage = backgroundSlug
     ? `url('/covers/SVG/${encodeURIComponent(backgroundSlug)}.png')`
@@ -160,12 +160,12 @@ export function BookCard({
             primaryAction();
           }
         }}
-        aria-label={`${book.title} megnyitasa`}
+        aria-label={`${book.title} megnyitása`}
       >
         <div className="book-spine-author-line">
           <span>{author}</span>
           {book.is_favorite ? (
-            <span className="book-spine-favorite-mark" aria-label="Kedvenc konyv">
+            <span className="book-spine-favorite-mark" aria-label="Kedvenc könyv">
               <Icon name="favorite" size={10} />
             </span>
           ) : null}
@@ -191,7 +191,7 @@ export function BookCard({
           primaryAction();
         }
       }}
-      aria-label={`${book.title} megnyitasa`}
+      aria-label={`${book.title} megnyitása`}
     >
       <div className="status-pin" style={{ color: status.color }}>
         <span className="status-pin-dot" aria-hidden="true" />
@@ -222,8 +222,8 @@ export function BookCard({
           onClick={(event) => event.stopPropagation()}
           onKeyDown={(event) => event.stopPropagation()}
         >
-          <summary className="book-accordion-trigger" aria-label="Leiras kinyitasa vagy bezarasa" />
-          <div className="details">{book.description?.trim() ? book.description : "Nincs megadva leiras."}</div>
+          <summary className="book-accordion-trigger" aria-label="Leírás kinyitása vagy bezárása" />
+          <div className="details">{book.description?.trim() ? book.description : "Nincs megadva leírás."}</div>
         </details>
 
         {book.status !== "ready" ? (

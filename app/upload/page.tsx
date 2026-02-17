@@ -59,7 +59,7 @@ export default function UploadPage() {
   async function onImport() {
     if (accessState !== "allowed") {
       setStatus("error");
-      setError("Ehhez a funkciohoz regisztralt felhasznalo kell.");
+      setError("Ehhez a funkcióhoz regisztrált felhasználó kell.");
       return;
     }
 
@@ -69,27 +69,27 @@ export default function UploadPage() {
 
     if (!title.trim()) {
       setStatus("error");
-      setError("Kerlek add meg a cimet.");
+      setError("Kérlek add meg a címet.");
       return;
     }
 
     const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
     if (sessionErr || !sessionData.session?.access_token) {
       setStatus("error");
-      setError(sessionErr?.message ?? "Nem talalhato ervenyes munkamenet.");
+      setError(sessionErr?.message ?? "Nem található érvényes munkamenet.");
       return;
     }
 
     if (importMode === "file") {
       if (!file) {
         setStatus("error");
-        setError("Kerlek valassz egy fajlt.");
+        setError("Kérlek válassz egy fájlt.");
         return;
       }
       const fileName = file.name.toLowerCase();
       if (!/\.(html?|rtf|docx)$/.test(fileName)) {
         setStatus("error");
-        setError("Csak HTML, RTF es DOCX fajl toltheto fel.");
+        setError("Csak HTML, RTF és DOCX fájl tölthető fel.");
         return;
       }
 
@@ -109,7 +109,7 @@ export default function UploadPage() {
       const result = await response.json().catch(() => null);
       if (!response.ok || !result?.ok) {
         setStatus("error");
-        setError(result?.message ?? "A feltoltes nem sikerult.");
+        setError(result?.message ?? "A feltöltés nem sikerült.");
         return;
       }
 
@@ -121,7 +121,7 @@ export default function UploadPage() {
     const workIdNumber = Number.parseInt(projectGutenbergWorkId.trim(), 10);
     if (!Number.isFinite(workIdNumber) || workIdNumber <= 0) {
       setStatus("error");
-      setError("A Project Gutenberg Work ID pozitiv egesz szam legyen.");
+      setError("A Project Gutenberg Work ID pozitív egész szám legyen.");
       return;
     }
 
@@ -142,7 +142,7 @@ export default function UploadPage() {
     const result = await response.json().catch(() => null);
     if (!response.ok || !result?.ok) {
       setStatus("error");
-      setError(result?.message ?? "A kulso forras import nem sikerult.");
+      setError(result?.message ?? "A külső forrás import nem sikerült.");
       return;
     }
 
@@ -153,7 +153,7 @@ export default function UploadPage() {
   if (accessState === "booting") {
     return (
       <div className="stack">
-        <div className="card">Jogosultsag ellenorzese...</div>
+        <div className="card">Jogosultság ellenőrzése...</div>
       </div>
     );
   }
@@ -162,8 +162,8 @@ export default function UploadPage() {
     return (
       <div className="stack">
         <div className="card">
-          <div style={{ fontWeight: 650, marginBottom: 6 }}>Nincs aktiv munkamenet</div>
-          <p className="sub">Elobb jelentkezz be vagy indits vendeg munkamenetet a landing oldalon.</p>
+          <div style={{ fontWeight: 650, marginBottom: 6 }}>Nincs aktív munkamenet</div>
+          <p className="sub">Előbb jelentkezz be vagy indíts vendég munkamenetet a landing oldalon.</p>
           <Link className="btn" href="/">
             Vissza a landing oldalra
           </Link>
@@ -176,10 +176,10 @@ export default function UploadPage() {
     return (
       <div className="stack">
         <div className="card">
-          <div style={{ fontWeight: 650, marginBottom: 6 }}>Regisztracio szukseges</div>
-          <p className="sub">A konyvfeltoltes csak regisztralt felhasznaloknak erheto el.</p>
+          <div style={{ fontWeight: 650, marginBottom: 6 }}>Regisztráció szükséges</div>
+          <p className="sub">A könyvfeltöltés csak regisztrált felhasználóknak érhető el.</p>
           <Link className="btn" href="/">
-            Vissza a konyvtarba
+            Vissza a könyvtárba
           </Link>
         </div>
       </div>
@@ -190,13 +190,13 @@ export default function UploadPage() {
     <div className="stack">
       <div className="row">
         <div>
-          <div className="h1">Uj konyv</div>
+          <div className="h1">Új könyv</div>
           <p className="sub">
-            Lokalis feltoltes (HTML, RTF, DOCX) vagy kulso forras import (Project Gutenberg HTML ZIP).
+            Lokális feltöltés (HTML, RTF, DOCX) vagy külső forrás import (Project Gutenberg HTML ZIP).
           </p>
         </div>
         <Link className="btn" href="/">
-          Vissza a konyvtarba
+          Vissza a könyvtárba
         </Link>
       </div>
 
@@ -209,7 +209,7 @@ export default function UploadPage() {
             onClick={() => setImportMode("file")}
             aria-pressed={importMode === "file"}
           >
-            Lokalis fajl
+            Lokális fájl
           </button>
           <button
             className="btn"
@@ -224,7 +224,7 @@ export default function UploadPage() {
 
         {importMode === "file" ? (
           <label>
-            <div style={{ marginBottom: 6, color: "var(--muted)" }}>Fajl</div>
+            <div style={{ marginBottom: 6, color: "var(--muted)" }}>Fájl</div>
             <input
               className="input"
               type="file"
@@ -233,7 +233,7 @@ export default function UploadPage() {
             />
             <div style={{ marginTop: 6 }}>
               <small>
-                {file ? `Kivalasztva: ${file.name}` : "A kivalasztott fajl a szerverre kerul es feldolgozas indul."}
+                {file ? `Kiválasztva: ${file.name}` : "A kiválasztott fájl a szerverre kerül és feldolgozás indul."}
               </small>
             </div>
           </label>
@@ -249,34 +249,34 @@ export default function UploadPage() {
             />
             <div style={{ marginTop: 6 }}>
               <small>
-                A rendszer a PG HTML ZIP forrast importalja (mirror/fallback URL-lal), majd fejezetekre es blokkokra bontja.
+                A rendszer a PG HTML ZIP forrást importálja (mirror/fallback URL-lal), majd fejezetekre és blokkokra bontja.
               </small>
             </div>
           </label>
         )}
 
         <label>
-          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Cim</div>
+          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Cím</div>
           <input
             className="input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="pl. A jo palocok"
+            placeholder="pl. A jó palócok"
           />
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Szerzo</div>
+          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Szerző</div>
           <input
             className="input"
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
-            placeholder="pl. Mikszath Kalman"
+            placeholder="pl. Mikszáth Kálmán"
           />
         </label>
 
         <label>
-          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Rovid leiras (opcionalis)</div>
+          <div style={{ marginBottom: 6, color: "var(--muted)" }}>Rövid leírás (opcionális)</div>
           <input
             className="input"
             value={description}
@@ -289,15 +289,15 @@ export default function UploadPage() {
           <button className="btn" onClick={onImport} disabled={status === "uploading"}>
             {status === "uploading"
               ? importMode === "file"
-                ? "Feltoltes..."
-                : "Kulso import..."
+                ? "Feltöltés..."
+                : "Külső import..."
               : importMode === "file"
-                ? "Feltoltes inditasa"
-                : "PG import inditasa"}
+                ? "Feltöltés indítása"
+                : "PG import indítása"}
           </button>
           {bookId ? (
             <Link className="btn" href={`/book/${bookId}`}>
-              Megnyitas
+              Megnyitás
             </Link>
           ) : (
             <span />

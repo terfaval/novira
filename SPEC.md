@@ -39,7 +39,9 @@
   - authenticated non-admin users see own books plus public books,
   - admin sees all books.
 - Book favorite rule:
-  - on book page, users can toggle favorite state via star action next to `Vissza a konyvtarba`;
+  - on book page, users can toggle personal favorite state via star action next to `Vissza a konyvtarba` (user-scoped, not visible as a user action to others);
+  - admin has a separate global favorite action, distinct from personal favorite, and it requires explicit admin password confirmation;
+  - effective favorite state is `personal OR global` for ordering/marking;
   - on home/library, favorite books are pinned before non-favorites within current filtered results;
   - in inactive spine view, favorite books show a star mark on the author line.
 - Public base book editing rule:

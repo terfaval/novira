@@ -48,6 +48,9 @@ Date: 2026-02-11
 - Admin-only UI actions must be hidden for non-admin roles.
 - Admin checks must not rely on client-only gating.
 - Book visibility (`is_public`) changes are admin-only and enforced by DB policy.
+- Favorite boundary:
+  - personal favorites must be user-scoped (`book_favorites`) and isolated by RLS;
+  - global favorites on `books.is_favorite` are admin-only actions and must require explicit admin password confirmation.
 
 ### 2.7 Data protection & retention
 - Soft-delete for Book/Chapter/Block/Variant/Note (optional MVP+)

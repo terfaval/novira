@@ -39,11 +39,11 @@ export default function LoginPage() {
 
     const normalizedEmail = email.trim();
     if (!normalizedEmail) {
-      setError("Az e-mail cim kotelezo.");
+      setError("Az e-mail cím kötelező.");
       return;
     }
     if (password.length < 8) {
-      setError("A jelszonak legalabb 8 karakteresnek kell lennie.");
+      setError("A jelszónak legalább 8 karakteresnek kell lennie.");
       return;
     }
 
@@ -83,13 +83,13 @@ export default function LoginPage() {
       if (signUpError) throw new Error(signUpError.message);
 
       if (!signUpData.session) {
-        setMessage("A fiok letrejott. Lehet, hogy e-mail megerosites szukseges a belepeshez.");
+        setMessage("A fiók létrejött. Lehet, hogy e-mail megerősítés szükséges a belépéshez.");
         return;
       }
 
       router.push("/");
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Sikertelen auth muvelet.");
+      setError(submitError instanceof Error ? submitError.message : "Sikertelen auth művelet.");
     } finally {
       setBusy(false);
     }
@@ -104,7 +104,7 @@ export default function LoginPage() {
   return (
     <div className="auth-wireframe-shell">
       <form className="card auth-wireframe-card" onSubmit={handleSubmit}>
-        <h1 className="h1">{mode === "login" ? "Belepes" : "Regisztracio"}</h1>
+        <h1 className="h1">{mode === "login" ? "Belépés" : "Regisztráció"}</h1>
 
         <label className="auth-wireframe-field">
           <span>E-mail</span>
@@ -120,21 +120,21 @@ export default function LoginPage() {
         </label>
 
         <label className="auth-wireframe-field">
-          <span>Jelszo</span>
+          <span>Jelszó</span>
           <input
             className="input"
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             autoComplete={mode === "login" ? "current-password" : "new-password"}
-            placeholder="legalabb 8 karakter"
+            placeholder="legalább 8 karakter"
             disabled={busy}
           />
         </label>
 
         <div className="auth-wireframe-actions">
           <button type="submit" className="btn" disabled={busy}>
-            {busy ? "Folyamatban..." : mode === "login" ? "Belepes" : "Regisztracio"}
+            {busy ? "Folyamatban..." : mode === "login" ? "Belépés" : "Regisztráció"}
           </button>
           <Link className="btn" href="/landing" aria-label="Vissza a landing oldalra">
             Vissza
@@ -147,7 +147,7 @@ export default function LoginPage() {
           onClick={() => handleModeChange(mode === "login" ? "register" : "login")}
           disabled={busy}
         >
-          {mode === "login" ? "Nincs fiok? Regisztracio" : "Van fiok? Belepes"}
+          {mode === "login" ? "Nincs fiók? Regisztráció" : "Van fiók? Belépés"}
         </button>
 
         {error ? <p className="auth-wireframe-error">{error}</p> : null}

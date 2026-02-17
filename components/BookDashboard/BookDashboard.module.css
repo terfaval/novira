@@ -92,6 +92,9 @@
   justify-content: center;
   box-shadow: 0 6px 16px var(--shadow);
 }
+.topBarGlobalFavoriteButton {
+  border-style: dashed;
+}
 .topBarFavoriteButton:disabled {
   opacity: 0.6;
 }

@@ -114,7 +114,7 @@ export default function AdminPage() {
   if (accessState === "booting") {
     return (
       <div className="stack">
-        <div className="card">Jogosultsag ellenorzese...</div>
+        <div className="card">Jogosultság ellenőrzése...</div>
       </div>
     );
   }
@@ -123,10 +123,10 @@ export default function AdminPage() {
     return (
       <div className="stack">
         <div className="card">
-          <div style={{ fontWeight: 650, marginBottom: 6 }}>Nincs aktiv munkamenet</div>
-          <p className="sub">Elobb jelentkezz be a landing oldalon.</p>
+          <div style={{ fontWeight: 650, marginBottom: 6 }}>Nincs aktív munkamenet</div>
+          <p className="sub">Előbb jelentkezz be a landing oldalon.</p>
           <Link className="btn" href="/landing">
-            At a landing oldalra
+            Át a landing oldalra
           </Link>
         </div>
       </div>
@@ -137,10 +137,10 @@ export default function AdminPage() {
     return (
       <div className="stack">
         <div className="card">
-          <div style={{ fontWeight: 650, marginBottom: 6 }}>Admin jogosultsag szukseges</div>
-          <p className="sub">Ezt az oldalt csak admin erheti el.</p>
+          <div style={{ fontWeight: 650, marginBottom: 6 }}>Admin jogosultság szükséges</div>
+          <p className="sub">Ezt az oldalt csak admin érheti el.</p>
           <Link className="btn" href="/">
-            Vissza a konyvtarba
+            Vissza a könyvtárba
           </Link>
         </div>
       </div>
@@ -151,22 +151,22 @@ export default function AdminPage() {
     <div className="stack">
       <div className="row">
         <div>
-          <div className="h1">Admin - konyv lathatosag</div>
-          <p className="sub">Itt allithato, melyik konyv latszik publikus konyvkent minden felhasznalonak.</p>
+          <div className="h1">Admin - könyv láthatóság</div>
+          <p className="sub">Itt állítható, melyik könyv látszik publikus könyvként minden felhasználónak.</p>
         </div>
         <Link className="btn" href="/">
-          Vissza a konyvtarba
+          Vissza a könyvtárba
         </Link>
       </div>
 
-      {loading ? <div className="card">Konyvek betoltese...</div> : null}
+      {loading ? <div className="card">Könyvek betöltése...</div> : null}
       {error ? (
         <div className="card" style={{ color: "var(--muted)" }}>
           <strong>Hiba:</strong> {error}
         </div>
       ) : null}
 
-      {!loading && books.length === 0 ? <div className="card">Nincs megjelenitheto konyv.</div> : null}
+      {!loading && books.length === 0 ? <div className="card">Nincs megjeleníthető könyv.</div> : null}
 
       {!loading && books.length > 0 ? (
         <div className="card" style={{ overflowX: "auto" }}>
@@ -174,11 +174,11 @@ export default function AdminPage() {
             <thead>
               <tr>
                 <th style={{ textAlign: "left", padding: "8px 6px" }}>Publikus</th>
-                <th style={{ textAlign: "left", padding: "8px 6px" }}>Cim</th>
-                <th style={{ textAlign: "left", padding: "8px 6px" }}>Szerzo</th>
-                <th style={{ textAlign: "left", padding: "8px 6px" }}>Statusz</th>
+                <th style={{ textAlign: "left", padding: "8px 6px" }}>Cím</th>
+                <th style={{ textAlign: "left", padding: "8px 6px" }}>Szerző</th>
+                <th style={{ textAlign: "left", padding: "8px 6px" }}>Státusz</th>
                 <th style={{ textAlign: "left", padding: "8px 6px" }}>Tulajdonos user_id</th>
-                <th style={{ textAlign: "left", padding: "8px 6px" }}>Frissitve</th>
+                <th style={{ textAlign: "left", padding: "8px 6px" }}>Frissítve</th>
               </tr>
             </thead>
             <tbody>
@@ -192,7 +192,7 @@ export default function AdminPage() {
                         checked={Boolean(book.is_public)}
                         disabled={isBusy}
                         onChange={(event) => void handlePublicToggle(book.id, event.target.checked)}
-                        aria-label={`${book.title} publikus kapcsolo`}
+                        aria-label={`${book.title} publikus kapcsoló`}
                       />
                     </td>
                     <td style={{ padding: "8px 6px" }}>{book.title}</td>
