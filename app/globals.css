@@ -918,6 +918,9 @@ main:has(.book-page-shell) {
   padding: 10px 12px;
   border-radius: 14px;
   cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.2;
   font-weight: 550;
   display: inline-flex;
   align-items: center;
@@ -1178,6 +1181,13 @@ details[open] > .book-accordion-trigger::after {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.book-spine-favorite-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 6px;
+  opacity: 0.95;
 }
 
 /* TITLE - CENTER */

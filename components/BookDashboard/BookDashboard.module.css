@@ -80,11 +80,76 @@
   justify-content: center;
   box-shadow: 0 6px 16px var(--shadow);
 }
+.topBarFavoriteButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--brand-paper) 92%, transparent);
+  color: color-mix(in srgb, var(--brand-ink) 72%, var(--text));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px var(--shadow);
+}
+.topBarFavoriteButton:disabled {
+  opacity: 0.6;
+}
+.topBarFavoriteButtonActive {
+  border-color: color-mix(in srgb, var(--brand-accent) 72%, var(--line));
+  color: color-mix(in srgb, var(--brand-accent) 100%, var(--brand-ink));
+  background: color-mix(in srgb, var(--brand-accent) 26%, var(--brand-paper));
+}
+.topBarFavoriteButtonActive :global(svg) {
+  fill: currentColor;
+  stroke: currentColor;
+}
 
 .main {
   min-height: calc(100dvh - 98px);
   margin-top: 12px;
   padding: 0 12px 26px;
+}
+
+.bottomBookActions {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--brand-paper) 95%, transparent);
+  padding: 10px;
+}
+
+.bottomBookActionsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.bottomBookActionButton {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-paper) 94%, transparent);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.bottomBookActionButton:disabled {
+  opacity: 0.55;
+}
+
+.bottomBookActionDanger {
+  border-color: color-mix(in srgb, #aa3a32 48%, var(--line));
+  background: color-mix(in srgb, #aa3a32 12%, var(--brand-paper));
+  color: color-mix(in srgb, #aa3a32 88%, var(--text));
 }
 
 .desktopStage {
@@ -725,6 +790,7 @@
   justify-content: center;
   box-shadow: 0 4px 12px var(--shadow);
 }
+
 .adminModeToggle {
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -1704,6 +1770,10 @@
 
 @media (max-width: 720px) {
   .editGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .bottomBookActionsGrid {
     grid-template-columns: 1fr;
   }
 }

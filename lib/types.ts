@@ -12,6 +12,7 @@ export type BookRow = {
   id: string;
   user_id: string;
   is_public?: boolean;
+  is_favorite?: boolean;
   source_book_id?: string | null;
   title: string;
   author: string | null;

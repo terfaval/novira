@@ -69,6 +69,10 @@ function resolveEditedRatio(book: BookRow) {
   return Math.max(0, Math.min(100, raw));
 }
 
+function isFavorite(book: BookRow) {
+  return book.is_favorite === true;
+}
+
 function resolveCarouselVisibleCount(viewportWidth: number | null) {
   if (viewportWidth !== null && viewportWidth <= 720) return 4;
   if (viewportWidth !== null && viewportWidth <= 1100) return 11;
@@ -153,7 +157,7 @@ export function LibraryClient({
   const readyBooks = state.status === "ready" ? state.books : [];
   const normalizedSearch = normalizeText(searchText);
   const books = [...readyBooks];
-  const filteredBooks = books
+  const filteredAndSortedBooks = books
     .filter((book) => {
       if (statusFilter !== "all" && book.status !== statusFilter) return false;
       if (!normalizedSearch) return true;
@@ -174,6 +178,10 @@ export function LibraryClient({
       if (sortMode === "edited_ratio_asc") return resolveEditedRatio(a) - resolveEditedRatio(b);
       return b.updated_at.localeCompare(a.updated_at);
     });
+  const filteredBooks = [
+    ...filteredAndSortedBooks.filter((book) => isFavorite(book)),
+    ...filteredAndSortedBooks.filter((book) => !isFavorite(book)),
+  ];
 
   const activeIndex = filteredBooks.findIndex((book) => book.id === activeBookId);
   const effectiveActiveIndex = activeIndex >= 0 ? activeIndex : filteredBooks.length > 0 ? 0 : -1;

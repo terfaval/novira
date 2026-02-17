@@ -38,6 +38,10 @@
   - unauthenticated visitors see only `is_public = true` and `ready` books,
   - authenticated non-admin users see own books plus public books,
   - admin sees all books.
+- Book favorite rule:
+  - on book page, users can toggle favorite state via star action next to `Vissza a konyvtarba`;
+  - on home/library, favorite books are pinned before non-favorites within current filtered results;
+  - in inactive spine view, favorite books show a star mark on the author line.
 - Public base book editing rule:
   - if a user opens another user's public base book, the system auto-creates/reuses a user-owned fork ("sajat olvasat") and opens that fork for editing.
 - Book page admin edit panel keeps `Konyv adatok` editing.

@@ -61,6 +61,26 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-BOOK-COVER-ICON-DEFAULT-SVG-FALLBACK
+- Goal: Use `icon_default.svg` as fallback whenever a book-specific cover icon SVG cannot be loaded.
+- Files modified: `components/BookCoverIcon.tsx`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-BOOK-FAVORITE-STAR-PIN-FIRST-AND-SPINE-MARK
+- Goal: Add book-page favorite star toggle next to `Vissza a konyvtarba`, pin favorites first on Home within current filtered results, and render a favorite star mark on inactive book spine near author line.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `components/LibraryClient.tsx`, `components/BookCard.tsx`, `app/globals.css`, `src/ui/icons/Icon.tsx`, `lib/types.ts`, `supabase/migrations/supabase_migrations_0009_books_favorite_flag.sql`, `SPEC.md`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-BOOK-DELETE-BOTTOM-BAR-SOURCE-PROTECTION-ADMIN-PASSWORD
+- Goal: Move book delete action next to bottom source-restore action, ensure non-admin delete only removes user-owned book data without deleting source books, and require admin role plus password confirmation for source-book deletion.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-BOOK-SOURCE-RESTORE-DELETE-ACTIVITY-UNDO-REDO
+- Goal: Add bottom-of-book-page `Eredeti konyv visszaallitasa` action to fully restore linked source material, add book delete controls for editor/admin in Activity panel, and upgrade undo UX with stronger icon + conditional redo action after undo.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/BookDashboard/BookDashboard.module.css`, `src/ui/icons/Icon.tsx`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
 - Ticket: ADHOC-BOOK-ADMIN-SOURCE-EDIT-TOGGLE-ON-EDITED-PANEL
 - Goal: Replace Book admin `Forras szerkesztes` metadata editor with source-text edit toggle behavior so admin edits source block text directly in the `Szerkesztett` panel, while keeping source provenance as preview-only metadata.
 - Files modified: `components/BookDashboard/BookDashboard.tsx`, `SPEC.md`, `TICKETS.md`
@@ -1048,4 +1068,9 @@ Step board:
 - Ticket: ADHOC-BOOK-ADMIN-SEPARATE-SOURCE-EDITOR-MODE
 - Goal: Add a dedicated admin edit mode on `/book/[id]` for editing source provenance fields separately from book metadata.
 - Files modified: `components/BookDashboard/BookDashboard.tsx`, `SPEC.md`, `SECURITY.md`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-UNIFIED-TEXT-BUTTON-FONT-WITH-HOME-TOPBAR-ADMIN
+- Goal: Make text button typography consistent across the system by aligning shared `.btn` font rendering to the home topbar `Admin` button style.
+- Files modified: `app/globals.css`, `TICKETS.md`
 - Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)

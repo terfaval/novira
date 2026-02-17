@@ -22,6 +22,9 @@ import {
   School,
   Building2,
   BookHeart,
+  RotateCcw,
+  RotateCw,
+  Star,
 } from "lucide-react";
 
 export type IconName =
@@ -48,7 +51,10 @@ export type IconName =
   | "translator"
   | "researcher"
   | "teacher"
-  | "institution";
+  | "institution"
+  | "undo"
+  | "redo"
+  | "favorite";
 
 const ICON_MAP = {
   generate: Sparkles,
@@ -75,6 +81,9 @@ const ICON_MAP = {
   researcher: Microscope,
   teacher: School,
   institution: Building2,
+  undo: RotateCcw,
+  redo: RotateCw,
+  favorite: Star,
 } as const;
 
 type Props = {

@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import type { BookRow } from "@/lib/types";
 import { BookCoverIcon } from "@/components/BookCoverIcon";
+import { Icon } from "@/src/ui/icons/Icon";
 
 function inferOriginalBookYear(book: BookRow) {
   const currentYear = new Date().getUTCFullYear();
@@ -161,7 +162,14 @@ export function BookCard({
         }}
         aria-label={`${book.title} megnyitasa`}
       >
-        <div className="book-spine-author-line">{author}</div>
+        <div className="book-spine-author-line">
+          <span>{author}</span>
+          {book.is_favorite ? (
+            <span className="book-spine-favorite-mark" aria-label="Kedvenc konyv">
+              <Icon name="favorite" size={10} />
+            </span>
+          ) : null}
+        </div>
         <div className="book-spine-title-line">{book.title}</div>
         <div className="book-spine-icon" aria-hidden="true">
           <BookCoverIcon slug={coverSlug} title={book.title} />

@@ -84,7 +84,9 @@ type EditedPanelUndoBlockSnapshot = {
   original_text: string;
 };
 type EditedPanelUndoSnapshotEntry = {
-  block: EditedPanelUndoBlockSnapshot;
+  blockId: string;
+  bookId: string;
+  block: EditedPanelUndoBlockSnapshot | null;
   variants: EditedPanelUndoVariantSnapshot[];
 };
 type EditedPanelUndoSnapshot = {
@@ -1271,7 +1273,10 @@ function ToolIcon({
     | "bookmark"
     | "add"
     | "toc"
-    | "notes";
+    | "notes"
+    | "undo"
+    | "redo"
+    | "favorite";
 }) {
   return <Icon name={type} />;
 }
@@ -2190,7 +2195,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const [undoFeedback, setUndoFeedback] = useState<string | null>(null);
   const [runtimeAlert, setRuntimeAlert] = useState<RuntimeAlertState | null>(null);
   const [lastEditedPanelUndo, setLastEditedPanelUndo] = useState<EditedPanelUndoSnapshot | null>(null);
+  const [lastEditedPanelRedo, setLastEditedPanelRedo] = useState<EditedPanelUndoSnapshot | null>(null);
   const [isUndoApplying, setIsUndoApplying] = useState(false);
+  const [isRedoApplying, setIsRedoApplying] = useState(false);
   const [isBatchGenerating, setIsBatchGenerating] = useState(false);
   const [autoGenerateOnScroll, setAutoGenerateOnScroll] = useState(false);
   const [autoTranslateChapterTitles, setAutoTranslateChapterTitles] = useState(false);
@@ -2216,6 +2223,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const [mobileToolPanelOpen, setMobileToolPanelOpen] = useState(false);
   const [desktopEditPanelOpen, setDesktopEditPanelOpen] = useState(false);
   const [adminSourceEditMode, setAdminSourceEditMode] = useState(false);
+  const [isSourceRestoreInFlight, setIsSourceRestoreInFlight] = useState(false);
+  const [isBookDeleteInFlight, setIsBookDeleteInFlight] = useState(false);
+  const [isFavoriteSaving, setIsFavoriteSaving] = useState(false);
   const [activeMobileBlockId, setActiveMobileBlockId] = useState<string | null>(null);
   const [expandedNoteIds, setExpandedNoteIds] = useState<Set<string>>(() => new Set());
   const [bookmarks, setBookmarks] = useState<DashboardBookmarkEntry[]>([]);
@@ -2317,6 +2327,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
   useEffect(() => {
     setLastEditedPanelUndo(null);
+    setLastEditedPanelRedo(null);
     setUndoFeedback(null);
     setRuntimeAlert(null);
     autoStopNoticeKeyRef.current = null;
@@ -2502,7 +2513,74 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     chapterDeleteSaving ||
     chapterAddSaving ||
     mergingPairKey !== null ||
-    isUndoApplying;
+    isUndoApplying ||
+    isRedoApplying ||
+    isSourceRestoreInFlight ||
+    isBookDeleteInFlight;
+
+  const captureEditedPanelUndoSnapshotFromBlockIds = useCallback(
+    async (args: { blockIds: string[]; actionLabel: string }): Promise<EditedPanelUndoSnapshot> => {
+      const uniqueBlockIds = [...new Set(args.blockIds.filter((id) => typeof id === "string" && id.trim().length > 0))];
+      if (uniqueBlockIds.length === 0) {
+        throw new Error("Nem talalhato blokk visszaallitasi menteshez.");
+      }
+
+      const blocksTable = supabase.from("blocks") as any;
+      const variantsTable = supabase.from("variants") as any;
+
+      const { data: blockRows, error: blockError } = await blocksTable
+        .select("id,book_id,chapter_id,block_index,original_text")
+        .eq("book_id", bookId)
+        .in("id", uniqueBlockIds);
+      if (blockError) throw new Error(blockError.message || "Sikertelen blokk visszaallitasi mentes.");
+
+      const blockById = new Map<string, EditedPanelUndoBlockSnapshot>();
+      for (const row of (blockRows as EditedPanelUndoBlockSnapshot[] | null) ?? []) {
+        blockById.set(row.id, row);
+      }
+
+      const { data: variantRows, error: variantError } = await variantsTable
+        .select("id,owner_id,book_id,chapter_id,block_id,variant_index,status,text")
+        .eq("book_id", bookId)
+        .in("block_id", uniqueBlockIds)
+        .order("variant_index", { ascending: true });
+      if (variantError) throw new Error(variantError.message || "Sikertelen varians visszaallitasi mentes.");
+
+      const variantsByBlockId = new Map<string, EditedPanelUndoVariantSnapshot[]>();
+      for (const row of (variantRows as EditedPanelUndoVariantSnapshot[] | null) ?? []) {
+        const bucket = variantsByBlockId.get(row.block_id);
+        const snapshotVariant = {
+          id: row.id,
+          owner_id: row.owner_id ?? null,
+          book_id: row.book_id,
+          chapter_id: row.chapter_id,
+          block_id: row.block_id,
+          variant_index: row.variant_index,
+          status: row.status,
+          text: row.text,
+        } satisfies EditedPanelUndoVariantSnapshot;
+        if (bucket) {
+          bucket.push(snapshotVariant);
+        } else {
+          variantsByBlockId.set(row.block_id, [snapshotVariant]);
+        }
+      }
+
+      const entries: EditedPanelUndoSnapshotEntry[] = uniqueBlockIds.map((blockIdValue) => ({
+        blockId: blockIdValue,
+        bookId,
+        block: blockById.get(blockIdValue) ?? null,
+        variants: variantsByBlockId.get(blockIdValue) ?? [],
+      }));
+
+      return {
+        actionLabel: args.actionLabel,
+        createdAt: Date.now(),
+        entries,
+      };
+    },
+    [bookId, supabase],
+  );
 
   const captureEditedPanelUndoSnapshot = useCallback(
     async (args: { blocks: DashboardBlock[]; actionLabel: string }): Promise<EditedPanelUndoSnapshot> => {
@@ -2511,78 +2589,62 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         throw new Error("Nem talalhato blokk visszaallitasi menteshez.");
       }
 
-      const blocksTable = supabase.from("blocks") as any;
-      const variantsTable = supabase.from("variants") as any;
-
-      const entries = await Promise.all(
-        uniqueBlocks.map(async (block) => {
-          const { data: blockRow, error: blockError } = await blocksTable
-            .select("id,book_id,chapter_id,block_index,original_text")
-            .eq("id", block.id)
-            .eq("book_id", block.bookId)
-            .maybeSingle();
-          if (blockError) throw new Error(blockError.message || "Sikertelen blokk visszaallitasi mentes.");
-
-          const snapshotBlock: EditedPanelUndoBlockSnapshot =
-            (blockRow as EditedPanelUndoBlockSnapshot | null) ?? {
-              id: block.id,
-              book_id: block.bookId,
-              chapter_id: block.chapterId,
-              block_index: block.blockIndex,
-              original_text: block.originalText,
-            };
-
-          const { data: variantRows, error: variantError } = await variantsTable
-            .select("id,owner_id,book_id,chapter_id,block_id,variant_index,status,text")
-            .eq("block_id", block.id)
-            .eq("book_id", block.bookId)
-            .order("variant_index", { ascending: true });
-          if (variantError) throw new Error(variantError.message || "Sikertelen varians visszaallitasi mentes.");
-
-          return {
-            block: snapshotBlock,
-            variants: ((variantRows as EditedPanelUndoVariantSnapshot[] | null) ?? []).map((row) => ({
-              id: row.id,
-              owner_id: row.owner_id ?? null,
-              book_id: row.book_id,
-              chapter_id: row.chapter_id,
-              block_id: row.block_id,
-              variant_index: row.variant_index,
-              status: row.status,
-              text: row.text,
-            })),
-          } satisfies EditedPanelUndoSnapshotEntry;
-        }),
-      );
+      const snapshot = await captureEditedPanelUndoSnapshotFromBlockIds({
+        blockIds: uniqueBlocks.map((block) => block.id),
+        actionLabel: args.actionLabel,
+      });
+      const fallbackByBlockId = new Map<string, EditedPanelUndoBlockSnapshot>();
+      for (const block of uniqueBlocks) {
+        fallbackByBlockId.set(block.id, {
+          id: block.id,
+          book_id: block.bookId,
+          chapter_id: block.chapterId,
+          block_index: block.blockIndex,
+          original_text: block.originalText,
+        });
+      }
 
       return {
-        actionLabel: args.actionLabel,
-        createdAt: Date.now(),
-        entries,
+        ...snapshot,
+        entries: snapshot.entries.map((entry) => ({
+          ...entry,
+          block: entry.block ?? fallbackByBlockId.get(entry.blockId) ?? null,
+        })),
       };
     },
-    [supabase],
+    [captureEditedPanelUndoSnapshotFromBlockIds],
   );
 
-  const handleUndoLastEditedPanelChange = useCallback(async () => {
-    if (state.status !== "ready") return;
-    if (!lastEditedPanelUndo || isEditorBusy) return;
-
-    setUndoFeedback(null);
-    setGenerateError(null);
-    setIsUndoApplying(true);
-
-    try {
+  const applyEditedPanelSnapshot = useCallback(
+    async (args: { snapshot: EditedPanelUndoSnapshot; fallbackOwnerId: string }) => {
       const blocksTable = supabase.from("blocks") as any;
       const variantsTable = supabase.from("variants") as any;
 
-      for (const entry of lastEditedPanelUndo.entries) {
+      for (const entry of args.snapshot.entries) {
+        const entryBookId = entry.block?.book_id ?? entry.bookId;
         const { data: existingBlock, error: existingBlockError } = await blocksTable
           .select("id")
-          .eq("id", entry.block.id)
-          .eq("book_id", entry.block.book_id)
+          .eq("id", entry.blockId)
+          .eq("book_id", entryBookId)
           .maybeSingle();
         if (existingBlockError) throw new Error(existingBlockError.message || "Sikertelen blokk visszaallitas ellenorzes.");
+
+        if (!entry.block) {
+          if (existingBlock) {
+            const { error: deleteVariantsError } = await variantsTable
+              .delete()
+              .eq("book_id", entryBookId)
+              .eq("block_id", entry.blockId);
+            if (deleteVariantsError) throw new Error(deleteVariantsError.message || "Sikertelen varians torles.");
+
+            const { error: deleteBlockError } = await blocksTable
+              .delete()
+              .eq("id", entry.blockId)
+              .eq("book_id", entryBookId);
+            if (deleteBlockError) throw new Error(deleteBlockError.message || "Sikertelen blokk torles.");
+          }
+          continue;
+        }
 
         if (!existingBlock) {
           const { error: insertBlockError } = await blocksTable.insert({
@@ -2614,7 +2676,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         if (entry.variants.length > 0) {
           const payload = entry.variants.map((variant) => ({
             id: variant.id,
-            owner_id: variant.owner_id ?? state.userId,
+            owner_id: variant.owner_id ?? args.fallbackOwnerId,
             book_id: variant.book_id,
             chapter_id: variant.chapter_id,
             block_id: variant.block_id,
@@ -2626,9 +2688,28 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           if (restoreVariantsError) throw new Error(restoreVariantsError.message || "Sikertelen varians visszaallitas.");
         }
       }
+    },
+    [supabase],
+  );
+
+  const handleUndoLastEditedPanelChange = useCallback(async () => {
+    if (state.status !== "ready") return;
+    if (!lastEditedPanelUndo || isEditorBusy) return;
+
+    setUndoFeedback(null);
+    setGenerateError(null);
+    setIsUndoApplying(true);
+
+    try {
+      const redoSnapshot = await captureEditedPanelUndoSnapshotFromBlockIds({
+        blockIds: lastEditedPanelUndo.entries.map((entry) => entry.blockId),
+        actionLabel: `Ismetles: ${lastEditedPanelUndo.actionLabel}`,
+      });
+      await applyEditedPanelSnapshot({ snapshot: lastEditedPanelUndo, fallbackOwnerId: state.userId });
 
       await loadDashboard({ keepCurrentView: true });
       setLastEditedPanelUndo(null);
+      setLastEditedPanelRedo(redoSnapshot);
       setUndoFeedback(`Visszaallitva: ${lastEditedPanelUndo.actionLabel}.`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Sikertelen visszaallitas.";
@@ -2636,7 +2717,33 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     } finally {
       setIsUndoApplying(false);
     }
-  }, [isEditorBusy, lastEditedPanelUndo, loadDashboard, state, supabase]);
+  }, [applyEditedPanelSnapshot, captureEditedPanelUndoSnapshotFromBlockIds, isEditorBusy, lastEditedPanelUndo, loadDashboard, state]);
+
+  const handleRedoLastEditedPanelChange = useCallback(async () => {
+    if (state.status !== "ready") return;
+    if (!lastEditedPanelRedo || isEditorBusy) return;
+
+    setUndoFeedback(null);
+    setGenerateError(null);
+    setIsRedoApplying(true);
+
+    try {
+      const undoSnapshot = await captureEditedPanelUndoSnapshotFromBlockIds({
+        blockIds: lastEditedPanelRedo.entries.map((entry) => entry.blockId),
+        actionLabel: `Visszavonas: ${lastEditedPanelRedo.actionLabel}`,
+      });
+      await applyEditedPanelSnapshot({ snapshot: lastEditedPanelRedo, fallbackOwnerId: state.userId });
+      await loadDashboard({ keepCurrentView: true });
+      setLastEditedPanelRedo(null);
+      setLastEditedPanelUndo(undoSnapshot);
+      setUndoFeedback(`Ismetelve: ${lastEditedPanelRedo.actionLabel}.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Sikertelen ujraalkalmazas.";
+      setUndoFeedback(message);
+    } finally {
+      setIsRedoApplying(false);
+    }
+  }, [applyEditedPanelSnapshot, captureEditedPanelUndoSnapshotFromBlockIds, isEditorBusy, lastEditedPanelRedo, loadDashboard, state]);
 
   const translateChapterTitlesFromGeneratedBlocks = useCallback(
     async (generatedBlocks: Array<{ chapterId: string; chapterIndex: number; translatedText: string }>) => {
@@ -2686,6 +2793,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         });
         await loadDashboard({ keepCurrentView: true });
         setLastEditedPanelUndo(undoSnapshot);
+        setLastEditedPanelRedo(null);
         setUndoFeedback(null);
         completeOnboardingByEvent("accept_success");
       } catch (error) {
@@ -2728,6 +2836,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         ]);
         await loadDashboard({ keepCurrentView: true });
         setLastEditedPanelUndo(undoSnapshot);
+        setLastEditedPanelRedo(null);
         setUndoFeedback(null);
         completeOnboardingByEvent("generate_success");
       } catch (error) {
@@ -2821,6 +2930,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         }
         if (successCount > 0 && undoSnapshot) {
           setLastEditedPanelUndo(undoSnapshot);
+          setLastEditedPanelRedo(null);
           setUndoFeedback(null);
         }
         if (successCount > 0) {
@@ -2988,6 +3098,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         }
         await loadDashboard({ keepCurrentView: true });
         setLastEditedPanelUndo(undoSnapshot);
+        setLastEditedPanelRedo(null);
         setUndoFeedback(null);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Sikertelen torles.";
@@ -3017,6 +3128,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         await deleteEditedBlockVariant({ supabase, block });
         await loadDashboard({ keepCurrentView: true });
         setLastEditedPanelUndo(undoSnapshot);
+        setLastEditedPanelRedo(null);
         setUndoFeedback(null);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Sikertelen elutasitas.";
@@ -3054,6 +3166,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           }
           await loadDashboard({ keepCurrentView: true });
           setLastEditedPanelUndo(undoSnapshot);
+          setLastEditedPanelRedo(null);
           setUndoFeedback(null);
           return true;
         }
@@ -3082,6 +3195,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         }
         await loadDashboard({ keepCurrentView: true });
         setLastEditedPanelUndo(undoSnapshot);
+        setLastEditedPanelRedo(null);
         setUndoFeedback(null);
         return true;
       } catch (error) {
@@ -3275,6 +3389,43 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     if (state.status !== "ready" || state.role !== "admin") return;
     setDesktopEditPanelOpen((prev) => !prev);
   }, [state]);
+  const handleToggleBookFavorite = useCallback(async () => {
+    if (state.status !== "ready") return;
+    if (isFavoriteSaving) return;
+
+    const currentFavorite = state.data.book.is_favorite === true;
+    const nextFavorite = !currentFavorite;
+    setIsFavoriteSaving(true);
+
+    const booksTable = supabase.from("books") as any;
+    const { error } = await booksTable
+      .update({ is_favorite: nextFavorite })
+      .eq("id", bookId)
+      .eq("user_id", state.userId);
+
+    if (error) {
+      const message = `${error.message ?? ""}`.toLowerCase();
+      if (message.includes("is_favorite")) {
+        showRuntimeAlert("A kedvenc jeloleshez hianyzik az `is_favorite` adatbazis oszlop.", "info");
+      } else {
+        showRuntimeAlert(error.message || "Sikertelen kedvenc jeloles.");
+      }
+      setIsFavoriteSaving(false);
+      return;
+    }
+
+    setState((prev) => {
+      if (prev.status !== "ready") return prev;
+      return {
+        ...prev,
+        data: {
+          ...prev.data,
+          book: { ...prev.data.book, is_favorite: nextFavorite },
+        },
+      };
+    });
+    setIsFavoriteSaving(false);
+  }, [bookId, isFavoriteSaving, showRuntimeAlert, state, supabase]);
   const handleToggleAdminSourceEditMode = useCallback(() => {
     if (state.status !== "ready" || state.role !== "admin") return;
     setAdminSourceEditMode((prev) => !prev);
@@ -3433,6 +3584,238 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     }
   }, [bookId, loadDashboard, state, supabase]);
 
+  const handleRestoreBookFromSource = useCallback(async () => {
+    if (state.status !== "ready" || state.role === "guest") return;
+    const sourceBookId = state.data.book.source_book_id?.trim() ?? "";
+    if (!sourceBookId) return;
+
+    const confirmed = window.confirm(
+      "Biztosan visszaallitod ezt a konyvet az eredeti forrasanyagra? A jelenlegi blokkok, variansok es jegyzetek torlodnek.",
+    );
+    if (!confirmed) return;
+
+    setUndoFeedback(null);
+    setIsSourceRestoreInFlight(true);
+    try {
+      const booksTable = supabase.from("books") as any;
+      const chaptersTable = supabase.from("chapters") as any;
+      const blocksTable = supabase.from("blocks") as any;
+      const variantsTable = supabase.from("variants") as any;
+      const notesTable = supabase.from("notes") as any;
+      const footnotesTable = supabase.from("footnotes") as any;
+      const anchorsTable = supabase.from("footnote_anchors") as any;
+
+      const { data: sourceBook, error: sourceBookError } = await booksTable
+        .select("id,status")
+        .eq("id", sourceBookId)
+        .maybeSingle();
+      if (sourceBookError || !sourceBook?.id) {
+        throw new Error(sourceBookError?.message || "A forraskonyv nem talalhato.");
+      }
+      if (sourceBook.status !== "ready") {
+        throw new Error("A forraskonyv nem kesz allapotu.");
+      }
+
+      const { data: sourceChapterRows, error: sourceChapterError } = await chaptersTable
+        .select("id,chapter_index,title")
+        .eq("book_id", sourceBookId)
+        .order("chapter_index", { ascending: true });
+      if (sourceChapterError) throw new Error(sourceChapterError.message || "Sikertelen forras fejezet lekerdezes.");
+
+      const { data: sourceBlockRows, error: sourceBlockError } = await blocksTable
+        .select("id,chapter_id,block_index,original_text,original_hash")
+        .eq("book_id", sourceBookId)
+        .order("block_index", { ascending: true });
+      if (sourceBlockError) throw new Error(sourceBlockError.message || "Sikertelen forras blokk lekerdezes.");
+
+      const { data: sourceFootnoteRows, error: sourceFootnoteError } = await footnotesTable
+        .select("number,text,source_chapter_id,source_block_id")
+        .eq("book_id", sourceBookId)
+        .order("number", { ascending: true });
+      if (sourceFootnoteError) throw new Error(sourceFootnoteError.message || "Sikertelen forras jegyzet lekerdezes.");
+
+      const { data: sourceAnchorRows, error: sourceAnchorError } = await anchorsTable
+        .select("chapter_id,block_id,footnote_number,start_offset,end_offset")
+        .eq("book_id", sourceBookId);
+      if (sourceAnchorError) throw new Error(sourceAnchorError.message || "Sikertelen forras hivatkozas lekerdezes.");
+
+      const { error: deleteNotesError } = await notesTable.delete().eq("book_id", bookId);
+      if (deleteNotesError) throw new Error(deleteNotesError.message || "Sikertelen jegyzet torles.");
+
+      const { error: deleteVariantsError } = await variantsTable.delete().eq("book_id", bookId);
+      if (deleteVariantsError) throw new Error(deleteVariantsError.message || "Sikertelen varians torles.");
+
+      const { error: deleteAnchorsError } = await anchorsTable.delete().eq("book_id", bookId);
+      if (deleteAnchorsError) throw new Error(deleteAnchorsError.message || "Sikertelen forrashivatkozas torles.");
+
+      const { error: deleteFootnotesError } = await footnotesTable.delete().eq("book_id", bookId);
+      if (deleteFootnotesError) throw new Error(deleteFootnotesError.message || "Sikertelen forrasjegyzet torles.");
+
+      const { error: deleteBlocksError } = await blocksTable.delete().eq("book_id", bookId);
+      if (deleteBlocksError) throw new Error(deleteBlocksError.message || "Sikertelen blokk torles.");
+
+      const { error: deleteChaptersError } = await chaptersTable.delete().eq("book_id", bookId);
+      if (deleteChaptersError) throw new Error(deleteChaptersError.message || "Sikertelen fejezet torles.");
+
+      const chapterIdMap = new Map<string, string>();
+      for (const sourceChapter of (sourceChapterRows as Array<{ id: string; chapter_index: number; title: string | null }> | null) ?? []) {
+        const { data: insertedChapter, error: insertChapterError } = await chaptersTable
+          .insert({
+            owner_id: state.userId,
+            book_id: bookId,
+            chapter_index: sourceChapter.chapter_index,
+            title: sourceChapter.title ?? null,
+          })
+          .select("id")
+          .single();
+        if (insertChapterError || !insertedChapter?.id) {
+          throw new Error(insertChapterError?.message || "Sikertelen fejezet visszaallitas.");
+        }
+        chapterIdMap.set(sourceChapter.id, insertedChapter.id as string);
+      }
+
+      const blockIdMap = new Map<string, string>();
+      for (const sourceBlock of
+        (sourceBlockRows as Array<{
+          id: string;
+          chapter_id: string;
+          block_index: number;
+          original_text: string;
+          original_hash: string | null;
+        }> | null) ?? []) {
+        const mappedChapterId = chapterIdMap.get(sourceBlock.chapter_id);
+        if (!mappedChapterId) continue;
+
+        const basePayload = {
+          owner_id: state.userId,
+          book_id: bookId,
+          chapter_id: mappedChapterId,
+          block_index: sourceBlock.block_index,
+          original_text: sourceBlock.original_text,
+          original_hash: sourceBlock.original_hash,
+        };
+        let insertBlockResult = await blocksTable.insert(basePayload).select("id").single();
+        if (insertBlockResult.error && `${insertBlockResult.error.message ?? ""}`.toLowerCase().includes("original_hash")) {
+          const fallbackPayload = {
+            owner_id: state.userId,
+            book_id: bookId,
+            chapter_id: mappedChapterId,
+            block_index: sourceBlock.block_index,
+            original_text: sourceBlock.original_text,
+          };
+          insertBlockResult = await blocksTable.insert(fallbackPayload).select("id").single();
+        }
+        if (insertBlockResult.error || !(insertBlockResult.data as { id?: string } | null)?.id) {
+          throw new Error(insertBlockResult.error?.message || "Sikertelen blokk visszaallitas.");
+        }
+        blockIdMap.set(sourceBlock.id, (insertBlockResult.data as { id: string }).id);
+      }
+
+      for (const sourceFootnote of
+        (sourceFootnoteRows as Array<{ number: number; text: string; source_chapter_id: string; source_block_id: string }> | null) ?? []) {
+        const mappedSourceChapterId = chapterIdMap.get(sourceFootnote.source_chapter_id);
+        const mappedSourceBlockId = blockIdMap.get(sourceFootnote.source_block_id);
+        if (!mappedSourceChapterId || !mappedSourceBlockId) continue;
+
+        const { error: insertFootnoteError } = await footnotesTable.insert({
+          owner_id: state.userId,
+          book_id: bookId,
+          number: sourceFootnote.number,
+          text: sourceFootnote.text,
+          source_chapter_id: mappedSourceChapterId,
+          source_block_id: mappedSourceBlockId,
+        });
+        if (insertFootnoteError) throw new Error(insertFootnoteError.message || "Sikertelen forrasjegyzet visszaallitas.");
+      }
+
+      for (const sourceAnchor of
+        (sourceAnchorRows as Array<{
+          chapter_id: string;
+          block_id: string;
+          footnote_number: number;
+          start_offset: number;
+          end_offset: number;
+        }> | null) ?? []) {
+        const mappedChapterId = chapterIdMap.get(sourceAnchor.chapter_id);
+        const mappedBlockId = blockIdMap.get(sourceAnchor.block_id);
+        if (!mappedChapterId || !mappedBlockId) continue;
+
+        const { error: insertAnchorError } = await anchorsTable.insert({
+          owner_id: state.userId,
+          book_id: bookId,
+          chapter_id: mappedChapterId,
+          block_id: mappedBlockId,
+          footnote_number: sourceAnchor.footnote_number,
+          start_offset: sourceAnchor.start_offset,
+          end_offset: sourceAnchor.end_offset,
+        });
+        if (insertAnchorError) throw new Error(insertAnchorError.message || "Sikertelen forrashivatkozas visszaallitas.");
+      }
+
+      await loadDashboard({ keepCurrentView: true });
+      setLastEditedPanelUndo(null);
+      setLastEditedPanelRedo(null);
+      setUndoFeedback("Az eredeti forrasanyag teljesen visszaallitva.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Sikertelen forras-visszaallitas.";
+      setUndoFeedback(message);
+    } finally {
+      setIsSourceRestoreInFlight(false);
+    }
+  }, [bookId, loadDashboard, state, supabase]);
+
+  const handleDeleteCurrentBook = useCallback(async () => {
+    if (state.status !== "ready" || state.role === "guest") return;
+    const isSourceBook = !state.data.book.source_book_id;
+    if (isSourceBook && state.role !== "admin") {
+      setUndoFeedback("A forraskonyv torlese csak adminnal engedelyezett.");
+      return;
+    }
+
+    if (isSourceBook && state.role === "admin") {
+      const password = window.prompt("Admin torles: add meg a jelszavad a forraskonyv torlesehez.");
+      if (!password) return;
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user?.email) {
+        setUndoFeedback(userError?.message || "Nem sikerult az admin azonositasa.");
+        return;
+      }
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: userData.user.email,
+        password,
+      });
+      if (verifyError) {
+        setUndoFeedback("Hibas jelszo vagy sikertelen admin ellenorzes.");
+        return;
+      }
+    }
+
+    const confirmed = window.confirm(
+      "Biztosan toroljuk ezt a konyvet? A torles vegleges, nem visszavonhato.",
+    );
+    if (!confirmed) return;
+
+    setUndoFeedback(null);
+    setIsBookDeleteInFlight(true);
+    try {
+      const booksTable = supabase.from("books") as any;
+      let deleteQuery = booksTable.delete().eq("id", bookId);
+      if (state.role !== "admin") {
+        deleteQuery = deleteQuery.eq("user_id", state.userId);
+      }
+      const { error: deleteError } = await deleteQuery;
+      if (deleteError) throw new Error(deleteError.message || "Sikertelen konyv torles.");
+
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Sikertelen konyv torles.";
+      setUndoFeedback(message);
+    } finally {
+      setIsBookDeleteInFlight(false);
+    }
+  }, [bookId, router, state, supabase]);
+
   useEffect(() => {
     if (state.status !== "ready") return;
     if (state.role !== "admin") return;
@@ -3545,6 +3928,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const iconPreviewPath = iconPreviewSlug
     ? `url('/covers/SVG/${iconPreviewSlug}.svg'), url('/covers/${iconPreviewSlug}.png')`
     : null;
+  const isFavoriteBook = state.status === "ready" && state.data.book.is_favorite === true;
+  const hasSourceBook = state.status === "ready" && Boolean(state.data.book.source_book_id?.trim());
+  const isSourceBook = state.status === "ready" && !state.data.book.source_book_id;
   const chapterGroups = useMemo(() => groupBlocksByChapter(blocks), [blocks]);
   const bookmarkColorByKey = useMemo(
     () =>
@@ -4925,6 +5311,44 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     </div>
   );
 
+  const renderBottomBookActions = () => {
+    if (state.status !== "ready" || state.role === "guest") return null;
+    const canDeleteThisBook = state.role === "admin" || !isSourceBook;
+
+    return (
+      <section className={`card ${styles.bottomBookActions}`} aria-label="Konyv muveletek">
+        <div className={styles.bottomBookActionsGrid}>
+          <button
+            className={styles.bottomBookActionButton}
+            type="button"
+            onClick={() => void handleRestoreBookFromSource()}
+            disabled={!hasSourceBook || isEditorBusy}
+            title={hasSourceBook ? "Eredeti konyv visszaallitasa" : "Ehhez a konyvhoz nincs forraskonyv linkelve"}
+          >
+            <span>{isSourceRestoreInFlight ? "Forras visszaallitasa..." : "Eredeti konyv visszaallitasa"}</span>
+            <ToolIcon type="undo" />
+          </button>
+          <button
+            className={`${styles.bottomBookActionButton} ${styles.bottomBookActionDanger}`}
+            type="button"
+            onClick={() => void handleDeleteCurrentBook()}
+            disabled={!canDeleteThisBook || isEditorBusy}
+            title={
+              canDeleteThisBook
+                ? isSourceBook
+                  ? "Forraskonyv torlese (admin jelszo szukseges)"
+                  : "Sajat konyv torlese"
+                : "Forraskonyvet csak admin torolhet"
+            }
+          >
+            <span>{isBookDeleteInFlight ? "Konyv torlese..." : "Konyv torlese"}</span>
+            <ActionIcon type="delete" />
+          </button>
+        </div>
+      </section>
+    );
+  };
+
   const renderMobileToolPanel = () => {
     if (!isMobile || state.status !== "ready") return null;
 
@@ -5022,10 +5446,24 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                     <span>
                       {isUndoApplying ? "Visszaallitas..." : "Utolso szerkesztes visszavonasa"}
                     </span>
-                    <ToolIcon type="back" />
+                    <ToolIcon type="undo" />
                   </button>
+                  {lastEditedPanelRedo ? (
+                    <button
+                      className={styles.mobileToolRow}
+                      type="button"
+                      onClick={() => void handleRedoLastEditedPanelChange()}
+                      disabled={!isReady || !lastEditedPanelRedo || isEditorBusy}
+                    >
+                      <span>{isRedoApplying ? "Ujraalkalmazas..." : "Visszavonas ujraalkalmazasa"}</span>
+                      <ToolIcon type="redo" />
+                    </button>
+                  ) : null}
                   {lastEditedPanelUndo ? (
                     <div className={styles.mobileToolHint}>Visszaallithato: {lastEditedPanelUndo.actionLabel}</div>
+                  ) : null}
+                  {lastEditedPanelRedo ? (
+                    <div className={styles.mobileToolHint}>Ujraalkalmazhato: {lastEditedPanelRedo.actionLabel}</div>
                   ) : null}
                   {undoFeedback ? <div className={styles.mobileToolHint}>{undoFeedback}</div> : null}
                 </section>
@@ -5257,6 +5695,18 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   }}
                 />
               ) : null}
+              {state.status === "ready" ? (
+                <button
+                  type="button"
+                  className={`${styles.topBarFavoriteButton} ${isFavoriteBook ? styles.topBarFavoriteButtonActive : ""}`}
+                  onClick={handleToggleBookFavorite}
+                  disabled={isFavoriteSaving}
+                  aria-label={isFavoriteBook ? "Konyv eltavolitasa a kedvencekbol" : "Konyv jelolese kedvenckent"}
+                  title={isFavoriteBook ? "Kedvenc konyv" : "Jeloles kedvenckent"}
+                >
+                  <ToolIcon type="favorite" />
+                </button>
+              ) : null}
               <Link className={styles.topBarBackButton} href="/" aria-label="Vissza a konyvtarba" title="Vissza a konyvtarba">
                 <ToolIcon type="back" />
               </Link>
@@ -5310,6 +5760,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           {desktopEditPanelOpen && state.status === "ready" && state.role === "admin" ? renderBookMetaSection() : null}
         </div>
       )}
+      {renderBottomBookActions()}
     </main>
 
       {!isMobile && state.status === "ready" ? (
@@ -5508,13 +5959,26 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   onClick={() => void handleUndoLastEditedPanelChange()}
                   disabled={!isReady || !lastEditedPanelUndo || isEditorBusy}
                 >
-                  <ToolIcon type="back" />
+                  <ToolIcon type="undo" />
                 </button>
+                {lastEditedPanelRedo ? (
+                  <button
+                    className={styles.activityIconButton}
+                    type="button"
+                    aria-label="Visszavonas ujraalkalmazasa"
+                    title={`Visszavonas ujraalkalmazasa: ${lastEditedPanelRedo.actionLabel}`}
+                    onClick={() => void handleRedoLastEditedPanelChange()}
+                    disabled={!isReady || !lastEditedPanelRedo || isEditorBusy}
+                  >
+                    <ToolIcon type="redo" />
+                  </button>
+                ) : null}
               </div>
               <div className={styles.activityMeta}>
                 Elfogadatlan generalt blokk: {generatedUnacceptedCount}/{MAX_UNACCEPTED_GENERATED_BLOCKS}
               </div>
               {lastEditedPanelUndo ? <div className={styles.activityMeta}>Visszaallithato: {lastEditedPanelUndo.actionLabel}</div> : null}
+              {lastEditedPanelRedo ? <div className={styles.activityMeta}>Ujraalkalmazhato: {lastEditedPanelRedo.actionLabel}</div> : null}
               {batchFeedback ? <div className={styles.activityMeta}>{batchFeedback}</div> : null}
               {undoFeedback ? <div className={styles.activityMeta}>{undoFeedback}</div> : null}
             </div>
