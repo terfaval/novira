@@ -52,15 +52,6 @@ type BookEditForm = {
   description: string;
   icon: string;
 };
-type SourceEditForm = {
-  sourceName: string;
-  sourceUrl: string;
-  sourceLicenseUrl: string;
-  sourceWorkId: string;
-  sourceSha256: string;
-  sourceRetrievedAt: string;
-};
-type AdminEditMode = "book" | "source";
 
 type GenerateErrorState = {
   blockId: string;
@@ -761,25 +752,6 @@ function toBookEditForm(data: BookDashboardData): BookEditForm {
     year: inferBookYear(data.book),
     description: data.book.description ?? "",
     icon: data.book.cover_slug ?? data.book.background_slug ?? "",
-  };
-}
-
-function toDatetimeLocalValue(value: string | null | undefined): string {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const timezoneOffsetMs = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 16);
-}
-
-function toSourceEditForm(data: BookDashboardData): SourceEditForm {
-  return {
-    sourceName: data.book.source_name ?? "",
-    sourceUrl: data.book.source_url ?? "",
-    sourceLicenseUrl: data.book.source_license_url ?? "",
-    sourceWorkId: data.book.source_work_id ?? "",
-    sourceSha256: data.book.source_original_sha256 ?? "",
-    sourceRetrievedAt: toDatetimeLocalValue(data.book.source_retrieved_at ?? ""),
   };
 }
 
@@ -2199,21 +2171,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     description: "",
     icon: "",
   });
-  const [sourceEditForm, setSourceEditForm] = useState<SourceEditForm>({
-    sourceName: "",
-    sourceUrl: "",
-    sourceLicenseUrl: "",
-    sourceWorkId: "",
-    sourceSha256: "",
-    sourceRetrievedAt: "",
-  });
-  const [adminEditMode, setAdminEditMode] = useState<AdminEditMode>("book");
   const [isEditSaving, setIsEditSaving] = useState(false);
-  const [isSourceEditSaving, setIsSourceEditSaving] = useState(false);
   const [isSummaryGenerating, setIsSummaryGenerating] = useState(false);
   const [isYearInferring, setIsYearInferring] = useState(false);
   const [editFeedback, setEditFeedback] = useState<string | null>(null);
-  const [sourceEditFeedback, setSourceEditFeedback] = useState<string | null>(null);
   const [store, setStore] = useState<DashboardViewStore>({
     viewState: "workbench",
     panelMode: "single",
@@ -2324,7 +2285,6 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         const data = await fetchBookDashboardData(supabase, context.resolvedBookId);
         setState({ status: "ready", userId: identity.userId, role: identity.role, data });
         setEditForm(toBookEditForm(data));
-        setSourceEditForm(toSourceEditForm(data));
 
         if (opts?.keepCurrentView) {
           if (data.completion.isComplete) {
@@ -3434,60 +3394,6 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     setIsEditSaving(false);
     await loadDashboard({ keepCurrentView: true });
   }, [bookId, editForm, loadDashboard, state, supabase]);
-
-  const handleSourceEditSubmit = useCallback(async () => {
-    if (state.status !== "ready" || state.role !== "admin") return;
-
-    const sourceName = sourceEditForm.sourceName.trim();
-    const sourceUrl = sourceEditForm.sourceUrl.trim();
-    const sourceLicenseUrl = sourceEditForm.sourceLicenseUrl.trim();
-    const sourceWorkId = sourceEditForm.sourceWorkId.trim();
-    const sourceSha256 = sourceEditForm.sourceSha256.trim();
-    const sourceRetrievedAt = sourceEditForm.sourceRetrievedAt.trim();
-
-    if (sourceUrl && !/^https?:\/\//i.test(sourceUrl)) {
-      setSourceEditFeedback("A forras URL csak http vagy https lehet.");
-      return;
-    }
-    if (sourceLicenseUrl && !/^https?:\/\//i.test(sourceLicenseUrl)) {
-      setSourceEditFeedback("A licenc URL csak http vagy https lehet.");
-      return;
-    }
-
-    let sourceRetrievedAtIso: string | null = null;
-    if (sourceRetrievedAt) {
-      const parsed = new Date(sourceRetrievedAt);
-      if (Number.isNaN(parsed.getTime())) {
-        setSourceEditFeedback("A letoltes ideje ervenytelen datum.");
-        return;
-      }
-      sourceRetrievedAtIso = parsed.toISOString();
-    }
-
-    setSourceEditFeedback(null);
-    setIsSourceEditSaving(true);
-
-    const payload = {
-      source_name: sourceName || null,
-      source_url: sourceUrl || null,
-      source_license_url: sourceLicenseUrl || null,
-      source_work_id: sourceWorkId || null,
-      source_original_sha256: sourceSha256 || null,
-      source_retrieved_at: sourceRetrievedAtIso,
-    };
-
-    const booksTable = supabase.from("books") as any;
-    const { error } = await booksTable.update(payload).eq("id", bookId).eq("user_id", state.userId);
-    if (error) {
-      setSourceEditFeedback(error.message || "Sikertelen forras mentes.");
-      setIsSourceEditSaving(false);
-      return;
-    }
-
-    setSourceEditFeedback("Forras adatok mentve.");
-    setIsSourceEditSaving(false);
-    await loadDashboard({ keepCurrentView: true });
-  }, [bookId, loadDashboard, sourceEditForm, state, supabase]);
 
   const handleGenerateSummary = useCallback(async () => {
     if (state.status !== "ready" || state.role !== "admin") return;
@@ -4836,12 +4742,12 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const pageStyle = { "--panel-accent-color": panelAccentColor } as CSSProperties;
   const renderBookMetaSection = () => {
     if (state.status !== "ready" || state.role !== "admin") return null;
-    const sourceName = sourceEditForm.sourceName.trim() || "lokalis_feltoltes";
-    const sourceUrl = sourceEditForm.sourceUrl.trim() || null;
-    const sourceRetrievedAt = sourceEditForm.sourceRetrievedAt.trim() || null;
-    const sourceLicenseUrl = sourceEditForm.sourceLicenseUrl.trim() || null;
-    const sourceWorkId = sourceEditForm.sourceWorkId.trim() || null;
-    const sourceSha256 = sourceEditForm.sourceSha256.trim() || null;
+    const sourceName = state.data.book.source_name?.trim() || "lokalis_feltoltes";
+    const sourceUrl = state.data.book.source_url?.trim() || null;
+    const sourceRetrievedAt = state.data.book.source_retrieved_at ?? null;
+    const sourceLicenseUrl = state.data.book.source_license_url?.trim() || null;
+    const sourceWorkId = state.data.book.source_work_id?.trim() || null;
+    const sourceSha256 = state.data.book.source_original_sha256?.trim() || null;
 
     return (
       <section className={`card ${styles.progressCard} ${styles.desktopMetaCard}`}>
@@ -4850,24 +4756,14 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             <button
               className="btn"
               type="button"
-              onClick={() => setAdminEditMode("book")}
-              aria-pressed={adminEditMode === "book"}
+              onClick={handleToggleAdminSourceEditMode}
+              aria-pressed={adminSourceEditMode}
             >
-              Konyv adatok
-            </button>
-            <button
-              className="btn"
-              type="button"
-              onClick={() => setAdminEditMode("source")}
-              aria-pressed={adminEditMode === "source"}
-            >
-              Forras szerkesztes
+              {adminSourceEditMode ? "Forras szerkesztes: aktiv" : "Forras szerkesztes"}
             </button>
           </div>
 
-          {adminEditMode === "book" ? (
-            <>
-              <div className={styles.editGrid}>
+          <div className={styles.editGrid}>
                 <label className={styles.editField}>
                   <span>Cim</span>
                   <input
@@ -4905,134 +4801,53 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                     placeholder="pl. golyakalifa"
                   />
                 </label>
-              </div>
+          </div>
 
-              <label className={styles.editField}>
-                <span>Rovid leiras</span>
-                <textarea
-                  className={styles.editTextarea}
-                  value={editForm.description}
-                  onChange={(event) => setEditForm((prev) => ({ ...prev, description: event.target.value }))}
-                  placeholder="2 mondatos osszefoglalo."
-                />
-              </label>
+          <label className={styles.editField}>
+            <span>Rovid leiras</span>
+            <textarea
+              className={styles.editTextarea}
+              value={editForm.description}
+              onChange={(event) => setEditForm((prev) => ({ ...prev, description: event.target.value }))}
+              placeholder="2 mondatos osszefoglalo."
+            />
+          </label>
 
-              <div className={styles.editActions}>
-                <button className="btn" type="button" onClick={handleGenerateSummary} disabled={isSummaryGenerating}>
-                  {isSummaryGenerating ? "Generalas..." : "Leiras generalasa"}
-                </button>
-                <button className="btn" type="button" onClick={handleInferPublicationYear} disabled={isYearInferring}>
-                  {isYearInferring ? "AI evbecsles..." : "Ev becslese (AI)"}
-                </button>
-              </div>
+          <div className={styles.editActions}>
+            <button className="btn" type="button" onClick={handleGenerateSummary} disabled={isSummaryGenerating}>
+              {isSummaryGenerating ? "Generalas..." : "Leiras generalasa"}
+            </button>
+            <button className="btn" type="button" onClick={handleInferPublicationYear} disabled={isYearInferring}>
+              {isYearInferring ? "AI evbecsles..." : "Ev becslese (AI)"}
+            </button>
+          </div>
 
-              {iconPreviewPath ? (
-                <div className={styles.iconPreview}>
-                  <div className={styles.iconPreviewImage} style={{ backgroundImage: iconPreviewPath }} />
-                  <span>{iconPreviewSlug}</span>
-                </div>
-              ) : null}
+          {iconPreviewPath ? (
+            <div className={styles.iconPreview}>
+              <div className={styles.iconPreviewImage} style={{ backgroundImage: iconPreviewPath }} />
+              <span>{iconPreviewSlug}</span>
+            </div>
+          ) : null}
 
-              {editFeedback ? <div className={styles.editFeedback}>{editFeedback}</div> : null}
+          {editFeedback ? <div className={styles.editFeedback}>{editFeedback}</div> : null}
 
-              <div className={styles.editActions}>
-                <button className="btn" type="button" onClick={handleEditSubmit} disabled={isEditSaving}>
-                  {isEditSaving ? "Mentese..." : "Mentes"}
-                </button>
-                <button
-                  className="btn"
-                  type="button"
-                  onClick={() => {
-                    if (state.status !== "ready") return;
-                    setEditFeedback(null);
-                    setEditForm(toBookEditForm(state.data));
-                  }}
-                  disabled={isEditSaving}
-                >
-                  Visszaallitas
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className={styles.editGrid}>
-                <label className={styles.editField}>
-                  <span>Forras neve</span>
-                  <input
-                    className="input"
-                    value={sourceEditForm.sourceName}
-                    onChange={(event) => setSourceEditForm((prev) => ({ ...prev, sourceName: event.target.value }))}
-                    placeholder="pl. project_gutenberg"
-                  />
-                </label>
-                <label className={styles.editField}>
-                  <span>Work ID</span>
-                  <input
-                    className="input"
-                    value={sourceEditForm.sourceWorkId}
-                    onChange={(event) => setSourceEditForm((prev) => ({ ...prev, sourceWorkId: event.target.value }))}
-                    placeholder="pl. 23962"
-                  />
-                </label>
-                <label className={styles.editField}>
-                  <span>Forras URL</span>
-                  <input
-                    className="input"
-                    value={sourceEditForm.sourceUrl}
-                    onChange={(event) => setSourceEditForm((prev) => ({ ...prev, sourceUrl: event.target.value }))}
-                    placeholder="https://..."
-                  />
-                </label>
-                <label className={styles.editField}>
-                  <span>Licenc URL</span>
-                  <input
-                    className="input"
-                    value={sourceEditForm.sourceLicenseUrl}
-                    onChange={(event) => setSourceEditForm((prev) => ({ ...prev, sourceLicenseUrl: event.target.value }))}
-                    placeholder="https://..."
-                  />
-                </label>
-                <label className={styles.editField}>
-                  <span>Letoltve</span>
-                  <input
-                    className="input"
-                    type="datetime-local"
-                    value={sourceEditForm.sourceRetrievedAt}
-                    onChange={(event) => setSourceEditForm((prev) => ({ ...prev, sourceRetrievedAt: event.target.value }))}
-                  />
-                </label>
-                <label className={styles.editField}>
-                  <span>Original SHA-256</span>
-                  <input
-                    className="input"
-                    value={sourceEditForm.sourceSha256}
-                    onChange={(event) => setSourceEditForm((prev) => ({ ...prev, sourceSha256: event.target.value }))}
-                    placeholder="hex..."
-                  />
-                </label>
-              </div>
-
-              {sourceEditFeedback ? <div className={styles.editFeedback}>{sourceEditFeedback}</div> : null}
-
-              <div className={styles.editActions}>
-                <button className="btn" type="button" onClick={handleSourceEditSubmit} disabled={isSourceEditSaving}>
-                  {isSourceEditSaving ? "Forras mentes..." : "Forras mentes"}
-                </button>
-                <button
-                  className="btn"
-                  type="button"
-                  onClick={() => {
-                    if (state.status !== "ready") return;
-                    setSourceEditFeedback(null);
-                    setSourceEditForm(toSourceEditForm(state.data));
-                  }}
-                  disabled={isSourceEditSaving}
-                >
-                  Visszaallitas
-                </button>
-              </div>
-            </>
-          )}
+          <div className={styles.editActions}>
+            <button className="btn" type="button" onClick={handleEditSubmit} disabled={isEditSaving}>
+              {isEditSaving ? "Mentese..." : "Mentes"}
+            </button>
+            <button
+              className="btn"
+              type="button"
+              onClick={() => {
+                if (state.status !== "ready") return;
+                setEditFeedback(null);
+                setEditForm(toBookEditForm(state.data));
+              }}
+              disabled={isEditSaving}
+            >
+              Visszaallitas
+            </button>
+          </div>
 
           <section className={styles.sourcePanel} aria-label="Forras es licenc">
             <div className={styles.sourcePanelTitle}>Forras es licenc (elozet)</div>

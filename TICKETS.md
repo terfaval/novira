@@ -61,6 +61,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-BOOK-ADMIN-SOURCE-EDIT-TOGGLE-ON-EDITED-PANEL
+- Goal: Replace Book admin `Forras szerkesztes` metadata editor with source-text edit toggle behavior so admin edits source block text directly in the `Szerkesztett` panel, while keeping source provenance as preview-only metadata.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `SPEC.md`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
 - Ticket: ADHOC-HOME-REGISTERED-USER-PLUS-ADD-BOOK-ACCESS
 - Goal: Make Home `+` add-book action available to registered users (non-guest), including mobile visibility, and allow upload/import endpoints for non-guest authenticated users.
 - Files modified: `app/page.tsx`, `app/upload/page.tsx`, `app/api/upload/route.ts`, `app/api/import/external/route.ts`, `app/globals.css`, `lib/auth/identity.ts`, `SPEC.md`, `DECISIONS.md`, `SECURITY.md`, `TICKETS.md`

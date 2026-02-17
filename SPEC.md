@@ -40,9 +40,9 @@
   - admin sees all books.
 - Public base book editing rule:
   - if a user opens another user's public base book, the system auto-creates/reuses a user-owned fork ("sajat olvasat") and opens that fork for editing.
-- Book page admin edit panel has two explicit modes:
-  - `Konyv adatok` (title/author/year/description/icon),
-  - `Forras szerkesztes` (source provenance fields).
+- Book page admin edit panel keeps `Konyv adatok` editing.
+- `Forras szerkesztes` on the admin panel toggles source-text editing mode in the `Szerkesztett` content panel (admin edits block `original_text` there).
+- Source provenance fields (`source_name`, `source_url`, license/work-id/hash/retrieved_at) are shown as preview metadata on the admin panel.
 
 ## UI Icon Policy
 - UI icons must be rendered only through `src/ui/icons/Icon.tsx`.
