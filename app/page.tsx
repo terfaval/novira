@@ -104,7 +104,7 @@ export default function Page() {
                   />
                 ) : (
                   <button type="button" className="btn" onClick={() => void handleLogout()} disabled={logoutBusy}>
-                    {logoutBusy ? "Kilepes..." : "Kilepes"}
+                    {logoutBusy ? "Kilépés..." : "Kilépés"}
                   </button>
                 )}
               </div>

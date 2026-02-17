@@ -40,7 +40,7 @@ export async function importProjectGutenbergHtmlZip(workId: number): Promise<Pro
   const zip = await JSZip.loadAsync(fetched.buffer);
   const htmlEntry = discoverMainHtmlEntry(zip);
   if (!htmlEntry) {
-    throw new Error("A Project Gutenberg ZIP nem tartalmaz feldolgozhato HTML fajlt.");
+    throw new Error("A Project Gutenberg ZIP nem tartalmaz feldolgozható HTML fájlt.");
   }
 
   const rawHtmlBuffer = await htmlEntry.async("nodebuffer");
@@ -52,7 +52,7 @@ export async function importProjectGutenbergHtmlZip(workId: number): Promise<Pro
   canonical = splitByJourneyToWestChapterHeadings(canonical);
 
   if (canonical.chapters.length === 0) {
-    throw new Error("A letoltott forrasbol nem sikerult fejezet/blokk tartalmat kinyerni.");
+    throw new Error("A letöltött forrásból nem sikerült fejezet/blokk tartalmat kinyerni.");
   }
 
   return {

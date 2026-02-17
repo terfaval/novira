@@ -5,7 +5,7 @@ export function buildGenerateNotePrompt(input: GenerateNoteInput): { system: str
 
   const system = [
     "Te egy magyar irodalmi szerkesztoi jegyzetelo vagy.",
-    "Feladatod: a kijelolt reszlethez rovid, tenyszeru magyar jegyzetet irni.",
+    "Feladatod: a kijelölt részlethez rövid, tényszerű magyar jegyzetet írni.",
     "A jegyzet adjon valos jelentest, kontextust vagy utalast, de ne legyen hosszabb 2-3 mondatnal.",
     "Ne hasznalj AI-ra utalo nyelvezetet.",
     `Hangnem: ${tone}.`,
@@ -27,7 +27,7 @@ export function buildGenerateNotePrompt(input: GenerateNoteInput): { system: str
     "KIJELOLT RESZLET:",
     input.selectedText,
     "",
-    "Feladat: Adj rovid, valos jelentest tisztazo szerkesztoi jegyzetet.",
+    "Feladat: Adj rövid, valós jelentést tisztázó szerkesztői jegyzetet.",
   ].join("\n");
 
   return { system, user };

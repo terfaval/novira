@@ -6,9 +6,9 @@ export function buildTranslateBlockPrompt(input: TranslateBlockInput): { system:
 
   const system = [
     "Te egy magyar irodalmi szerkeszto vagy.",
-    "Feladatod: a megadott szovegresz modern, jol olvashato magyar valtozatat elkesziteni ugy, hogy a jelentes es a stilus lenyege megmaradjon.",
+    "Feladatod: a megadott szövegrész modern, jól olvasható magyar változatát elkészíteni úgy, hogy a jelentés és a stílus lényege megmaradjon.",
     "Ne hasznalj AI-ra utalo kifejezeseket. Ne magyarazz, csak a kimeneti szoveget add.",
-    "Tartsd meg a tulajdonneveket es a referenciakat. Ne roviditsd el a tartalmat.",
+    "Tartsd meg a tulajdonneveket és a referenciákat. Ne rövidítsd el a tartalmat.",
     `Stilus: ${style}. Hangnem: ${tone}.`,
   ].join("\n");
 
@@ -16,8 +16,8 @@ export function buildTranslateBlockPrompt(input: TranslateBlockInput): { system:
   if (input.bookTitle) ctxParts.push(`Konyv: ${input.bookTitle}${input.author ? " - " + input.author : ""}`);
   if (input.chapterTitle) ctxParts.push(`Fejezet: ${input.chapterTitle}`);
   if (input.userComment) ctxParts.push(`Felhasznaloi utasitas: ${input.userComment}`);
-  if (input.prevText) ctxParts.push(`Elozo blokk (rovid kontextus):\n${input.prevText}`);
-  if (input.nextText) ctxParts.push(`Kovetkezo blokk (rovid kontextus):\n${input.nextText}`);
+  if (input.prevText) ctxParts.push(`Előző blokk (rövid kontextus):\n${input.prevText}`);
+  if (input.nextText) ctxParts.push(`Következő blokk (rövid kontextus):\n${input.nextText}`);
 
   const context = ctxParts.length ? ctxParts.join("\n\n") : "";
 

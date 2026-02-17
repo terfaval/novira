@@ -126,7 +126,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
     const auth = await supabase.auth.getUser();
     if (auth.error || !auth.data.user) {
       return NextResponse.json(
-        { ok: false, error: err("UNAUTHORIZED", "Ervenytelen munkamenet.") },
+        { ok: false, error: err("UNAUTHORIZED", "Érvénytelen munkamenet.") },
         { status: 401 }
       );
     }
@@ -161,7 +161,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
         .single();
       if (bookErr || !bookRow) {
         return NextResponse.json(
-          { ok: false, error: err("BAD_REQUEST", "A konyv nem talalhato a felhasznalohoz.") },
+          { ok: false, error: err("BAD_REQUEST", "A könyv nem található a felhasználóhoz.") },
           { status: 400 }
         );
       }
@@ -210,7 +210,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
         .single();
       if (bookErr || !bookRow) {
         return NextResponse.json(
-          { ok: false, error: err("BAD_REQUEST", "A konyv nem talalhato a felhasznalohoz.") },
+          { ok: false, error: err("BAD_REQUEST", "A könyv nem található a felhasználóhoz.") },
           { status: 400 }
         );
       }
@@ -299,7 +299,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
         .single();
       if (bookErr || !bookRow) {
         return NextResponse.json(
-          { ok: false, error: err("BAD_REQUEST", "A konyv nem talalhato a felhasznalohoz.") },
+          { ok: false, error: err("BAD_REQUEST", "A könyv nem található a felhasználóhoz.") },
           { status: 400 }
         );
       }
@@ -312,7 +312,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
         .single();
       if (chapterErr || !chapterRow) {
         return NextResponse.json(
-          { ok: false, error: err("BAD_REQUEST", "A fejezet nem talalhato a konyvben.") },
+          { ok: false, error: err("BAD_REQUEST", "A fejezet nem található a könyvben.") },
           { status: 400 }
         );
       }

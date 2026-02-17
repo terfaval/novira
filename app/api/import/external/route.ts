@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   const supabase = getSupabaseServerClient(accessToken);
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   if (authErr || !authData.user) {
-    return NextResponse.json({ ok: false, message: "Ervenytelen munkamenet." }, { status: 401 });
+    return NextResponse.json({ ok: false, message: "Érvénytelen munkamenet." }, { status: 401 });
   }
   if (isGuestUser(authData.user)) {
     return NextResponse.json({ ok: false, message: "Regisztralt felhasznalo szukseges." }, { status: 403 });
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     imported = await importProjectGutenbergHtmlZip(body.workId);
   } catch (error: any) {
     return NextResponse.json(
-      { ok: false, message: error?.message ?? "A kulso forras letoltese/feldolgozasa sikertelen." },
+      { ok: false, message: error?.message ?? "A külső forrás letöltése/feldolgozása sikertelen." },
       { status: 500 }
     );
   }
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     .upload(storagePath, imported.zipBuffer, { upsert: false, contentType: "application/zip" });
   if (uploadRes.error) {
     return NextResponse.json(
-      { ok: false, message: `A forrasfajl tarolasa sikertelen: ${uploadRes.error.message}` },
+      { ok: false, message: `A forrásfájl tárolása sikertelen: ${uploadRes.error.message}` },
       { status: 500 }
     );
   }
@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
       zipSha256: zipHash,
     });
   } catch (err: any) {
-    const message = err?.message ?? "Sikertelen kulso forras import.";
+    const message = err?.message ?? "Sikertelen külső forrás import.";
     if (bookId) {
       await setBookStatus(supabase, bookId, "failed", message);
     } else {
@@ -171,10 +171,10 @@ function hasMissingOptionalSourceColumns(error: { message?: string } | null): bo
 }
 
 function mapInsertError(error: { message?: string } | null): Error {
-  const raw = error?.message ?? "Nem sikerult letrehozni a konyv rekordot.";
+  const raw = error?.message ?? "Nem sikerült létrehozni a könyv rekordot.";
   const normalized = raw.toLowerCase();
   if (normalized.includes("row-level security")) {
-    return new Error("Nincs jogosultsag a konyv letrehozasahoz (RLS policy hiba).");
+    return new Error("Nincs jogosultság a könyv létrehozásához (RLS policy hiba).");
   }
   return new Error(raw);
 }
@@ -192,7 +192,7 @@ async function setBookStatus(
 
   const { error } = await supabase.from("books").update(payload).eq("id", bookId);
   if (error) {
-    throw new Error(`Nem sikerult frissiteni a konyv statuszt: ${error.message}`);
+    throw new Error(`Nem sikerült frissíteni a könyv státuszt: ${error.message}`);
   }
 }
 

@@ -200,7 +200,8 @@ export default function LandingPage() {
             <span>Megőrzött hang.</span>
           </h1>
           <p className="landing-hero-sub">
-            A Novira digitális irodalmi műhely. Teljes műveket tesz érthetőbbé - a stílus és jelentés megőrzésével.
+            A Novira digitális irodalmi műhely. Teljes műveket tesz érthetőbbé 
+            a stílus és jelentés megőrzésével.
           </p>
           <div className="landing-cta-row">
             <button type="button" className="btn" onClick={() => void handleLoginClick()} disabled={loginBusy || guestBusy}>

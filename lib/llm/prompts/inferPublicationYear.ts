@@ -6,7 +6,7 @@ export function buildInferPublicationYearPrompt(
   const chapterList =
     input.chapterTitles && input.chapterTitles.length > 0
       ? input.chapterTitles.slice(0, 10).map((title, index) => `${index + 1}. ${title}`).join("\n")
-      : "Nincs fejezetcim adat.";
+      : "Nincs fejezetcím adat.";
 
   const sampleText = (input.sampleText ?? "").trim();
   const sampleSnippet = sampleText ? sampleText.slice(0, 1400) : "Nincs szovegreszlet.";
@@ -20,11 +20,11 @@ export function buildInferPublicationYearPrompt(
   ].join("\n");
 
   const user = [
-    `Cim: ${input.bookTitle ?? "Ismeretlen cim"}`,
-    `Szerzo: ${input.author ?? "Ismeretlen szerzo"}`,
+    `Cím: ${input.bookTitle ?? "Ismeretlen cím"}`,
+    `Szerző: ${input.author ?? "Ismeretlen szerző"}`,
     `Leiras: ${input.description ?? ""}`,
-    `Forras fajlnev: ${input.sourceFilename ?? ""}`,
-    "Fejezetcimek:",
+    `Forrás fájlnév: ${input.sourceFilename ?? ""}`,
+    "Fejezetcímek:",
     chapterList,
     "Szovegreszlet:",
     sampleSnippet,

@@ -45,7 +45,7 @@ export class OpenAiProvider implements LlmProvider {
         { role: "user", content: user },
       ],
       temperature: 0.2,
-      max_tokens: maxOutputTokens,
+      max_completion_tokens: maxOutputTokens,
     });
 
     const text = (resp?.choices?.[0]?.message?.content ?? "").trim();
@@ -72,7 +72,7 @@ export class OpenAiProvider implements LlmProvider {
         { role: "user", content: user },
       ],
       temperature: 0.2,
-      max_tokens: maxOutputTokens,
+      max_completion_tokens: maxOutputTokens,
     });
 
     const noteText = (resp?.choices?.[0]?.message?.content ?? "").trim();
@@ -92,7 +92,7 @@ export class OpenAiProvider implements LlmProvider {
     const chapterList =
       input.chapterTitles && input.chapterTitles.length > 0
         ? input.chapterTitles.slice(0, 8).map((title, index) => `${index + 1}. ${title}`).join("\n")
-        : "Nincs fejezetcim adat.";
+        : "Nincs fejezetcím adat.";
 
     const sampleText = (input.sampleText ?? "").trim();
     const sampleSnippet = sampleText ? sampleText.slice(0, 1200) : "Nincs szovegreszlet.";
@@ -103,14 +103,14 @@ export class OpenAiProvider implements LlmProvider {
         {
           role: "system",
           content:
-            "Magyar irodalmi szerkeszto vagy. Feladatod: rovid, semleges, ketmondatos osszefoglalo keszitese.",
+            "Magyar irodalmi szerkesztő vagy. Feladatod: rövid, semleges, kétmondatos összefoglaló készítése.",
         },
         {
           role: "user",
           content: [
-            `Cim: ${input.bookTitle ?? "Ismeretlen cim"}`,
-            `Szerzo: ${input.author ?? "Ismeretlen szerzo"}`,
-            "Fejezetcimek (ha vannak):",
+            `Cím: ${input.bookTitle ?? "Ismeretlen cím"}`,
+            `Szerző: ${input.author ?? "Ismeretlen szerző"}`,
+            "Fejezetcímek (ha vannak):",
             chapterList,
             "Reszlet a szovegbol:",
             sampleSnippet,
@@ -119,7 +119,7 @@ export class OpenAiProvider implements LlmProvider {
         },
       ],
       temperature: 0.2,
-      max_tokens: 180,
+      max_completion_tokens: 180,
     });
 
     const summaryText = (resp?.choices?.[0]?.message?.content ?? "").trim();
@@ -144,7 +144,7 @@ export class OpenAiProvider implements LlmProvider {
         { role: "user", content: user },
       ],
       temperature: 0.1,
-      max_tokens: 120,
+      max_completion_tokens: 120,
     });
 
     const raw = (resp?.choices?.[0]?.message?.content ?? "").trim();
@@ -188,7 +188,7 @@ export class OpenAiProvider implements LlmProvider {
         { role: "user", content: user },
       ],
       temperature: 0.2,
-      max_tokens: maxOutputTokens,
+      max_completion_tokens: maxOutputTokens,
     });
 
     const chapterTitle = (resp?.choices?.[0]?.message?.content ?? "").replace(/^["'`]+|["'`]+$/g, "").trim();
@@ -204,22 +204,22 @@ function buildGenerateChapterTitlePrompt(input: GenerateChapterTitleInput): { sy
 
   const system = [
     "Te egy magyar irodalmi szerkeszto vagy.",
-    "Feladatod: magyar, rovid fejezetcim javaslasa.",
-    "Ha a meglevo cim ertelmes es csak forditani kell, add meg rovid magyar forditasat.",
-    "Ha a cim hianyzik, csak szam, vagy altalanos fejezet-sorszam, adj uj rovid cimet a fejezet tartalma alapjan.",
-    "A kimenet csak egyetlen cim legyen, magyarazat nelkul.",
-    "A cim 2-8 szobol alljon, max 64 karakterrel.",
+    "Feladatod: magyar, rövid fejezetcím javaslása.",
+    "Ha a meglévő cím értelmes és csak fordítani kell, add meg rövid magyar fordítását.",
+    "Ha a cím hiányzik, csak szám, vagy általános fejezet-sorszám, adj új rövid címet a fejezet tartalma alapján.",
+    "A kimenet csak egyetlen cím legyen, magyarázat nélkül.",
+    "A cím 2-8 szóból álljon, max 64 karakterrel.",
   ].join("\n");
 
   const userParts = [
-    `Konyv: ${input.bookTitle ?? "Ismeretlen cim"}`,
-    `Szerzo: ${input.author ?? "Ismeretlen szerzo"}`,
+    `Könyv: ${input.bookTitle ?? "Ismeretlen cím"}`,
+    `Szerző: ${input.author ?? "Ismeretlen szerző"}`,
     `Fejezet index: ${input.chapterIndex}`,
-    `Aktualis fejezetcim: ${currentTitle || "(nincs)"}`,
+    `Aktuális fejezetcím: ${currentTitle || "(nincs)"}`,
     `Felhasznaloi komment: ${(input.userComment ?? "").trim() || "(nincs)"}`,
     "Fejezet blokk-reszlet:",
     sampleSnippet,
-    "Adj egyetlen vegso cimet.",
+    "Adj egyetlen végső címet.",
   ];
 
   return { system, user: userParts.join("\n\n") };

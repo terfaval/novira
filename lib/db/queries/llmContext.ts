@@ -26,7 +26,7 @@ export async function getLlmContextForBlock(
     .single();
 
   if (blockErr) throw new Error(`Nem sikerult beolvasni a blokkot: ${blockErr.message}`);
-  if (!blockRow) throw new Error("A blokk nem talalhato.");
+  if (!blockRow) throw new Error("A blokk nem található.");
 
   const chapterId = blockRow.chapter_id;
   const blockIndex = blockRow.block_index;
@@ -46,7 +46,7 @@ export async function getLlmContextForBlock(
     .eq("id", bookId)
     .maybeSingle();
 
-  if (bookErr) throw new Error(`Nem sikerult beolvasni a konyvet: ${bookErr.message}`);
+  if (bookErr) throw new Error(`Nem sikerült beolvasni a könyvet: ${bookErr.message}`);
 
   const { data: prevRow } = await supabase
     .from("blocks")

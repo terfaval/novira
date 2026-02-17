@@ -339,8 +339,8 @@ const BOOK_EDITORIAL_ONBOARDING_STEPS: OnboardingStep[] = [
     id: "step_dashboard_modes",
     route: "/book/[id]",
     anchorId: "onb-mode-controls",
-    title: "Workbench es Reader",
-    body: "A Workbench szerkesztéshez való, a Reader csak teljesen elfogadott állapotban érhető el.",
+    title: "Workbench Ä‚Â©s Reader",
+    body: "A Workbench szerkesztÄ‚Â©shez valÄ‚Ĺ‚, a Reader csak teljesen elfogadott Ä‚Ë‡llapotban Ä‚Â©rhetÄąâ€ el.",
     placement: "left",
     completeOn: "mode_toggled",
     skippable: true,
@@ -349,8 +349,8 @@ const BOOK_EDITORIAL_ONBOARDING_STEPS: OnboardingStep[] = [
     id: "step_progress_meaning",
     route: "/book/[id]",
     anchorId: "onb-progress",
-    title: "Completion jelentes",
-    body: "A completion mutatja, hany blokk van elfogadva, es mikor nyilik meg a Reader.",
+    title: "Completion jelentÄ‚Â©se",
+    body: "A completion mutatja, hÄ‚Ë‡ny blokk van elfogadva, Ä‚Â©s mikor nyÄ‚Â­lik meg a Reader.",
     placement: "top",
     completeOn: "next",
     skippable: true,
@@ -360,7 +360,7 @@ const BOOK_EDITORIAL_ONBOARDING_STEPS: OnboardingStep[] = [
     route: "/book/[id]",
     anchorId: "onb-block-actions",
     title: "Blokk munkafolyamat",
-    body: "A folyamat: Generalas, atnezes, majd Elfogad.",
+    body: "A folyamat: GenerÄ‚Ë‡lÄ‚Ë‡s, Ä‚Ë‡tnÄ‚Â©zÄ‚Â©s, majd Elfogad.",
     placement: "left",
     completeOn: "next",
     skippable: true,
@@ -369,8 +369,8 @@ const BOOK_EDITORIAL_ONBOARDING_STEPS: OnboardingStep[] = [
     id: "step_generate",
     route: "/book/[id]",
     anchorId: "onb-generate",
-    title: "Generalas",
-    body: "A Generálás új szerkesztett változatot készít az adott blokkhoz.",
+    title: "GenerÄ‚Ë‡lÄ‚Ë‡s",
+    body: "A GenerÄ‚Ë‡lÄ‚Ë‡s Ä‚Ĺźj szerkesztett vÄ‚Ë‡ltozatot kÄ‚Â©szÄ‚Â­t az adott blokkhoz.",
     placement: "left",
     completeOn: "generate_success",
     skippable: true,
@@ -379,8 +379,8 @@ const BOOK_EDITORIAL_ONBOARDING_STEPS: OnboardingStep[] = [
     id: "step_accept",
     route: "/book/[id]",
     anchorId: "onb-accept",
-    title: "Elfogadas",
-    body: "Az Elfogad gomb a megfelelő változatot rögzített állapotba teszi.",
+    title: "ElfogadÄ‚Ë‡s",
+    body: "Az Elfogad gomb a megfelelÄąâ€ vÄ‚Ë‡ltozatot rÄ‚Â¶gzÄ‚Â­tett Ä‚Ë‡llapotba teszi.",
     placement: "left",
     completeOn: "accept_success",
     skippable: true,
@@ -389,8 +389,8 @@ const BOOK_EDITORIAL_ONBOARDING_STEPS: OnboardingStep[] = [
     id: "step_note_request",
     route: "/book/[id]",
     anchorId: "onb-note-trigger",
-    title: "Jegyzet kerese",
-    body: "Kijelölt szövegreszre kerhetsz magyarazo jegyzetet.",
+    title: "Jegyzet kÄ‚Â©rÄ‚Â©se",
+    body: "KijelÄ‚Â¶lt szÄ‚Â¶vegrÄ‚Â©szre kÄ‚Â©rhetsz magyarÄ‚Ë‡zÄ‚Ĺ‚ jegyzetet.",
     placement: "top",
     completeOn: "note_requested",
     skippable: true,
@@ -399,8 +399,8 @@ const BOOK_EDITORIAL_ONBOARDING_STEPS: OnboardingStep[] = [
     id: "step_note_decision",
     route: "/book/[id]",
     anchorId: "onb-note-suggestion",
-    title: "Javaslat elfogadasa vagy elvetese",
-    body: "A javaslatot elfogadhatod vagy elutasithatod a tooltipben.",
+    title: "Javaslat elfogadÄ‚Ë‡sa vagy elvetÄ‚Â©se",
+    body: "A javaslatot elfogadhatod vagy elutasÄ‚Â­thatod a tooltipben.",
     placement: "top",
     completeOn: "note_decided",
     skippable: true,
@@ -409,8 +409,8 @@ const BOOK_EDITORIAL_ONBOARDING_STEPS: OnboardingStep[] = [
     id: "step_chapter_edit",
     route: "/book/[id]",
     anchorId: "onb-chapter-header",
-    title: "Fejezet cím szerkesztése",
-    body: "A fejezetcím inline szerkesztheto es azonnal mentheto.",
+    title: "Fejezet cÄ‚Â­m szerkesztÄ‚Â©se",
+    body: "A fejezetcÄ‚Â­m inline szerkeszthetÄąâ€ Ä‚Â©s azonnal menthetÄąâ€.",
     placement: "bottom",
     completeOn: "chapter_saved",
     skippable: true,
@@ -419,8 +419,8 @@ const BOOK_EDITORIAL_ONBOARDING_STEPS: OnboardingStep[] = [
     id: "step_done",
     route: "/book/[id]",
     anchorId: "onb-replay",
-    title: "Onboarding kesz",
-    body: "Az onboarding barmikor ujraindithato az erre kijelölt gombbal.",
+    title: "Onboarding kÄ‚Â©sz",
+    body: "Az onboarding bÄ‚Ë‡rmikor Ä‚ĹźjraindÄ‚Â­thatÄ‚Ĺ‚ az erre kijelÄ‚Â¶lt gombbal.",
     placement: "left",
     completeOn: "next",
     skippable: false,
@@ -779,20 +779,20 @@ function resolveTopbarIconSlug(book: BookDashboardData["book"]): string {
 function mapGenerateError(status: number, fallbackMessage?: string, retryAfterSeconds?: number | null): string {
   if (status === 429) {
     if (retryAfterSeconds && retryAfterSeconds > 0) {
-      return `Túl sok generálási kérés érkezett. Próbáld újra ${retryAfterSeconds} mp mulva.`;
+      return `TĂ„â€šÄąĹşl sok generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsi kĂ„â€šĂ‚Â©rĂ„â€šĂ‚Â©s Ă„â€šĂ‚Â©rkezett. PrĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld Ă„â€šÄąĹşjra ${retryAfterSeconds} mp mulva.`;
     }
-    return "Tul sok generalasi keres erkezett. Varj egy kicsit, majd próbáld újra.";
+    return "TĂ„â€šÄąĹşl sok generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsi kĂ„â€šĂ‚Â©rĂ„â€šĂ‚Â©s Ă„â€šĂ‚Â©rkezett. VĂ„â€šĂ‹â€ˇrj egy kicsit, majd prĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld Ă„â€šÄąĹşjra.";
   }
   if (status === 400) {
-    return "A blokk most nem generalhato. Ellenőrizd a tartalmat, majd próbáld újra.";
+    return "A blokk most nem generalhato. EllenĂ„Ä…Ă˘â‚¬Ârizd a tartalmat, majd prĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld Ă„â€šÄąĹşjra.";
   }
   if (status >= 500) {
-    return "A generalas most nem elérhető. Próbáld meg pár perc múlva.";
+    return "A generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs most nem elĂ„â€šĂ‚Â©rhetĂ„Ä…Ă˘â‚¬Â. PrĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld meg pĂ„â€šĂ‹â€ˇr perc mĂ„â€šÄąĹşlva.";
   }
   if (fallbackMessage && fallbackMessage.trim()) {
     return fallbackMessage;
   }
-  return "Sikertelen generalas.";
+  return "Sikertelen generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs.";
 }
 
 function parseRetryAfterSeconds(value: string | null): number | null {
@@ -807,66 +807,66 @@ function parseRetryAfterSeconds(value: string | null): number | null {
 
 function mapNoteError(status: number, fallbackMessage?: string): string {
   if (status === 429) {
-    return "Tul sok jegyzetkeres erkezett. Varj egy kicsit, majd próbáld újra.";
+    return "Tul sok jegyzetkeres erkezett. Varj egy kicsit, majd prĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld Ă„â€šÄąĹşjra.";
   }
   if (status === 400) {
-    return "A kijelölt reszlethez most nem kérhető jegyzet. Jelolj ki egy rövidebb szöveget.";
+    return "A kijelĂ„â€šĂ‚Â¶lt reszlethez most nem kĂ„â€šĂ‚Â©rhetĂ„Ä…Ă˘â‚¬Â jegyzet. Jelolj ki egy rĂ„â€šĂ‚Â¶videbb szĂ„â€šĂ‚Â¶veget.";
   }
   if (status >= 500) {
-    return "A jegyzetgeneralas most nem elérhető. Próbáld meg pár perc múlva.";
+    return "A jegyzetgenerĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs most nem elĂ„â€šĂ‚Â©rhetĂ„Ä…Ă˘â‚¬Â. PrĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld meg pĂ„â€šĂ‹â€ˇr perc mĂ„â€šÄąĹşlva.";
   }
   if (fallbackMessage && fallbackMessage.trim()) {
     return fallbackMessage;
   }
-  return "Sikertelen jegyzetgeneralas.";
+  return "Sikertelen jegyzetgenerĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs.";
 }
 
 function mapSummaryError(status: number, fallbackMessage?: string): string {
   if (status === 429) {
-    return "Túl sok leírásgenerálási kérés érkezett. Várj egy kicsit, majd próbáld újra.";
+    return "TĂ„â€šÄąĹşl sok leĂ„â€šĂ‚Â­rĂ„â€šĂ‹â€ˇsgenerĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsi kĂ„â€šĂ‚Â©rĂ„â€šĂ‚Â©s Ă„â€šĂ‚Â©rkezett. VĂ„â€šĂ‹â€ˇrj egy kicsit, majd prĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld Ă„â€šÄąĹşjra.";
   }
   if (status === 400) {
-    return "A leírás most nem generálható ehhez a könyvhöz.";
+    return "A leĂ„â€šĂ‚Â­rĂ„â€šĂ‹â€ˇs most nem generĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€š ehhez a kĂ„â€šĂ‚Â¶nyvhĂ„â€šĂ‚Â¶z.";
   }
   if (status >= 500) {
-    return "A leírásgenerálás most nem elérhető. Próbáld meg pár perc múlva.";
+    return "A leĂ„â€šĂ‚Â­rĂ„â€šĂ‹â€ˇsgenerĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs most nem elĂ„â€šĂ‚Â©rhetĂ„Ä…Ă˘â‚¬Â. PrĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld meg pĂ„â€šĂ‹â€ˇr perc mĂ„â€šÄąĹşlva.";
   }
   if (fallbackMessage && fallbackMessage.trim()) {
     return fallbackMessage;
   }
-  return "Sikertelen leírásgenerálás.";
+  return "Sikertelen leĂ„â€šĂ‚Â­rĂ„â€šĂ‹â€ˇsgenerĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs.";
 }
 
 function mapChapterTitleError(status: number, fallbackMessage?: string): string {
   if (status === 429) {
-    return "Tul sok fejezetcím-generalasi keres erkezett. Varj egy kicsit, majd próbáld újra.";
+    return "TĂ„â€šÄąĹşl sok fejezetcĂ„â€šĂ‚Â­m-generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsi kĂ„â€šĂ‚Â©rĂ„â€šĂ‚Â©s Ă„â€šĂ‚Â©rkezett. VĂ„â€šĂ‹â€ˇrj egy kicsit, majd prĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld Ă„â€šÄąĹşjra.";
   }
   if (status === 400) {
-    return "A fejezetcím most nem generalhato ehhez a fejezethez.";
+    return "A fejezetcĂ„â€šĂ‚Â­m most nem generalhato ehhez a fejezethez.";
   }
   if (status >= 500) {
-    return "A fejezetcím-generalas most nem elérhető. Próbáld meg pár perc múlva.";
+    return "A fejezetcĂ„â€šĂ‚Â­m-generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs most nem elĂ„â€šĂ‚Â©rhetĂ„Ä…Ă˘â‚¬Â. PrĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld meg pĂ„â€šĂ‹â€ˇr perc mĂ„â€šÄąĹşlva.";
   }
   if (fallbackMessage && fallbackMessage.trim()) {
     return fallbackMessage;
   }
-  return "Sikertelen fejezetcím-generálás.";
+  return "Sikertelen fejezetcĂ„â€šĂ‚Â­m-generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs.";
 }
 
 function mapYearInferenceError(status: number, fallbackMessage?: string): string {
   if (status === 429) {
-    return "Tul sok évbecslési keres erkezett. Varj egy kicsit, majd próbáld újra.";
+    return "Tul sok Ă„â€šĂ‚Â©vbecslĂ„â€šĂ‚Â©si keres erkezett. Varj egy kicsit, majd prĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld Ă„â€šÄąĹşjra.";
   }
   if (status === 400) {
-    return "A könyv adatai nem alkalmasak évbecslésre.";
+    return "A kĂ„â€šĂ‚Â¶nyv adatai nem alkalmasak Ă„â€šĂ‚Â©vbecslĂ„â€šĂ‚Â©sre.";
   }
   if (status >= 500) {
-    return "Az AI évbecslés most nem elérhető. Próbáld meg pár perc múlva.";
+    return "Az AI Ă„â€šĂ‚Â©vbecslĂ„â€šĂ‚Â©s most nem elĂ„â€šĂ‚Â©rhetĂ„Ä…Ă˘â‚¬Â. PrĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld meg pĂ„â€šĂ‹â€ˇr perc mĂ„â€šÄąĹşlva.";
   }
   if (fallbackMessage && fallbackMessage.trim()) {
     return fallbackMessage;
   }
-  return "Sikertelen évbecslés.";
+  return "Sikertelen Ă„â€šĂ‚Â©vbecslĂ„â€šĂ‚Â©s.";
 }
 
 async function requestDraftGeneration(args: {
@@ -879,7 +879,7 @@ async function requestDraftGeneration(args: {
   const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;
   if (sessionErr || !accessToken) {
-    throw new Error(sessionErr?.message ?? "Nem található érvényes munkamenet.");
+    throw new Error(sessionErr?.message ?? "Nem talĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€š Ă„â€šĂ‚Â©rvĂ„â€šĂ‚Â©nyes munkamenet.");
   }
 
   const controller = new AbortController();
@@ -904,9 +904,9 @@ async function requestDraftGeneration(args: {
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
-      throw new Error(`A generalas timeout miatt megszakadt (${Math.round(LLM_REQUEST_TIMEOUT_MS / 1000)} mp).`);
+      throw new Error(`A generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs timeout miatt megszakadt (${Math.round(LLM_REQUEST_TIMEOUT_MS / 1000)} mp).`);
     }
-    throw new Error("A generalasi keres kuldese nem sikerült. Probald ujra.");
+    throw new Error("A generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsi kĂ„â€šĂ‚Â©rĂ„â€šĂ‚Â©s kĂ„â€šĂ„ËťldĂ„â€šĂ‚Â©se nem sikerĂ„â€šĂ„Ëťlt. PrĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld Ă„â€šÄąĹşjra.");
   } finally {
     window.clearTimeout(timeoutId);
   }
@@ -918,7 +918,7 @@ async function requestDraftGeneration(args: {
     throw new Error(mapGenerateError(response.status, fallbackMessage, retryAfterSeconds));
   }
   if (!("variant" in payload) || !payload.variant?.text?.trim()) {
-    throw new Error("A generalas ures válasszal tert vissza.");
+    throw new Error("A generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs Ă„â€šĂ„Ëťres vĂ„â€šĂ‹â€ˇlasszal tĂ„â€šĂ‚Â©rt vissza.");
   }
   return payload.variant.text.trim();
 }
@@ -933,7 +933,7 @@ async function requestChapterTitleGeneration(args: {
   const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;
   if (sessionErr || !accessToken) {
-    throw new Error(sessionErr?.message ?? "Nem található érvényes munkamenet.");
+    throw new Error(sessionErr?.message ?? "Nem talĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€š Ă„â€šĂ‚Â©rvĂ„â€šĂ‚Â©nyes munkamenet.");
   }
 
   const response = await fetch("/api/llm", {
@@ -958,7 +958,7 @@ async function requestChapterTitleGeneration(args: {
     throw new Error(mapChapterTitleError(response.status, fallbackMessage));
   }
   const title = payload.chapterTitle.trim();
-  if (!title) throw new Error("Üres fejezetcím érkezett.");
+  if (!title) throw new Error("Ă„â€šÄąâ€şres fejezetcĂ„â€šĂ‚Â­m Ă„â€šĂ‚Â©rkezett.");
   return title.slice(0, 160);
 }
 
@@ -972,7 +972,7 @@ async function requestSelectionNote(args: {
   const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;
   if (sessionErr || !accessToken) {
-    throw new Error(sessionErr?.message ?? "Nem található érvényes munkamenet.");
+    throw new Error(sessionErr?.message ?? "Nem talĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€š Ă„â€šĂ‚Â©rvĂ„â€šĂ‚Â©nyes munkamenet.");
   }
 
   const response = await fetch("/api/llm", {
@@ -1005,7 +1005,7 @@ async function requestBookSummary(args: {
   const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;
   if (sessionErr || !accessToken) {
-    throw new Error(sessionErr?.message ?? "Nem található érvényes munkamenet.");
+    throw new Error(sessionErr?.message ?? "Nem talĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€š Ă„â€šĂ‚Â©rvĂ„â€šĂ‚Â©nyes munkamenet.");
   }
 
   const response = await fetch("/api/llm", {
@@ -1036,7 +1036,7 @@ async function requestPublicationYearInference(args: {
   const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;
   if (sessionErr || !accessToken) {
-    throw new Error(sessionErr?.message ?? "Nem található érvényes munkamenet.");
+    throw new Error(sessionErr?.message ?? "Nem talĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€š Ă„â€šĂ‚Â©rvĂ„â€šĂ‚Â©nyes munkamenet.");
   }
 
   const response = await fetch("/api/llm", {
@@ -1277,7 +1277,7 @@ function groupBlocksByChapter(blocks: DashboardBlock[]): ChapterGroup[] {
       groups.push({
         chapterId: block.chapterId,
         chapterIndex: block.chapterIndex,
-        chapterTitle: block.chapterTitle?.trim() || "Cím nelkul",
+        chapterTitle: block.chapterTitle?.trim() || "CĂ„â€šĂ‚Â­m nelkul",
         blocks: [block],
       });
       continue;
@@ -1441,7 +1441,7 @@ const BlockControls = memo(function BlockControls({
             data-mobile-expanded={mobileExpanded ? "true" : "false"}
             data-onboarding-id="onb-generate"
           >
-            <span>{generateInFlight ? "Generalas..." : "Generalas"}</span>
+            <span>{generateInFlight ? "GenerĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs..." : "GenerÄ‚Ë‡lÄ‚Ë‡s"}</span>
             <ActionIcon type="generate" />
           </button>
           <button
@@ -1463,7 +1463,7 @@ const BlockControls = memo(function BlockControls({
             data-tone="bookmark"
             data-mobile-expanded={mobileExpanded ? "true" : "false"}
           >
-            <span>{hasProgressBookmarkAtThisBlock ? "Haladas itt" : "Haladas jelzo"}</span>
+            <span>{hasProgressBookmarkAtThisBlock ? "HaladÄ‚Ë‡s itt" : "HaladÄ‚Ë‡s jelzo"}</span>
             <Icon name="bookmark" />
           </button>
           <button
@@ -1490,10 +1490,10 @@ const BlockControls = memo(function BlockControls({
         >
           <span>
             {deleteInFlight
-              ? "Törlés..."
+              ? "TĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s..."
               : block.editedVariantId
-                ? "Visszaallitas / törlés"
-                : "Blokk törlése"}
+                ? "Visszaallitas / tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s"
+                : "Blokk tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©se"}
           </span>
           <ActionIcon type="delete" />
         </button>
@@ -1638,8 +1638,8 @@ const ChapterHeader = memo(function ChapterHeader({
                 type="button"
                 onClick={() => onGenerateTitle(group)}
                 disabled={actionBusy || titleGenerating}
-                aria-label={`Fejezet ${group.chapterIndex} címének generálása`}
-                title="Fejezet cím generálása"
+                aria-label={`Fejezet ${group.chapterIndex} cĂ„â€šĂ‚Â­mĂ„â€šĂ‚Â©nek generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsa`}
+                title="Fejezet cĂ„â€šĂ‚Â­m generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsa"
               >
                 <ActionIcon type="generate" />
               </button>
@@ -1657,7 +1657,7 @@ const ChapterHeader = memo(function ChapterHeader({
                 type="button"
                 onClick={onSaveEdit}
                 disabled={actionBusy}
-                aria-label={`Fejezet ${group.chapterIndex} címének mentése`}
+                aria-label={`Fejezet ${group.chapterIndex} cĂ„â€šĂ‚Â­mĂ„â€šĂ‚Â©nek mentĂ„â€šĂ‚Â©se`}
                 title="Mentese"
               >
                 <ActionIcon type="accept" />
@@ -1667,7 +1667,7 @@ const ChapterHeader = memo(function ChapterHeader({
                 type="button"
                 onClick={onCancelEdit}
                 disabled={actionBusy}
-                aria-label={`Fejezet ${group.chapterIndex} szerkesztés megszakítása`}
+                aria-label={`Fejezet ${group.chapterIndex} szerkesztĂ„â€šĂ‚Â©s megszakĂ„â€šĂ‚Â­tĂ„â€šĂ‹â€ˇsa`}
                 title="Megse"
               >
                 X
@@ -1679,8 +1679,8 @@ const ChapterHeader = memo(function ChapterHeader({
               type="button"
               onClick={() => onStartEdit(group)}
               disabled={actionBusy}
-              aria-label={`Fejezet ${group.chapterIndex} címének szerkesztése`}
-              title="Fejezet cím szerkesztése"
+              aria-label={`Fejezet ${group.chapterIndex} cĂ„â€šĂ‚Â­mĂ„â€šĂ‚Â©nek szerkesztĂ„â€šĂ‚Â©se`}
+              title="Fejezet cĂ„â€šĂ‚Â­m szerkesztĂ„â€šĂ‚Â©se"
             >
               <ActionIcon type="edit" />
             </button>
@@ -1690,8 +1690,8 @@ const ChapterHeader = memo(function ChapterHeader({
             type="button"
             onClick={() => onDelete(group)}
             disabled={actionBusy}
-            aria-label={`Fejezet ${group.chapterIndex} törlése`}
-            title="Fejezet törlése"
+            aria-label={`Fejezet ${group.chapterIndex} tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©se`}
+            title="Fejezet tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©se"
           >
             <ActionIcon type="delete" />
           </button>
@@ -1924,7 +1924,7 @@ const BlockCard = memo(function BlockCard({
             Magyarazati jelzes: {explanationSignalCount}
           </span>
           {remainingSuggestionCount > 0 ? (
-            <span className={styles.noteSignalMeta}>Új javaslat: {remainingSuggestionCount}</span>
+            <span className={styles.noteSignalMeta}>Ă„â€šÄąË‡j javaslat: {remainingSuggestionCount}</span>
           ) : null}
         </div>
       ) : null}
@@ -1965,7 +1965,7 @@ const BlockCard = memo(function BlockCard({
             className={styles.manualEditTextarea}
             value={manualDraftText}
             onChange={(event) => setManualDraftText(event.target.value)}
-            placeholder={isAdminSourceEditMode ? "Forrás blokk szöveg" : "Tisztitott blokk szöveg"}
+            placeholder={isAdminSourceEditMode ? "ForrĂ„â€šĂ‹â€ˇs blokk szĂ„â€šĂ‚Â¶veg" : "Tisztitott blokk szĂ„â€šĂ‚Â¶veg"}
           />
           <div className={styles.manualEditActions}>
             <button
@@ -2002,7 +2002,7 @@ const BlockCard = memo(function BlockCard({
             onClick={() => onCreateNote({ block, range: selectionRange })}
             data-onboarding-id="onb-note-trigger"
           >
-            {creatingNoteInFlight ? "Jegyzet..." : "Jegyzet kerese"}
+            {creatingNoteInFlight ? "Jegyzet..." : "Jegyzet kÄ‚Â©rÄ‚Â©se"}
           </button>
         </div>
       ) : null}
@@ -2381,7 +2381,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       if (sessionErr || !identity) {
         setState({
           status: "error",
-          message: sessionErr?.message ?? "Nincs aktív munkamenet. Lépj be a landing oldalon.",
+          message: sessionErr?.message ?? "Nincs aktĂ„â€šĂ‚Â­v munkamenet. LĂ„â€šĂ‚Â©pj be a landing oldalon.",
         });
         return;
       }
@@ -2628,7 +2628,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     async (args: { blockIds: string[]; actionLabel: string }): Promise<EditedPanelUndoSnapshot> => {
       const uniqueBlockIds = [...new Set(args.blockIds.filter((id) => typeof id === "string" && id.trim().length > 0))];
       if (uniqueBlockIds.length === 0) {
-        throw new Error("Nem található blokk visszaállítási mentéshez.");
+        throw new Error("Nem talĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€š blokk visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tĂ„â€šĂ‹â€ˇsi mentĂ„â€šĂ‚Â©shez.");
       }
 
       const blocksTable = supabase.from("blocks") as any;
@@ -2638,7 +2638,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         .select("id,book_id,chapter_id,block_index,original_text")
         .eq("book_id", bookId)
         .in("id", uniqueBlockIds);
-      if (blockError) throw new Error(blockError.message || "Sikertelen blokk visszaállítasi mentes.");
+      if (blockError) throw new Error(blockError.message || "Sikertelen blokk visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tasi mentes.");
 
       const blockById = new Map<string, EditedPanelUndoBlockSnapshot>();
       for (const row of (blockRows as EditedPanelUndoBlockSnapshot[] | null) ?? []) {
@@ -2650,7 +2650,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         .eq("book_id", bookId)
         .in("block_id", uniqueBlockIds)
         .order("variant_index", { ascending: true });
-      if (variantError) throw new Error(variantError.message || "Sikertelen varians visszaállítasi mentes.");
+      if (variantError) throw new Error(variantError.message || "Sikertelen varians visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tasi mentes.");
 
       const variantsByBlockId = new Map<string, EditedPanelUndoVariantSnapshot[]>();
       for (const row of (variantRows as EditedPanelUndoVariantSnapshot[] | null) ?? []) {
@@ -2692,7 +2692,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     async (args: { blocks: DashboardBlock[]; actionLabel: string }): Promise<EditedPanelUndoSnapshot> => {
       const uniqueBlocks = [...new Map(args.blocks.map((block) => [block.id, block])).values()];
       if (uniqueBlocks.length === 0) {
-        throw new Error("Nem található blokk visszaállítási mentéshez.");
+        throw new Error("Nem talĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€š blokk visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tĂ„â€šĂ‹â€ˇsi mentĂ„â€šĂ‚Â©shez.");
       }
 
       const snapshot = await captureEditedPanelUndoSnapshotFromBlockIds({
@@ -2733,7 +2733,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           .eq("id", entry.blockId)
           .eq("book_id", entryBookId)
           .maybeSingle();
-        if (existingBlockError) throw new Error(existingBlockError.message || "Sikertelen blokk visszaállítas ellenőrzés.");
+        if (existingBlockError) throw new Error(existingBlockError.message || "Sikertelen blokk visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tas ellenĂ„Ä…Ă˘â‚¬ÂrzĂ„â€šĂ‚Â©s.");
 
         if (!entry.block) {
           if (existingBlock) {
@@ -2741,13 +2741,13 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               .delete()
               .eq("book_id", entryBookId)
               .eq("block_id", entry.blockId);
-            if (deleteVariantsError) throw new Error(deleteVariantsError.message || "Sikertelen varians törlés.");
+            if (deleteVariantsError) throw new Error(deleteVariantsError.message || "Sikertelen varians tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.");
 
             const { error: deleteBlockError } = await blocksTable
               .delete()
               .eq("id", entry.blockId)
               .eq("book_id", entryBookId);
-            if (deleteBlockError) throw new Error(deleteBlockError.message || "Sikertelen blokk törlés.");
+            if (deleteBlockError) throw new Error(deleteBlockError.message || "Sikertelen blokk tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.");
           }
           continue;
         }
@@ -2760,7 +2760,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             block_index: entry.block.block_index,
             original_text: entry.block.original_text,
           });
-          if (insertBlockError) throw new Error(insertBlockError.message || "Sikertelen blokk visszaállítas.");
+          if (insertBlockError) throw new Error(insertBlockError.message || "Sikertelen blokk visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tas.");
         } else {
           const { error: updateBlockError } = await blocksTable
             .update({
@@ -2770,14 +2770,14 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             })
             .eq("id", entry.block.id)
             .eq("book_id", entry.block.book_id);
-          if (updateBlockError) throw new Error(updateBlockError.message || "Sikertelen blokk visszaállítas.");
+          if (updateBlockError) throw new Error(updateBlockError.message || "Sikertelen blokk visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tas.");
         }
 
         const { error: clearVariantsError } = await variantsTable
           .delete()
           .eq("block_id", entry.block.id)
           .eq("book_id", entry.block.book_id);
-        if (clearVariantsError) throw new Error(clearVariantsError.message || "Sikertelen varians visszaállítas törlés.");
+        if (clearVariantsError) throw new Error(clearVariantsError.message || "Sikertelen varians visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tas tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.");
 
         if (entry.variants.length > 0) {
           const payload = entry.variants.map((variant) => ({
@@ -2791,7 +2791,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             text: variant.text,
           }));
           const { error: restoreVariantsError } = await variantsTable.insert(payload);
-          if (restoreVariantsError) throw new Error(restoreVariantsError.message || "Sikertelen varians visszaállítas.");
+          if (restoreVariantsError) throw new Error(restoreVariantsError.message || "Sikertelen varians visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tas.");
         }
       }
     },
@@ -2818,7 +2818,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       setLastEditedPanelRedo(redoSnapshot);
       setUndoFeedback(`Visszaallitva: ${lastEditedPanelUndo.actionLabel}.`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Sikertelen visszaállítas.";
+      const message = error instanceof Error ? error.message : "Sikertelen visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tas.";
       setUndoFeedback(message);
     } finally {
       setIsUndoApplying(false);
@@ -2877,7 +2877,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
       for (const [chapterId, title] of candidateByChapterId) {
         const { error } = await chaptersTable.update({ title }).eq("id", chapterId).eq("book_id", bookId);
-        if (error) throw new Error(error.message || "Sikertelen fejezetcím-frissites.");
+        if (error) throw new Error(error.message || "Sikertelen fejezetcĂ„â€šĂ‚Â­m-frissites.");
       }
     },
     [autoTranslateChapterTitles, bookId, state, supabase],
@@ -2916,7 +2916,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     async (block: DashboardBlock, userComment?: string) => {
       if (state.status !== "ready") return;
       if (!hasGeneratedEditedContent(block) && !block.isAccepted && remainingGenerateSlots <= 0) {
-        const message = `Elerted a ${MAX_UNACCEPTED_GENERATED_BLOCKS} elfogadatlan generalt blokk limitet. Előbb fogadj el vagy utasits el javaslatokat.`;
+        const message = `Elerted a ${MAX_UNACCEPTED_GENERATED_BLOCKS} elfogadatlan generalt blokk limitet. ElĂ„Ä…Ă˘â‚¬Âbb fogadj el vagy utasits el javaslatokat.`;
         setGenerateError({
           blockId: block.id,
           message,
@@ -2947,7 +2947,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         setUndoFeedback(null);
         completeOnboardingByEvent("generate_success");
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Sikertelen generalas.";
+        const message = error instanceof Error ? error.message : "Sikertelen generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs.";
         setGenerateError({ blockId: block.id, message });
         showRuntimeAlert(message);
       } finally {
@@ -2994,7 +2994,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       setIsBatchGenerating(true);
       setGenerateError(null);
       if (source === "manual") {
-        setBatchFeedback("Tobb blokk generalasa folyamatban...");
+        setBatchFeedback("TĂ„â€šĂ‚Â¶bb blokk generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsa folyamatban...");
       }
 
       const toGenerate = generationCandidates.slice(0, Math.min(BATCH_GENERATE_CHUNK_SIZE, remainingGenerateSlots));
@@ -3006,7 +3006,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       try {
         undoSnapshot = await captureEditedPanelUndoSnapshot({
           blocks: toGenerate,
-          actionLabel: `Tobb blokk generalasa (${toGenerate.length})`,
+          actionLabel: `TĂ„â€šĂ‚Â¶bb blokk generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsa (${toGenerate.length})`,
         });
         for (const block of toGenerate) {
           setGeneratingBlockId(block.id);
@@ -3025,7 +3025,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             successCount += 1;
           } catch (error) {
             failureCount += 1;
-            const message = error instanceof Error ? error.message : "Sikertelen generalas.";
+            const message = error instanceof Error ? error.message : "Sikertelen generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs.";
             setGenerateError({ blockId: block.id, message });
           }
         }
@@ -3054,8 +3054,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         if (failureCount > 0) {
           showRuntimeAlert(
             failureCount > 1
-              ? `A blokk-generalas reszben sikertelen (${failureCount} hiba).`
-              : "A blokk-generalas kozben hiba tortent.",
+              ? `A blokk-generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs rĂ„â€šĂ‚Â©szben sikertelen (${failureCount} hiba).`
+              : "A blokk-generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs kĂ„â€šĂ‚Â¶zben hiba tĂ„â€šĂ‚Â¶rtĂ„â€šĂ‚Â©nt.",
           );
         }
       } finally {
@@ -3093,10 +3093,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         });
         const chaptersTable = supabase.from("chapters") as any;
         const { error } = await chaptersTable.update({ title: nextTitle }).eq("id", group.chapterId).eq("book_id", bookId);
-        if (error) throw new Error(error.message || "Sikertelen fejezetcím-mentes.");
+        if (error) throw new Error(error.message || "Sikertelen fejezetcĂ„â€šĂ‚Â­m-mentes.");
         await loadDashboard({ keepCurrentView: true });
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Sikertelen fejezetcím-generálás.";
+        const message = error instanceof Error ? error.message : "Sikertelen fejezetcĂ„â€šĂ‚Â­m-generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs.";
         setChapterTitleError({ chapterId: group.chapterId, message });
         showRuntimeAlert(message);
       } finally {
@@ -3199,7 +3199,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         await loadDashboard({ keepCurrentView: true });
         completeOnboardingByEvent("note_requested");
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Sikertelen jegyzetgeneralas.";
+        const message = error instanceof Error ? error.message : "Sikertelen jegyzetgenerĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs.";
         setNoteError({ blockId: block.id, message });
       } finally {
         setCreatingNoteBlockId(null);
@@ -3264,8 +3264,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       if (state.status !== "ready") return;
       const confirmed = window.confirm(
         block.editedVariantId
-          ? "Biztosan töröljük a blokk szerkesztett változatát?"
-          : "Biztosan toroljuk a teljes blokkot? Ez az eredeti szöveget is eltávolítja.",
+          ? "Biztosan tĂ„â€šĂ‚Â¶rĂ„â€šĂ‚Â¶ljĂ„â€šĂ„Ëťk a blokk szerkesztett vĂ„â€šĂ‹â€ˇltozatĂ„â€šĂ‹â€ˇt?"
+          : "Biztosan toroljuk a teljes blokkot? Ez az eredeti szĂ„â€šĂ‚Â¶veget is eltĂ„â€šĂ‹â€ˇvolĂ„â€šĂ‚Â­tja.",
       );
       if (!confirmed) return;
 
@@ -3274,8 +3274,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         const undoSnapshot = await captureEditedPanelUndoSnapshot({
           blocks: [block],
           actionLabel: block.editedVariantId
-            ? `Szerkesztett változat törlése (${block.blockIndex}. blokk)`
-            : `Blokk törlése (${block.blockIndex}. blokk)`,
+            ? `Szerkesztett vĂ„â€šĂ‹â€ˇltozat tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©se (${block.blockIndex}. blokk)`
+            : `Blokk tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©se (${block.blockIndex}. blokk)`,
         });
         if (block.editedVariantId) {
           await deleteEditedBlockVariant({ supabase, block });
@@ -3285,14 +3285,14 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             .delete()
             .eq("id", block.id)
             .eq("book_id", block.bookId);
-          if (error) throw new Error(error.message || "Sikertelen blokk törlés.");
+          if (error) throw new Error(error.message || "Sikertelen blokk tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.");
         }
         await loadDashboard({ keepCurrentView: true });
         setLastEditedPanelUndo(undoSnapshot);
         setLastEditedPanelRedo(null);
         setUndoFeedback(null);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Sikertelen törlés.";
+        const message = error instanceof Error ? error.message : "Sikertelen tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.";
         setState({ status: "error", message });
       } finally {
         setDeletingBlockId(null);
@@ -3306,7 +3306,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       if (state.status !== "ready") return;
       if (!block.editedVariantId) return;
       const confirmed = window.confirm(
-        "Biztosan elutasítod ezt a változatot? A blokk visszaáll az eredeti szövegre.",
+        "Biztosan elutasĂ„â€šĂ‚Â­tod ezt a vĂ„â€šĂ‹â€ˇltozatot? A blokk visszaĂ„â€šĂ‹â€ˇll az eredeti szĂ„â€šĂ‚Â¶vegre.",
       );
       if (!confirmed) return;
 
@@ -3336,7 +3336,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       if (state.status !== "ready") return false;
       const cleaned = text.trim();
       if (!cleaned) {
-        setManualEditError({ blockId: block.id, message: "A blokk szövege nem lehet ures." });
+        setManualEditError({ blockId: block.id, message: "A blokk szĂ„â€šĂ‚Â¶vege nem lehet ures." });
         return false;
       }
       setManualEditError(null);
@@ -3353,7 +3353,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             .eq("id", block.id)
             .eq("book_id", block.bookId);
           if (updateError) {
-            throw new Error(updateError.message || "Sikertelen forrás szöveg mentes.");
+            throw new Error(updateError.message || "Sikertelen forrĂ„â€šĂ‹â€ˇs szĂ„â€šĂ‚Â¶veg mentes.");
           }
           await loadDashboard({ keepCurrentView: true });
           setLastEditedPanelUndo(undoSnapshot);
@@ -3407,7 +3407,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         if (existing) {
           return prev.map((entry) =>
             entry.id === existing.id
-              ? { ...entry, markerId, name: entry.name.trim() ? entry.name : "Haladas jelzo" }
+              ? { ...entry, markerId, name: entry.name.trim() ? entry.name : "HaladÄ‚Ë‡s jelzo" }
               : entry,
           );
         }
@@ -3416,7 +3416,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           markerId,
           kind: "progress",
           colorKey: DEFAULT_BOOKMARK_COLOR_KEY,
-          name: "Haladas jelzo",
+          name: "HaladÄ‚Ë‡s jelzo",
         };
         setSelectedBookmarkId(created.id);
         return [...prev, created];
@@ -3429,7 +3429,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       markerId,
       kind: "important",
       colorKey: IMPORTANT_BOOKMARK_DEFAULT_COLOR_KEY,
-      name: "Fontos jelöles",
+      name: "Fontos jelĂ„â€šĂ‚Â¶les",
     };
     setBookmarks((prev) => [...prev, created]);
     setSelectedBookmarkId(created.id);
@@ -3596,9 +3596,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     if (error) {
       const message = `${error.message ?? ""}`.toLowerCase();
       if (message.includes("book_favorites")) {
-        showRuntimeAlert("A személyes kedvenchez hiányzik a `book_favorites` adatbázis tábla.", "info");
+        showRuntimeAlert("A szemĂ„â€šĂ‚Â©lyes kedvenchez hiĂ„â€šĂ‹â€ˇnyzik a `book_favorites` adatbĂ„â€šĂ‹â€ˇzis tĂ„â€šĂ‹â€ˇbla.", "info");
       } else {
-        showRuntimeAlert(error.message || "Sikertelen saját kedvenc jelöles.");
+        showRuntimeAlert(error.message || "Sikertelen sajĂ„â€šĂ‹â€ˇt kedvenc jelĂ„â€šĂ‚Â¶les.");
       }
       setIsFavoriteSaving(false);
       return;
@@ -3624,11 +3624,11 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     if (state.status !== "ready" || state.role !== "admin") return;
     if (isGlobalFavoriteSaving) return;
 
-    const password = window.prompt("Globális kedvenc: add meg az admin jelszavad.");
+    const password = window.prompt("GlobĂ„â€šĂ‹â€ˇlis kedvenc: add meg az admin jelszavad.");
     if (!password) return;
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError || !userData.user?.email) {
-      showRuntimeAlert(userError?.message || "Nem sikerült az admin azonositasa.");
+      showRuntimeAlert(userError?.message || "Nem sikerĂ„â€šĂ„Ëťlt az admin azonositasa.");
       return;
     }
     const { error: verifyError } = await supabase.auth.signInWithPassword({
@@ -3636,7 +3636,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       password,
     });
     if (verifyError) {
-      showRuntimeAlert("Hibas jelszó vagy sikertelen admin ellenőrzés.");
+      showRuntimeAlert("Hibas jelszĂ„â€šÄąâ€š vagy sikertelen admin ellenĂ„Ä…Ă˘â‚¬ÂrzĂ„â€šĂ‚Â©s.");
       return;
     }
 
@@ -3649,9 +3649,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     if (error) {
       const message = `${error.message ?? ""}`.toLowerCase();
       if (message.includes("is_favorite")) {
-        showRuntimeAlert("A globális kedvenchez hiányzik az `is_favorite` adatbázis oszlop.", "info");
+        showRuntimeAlert("A globĂ„â€šĂ‹â€ˇlis kedvenchez hiĂ„â€šĂ‹â€ˇnyzik az `is_favorite` adatbĂ„â€šĂ‹â€ˇzis oszlop.", "info");
       } else {
-        showRuntimeAlert(error.message || "Sikertelen globális kedvenc jelöles.");
+        showRuntimeAlert(error.message || "Sikertelen globĂ„â€šĂ‹â€ˇlis kedvenc jelĂ„â€šĂ‚Â¶les.");
       }
       setIsGlobalFavoriteSaving(false);
       return;
@@ -3706,7 +3706,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     const yearRaw = editForm.year.trim();
 
     if (!title) {
-      setEditFeedback("A cím kötelező.");
+      setEditFeedback("A cĂ„â€šĂ‚Â­m kĂ„â€šĂ‚Â¶telezĂ„Ä…Ă˘â‚¬Â.");
       return;
     }
 
@@ -3761,7 +3761,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         const legacyFallback = await booksTable.update(legacyPayload).eq("id", bookId).eq("user_id", state.userId);
 
         if (!legacyFallback.error) {
-          setEditFeedback("Könyv adatai mentve (legacy ev mezovel).");
+          setEditFeedback("KĂ„â€šĂ‚Â¶nyv adatai mentve (legacy ev mezovel).");
           setIsEditSaving(false);
           await loadDashboard({ keepCurrentView: true });
           return;
@@ -3776,7 +3776,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         }
 
         setEditFeedback(
-          "A cím/szerző/leírás mentve. Az év vagy ikon oszlop hiányzik az adatbázisban.",
+          "A cĂ„â€šĂ‚Â­m/szerzĂ„Ä…Ă˘â‚¬Â/leĂ„â€šĂ‚Â­rĂ„â€šĂ‹â€ˇs mentve. Az Ă„â€šĂ‚Â©v vagy ikon oszlop hiĂ„â€šĂ‹â€ˇnyzik az adatbĂ„â€šĂ‹â€ˇzisban.",
         );
         setIsEditSaving(false);
         await loadDashboard({ keepCurrentView: true });
@@ -3788,7 +3788,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       return;
     }
 
-    setEditFeedback("Könyv adatai mentve.");
+    setEditFeedback("KĂ„â€šĂ‚Â¶nyv adatai mentve.");
     setIsEditSaving(false);
     await loadDashboard({ keepCurrentView: true });
   }, [bookId, editForm, loadDashboard, state, supabase]);
@@ -3800,9 +3800,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     try {
       const summary = await requestBookSummary({ supabase, bookId });
       setEditForm((prev) => ({ ...prev, description: summary }));
-      setEditFeedback("Leiras generalva. Ellenőrizd, majd mentsd.");
+      setEditFeedback("Leiras generalva. EllenĂ„Ä…Ă˘â‚¬Ârizd, majd mentsd.");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Sikertelen leírásgenerálás.";
+      const message = error instanceof Error ? error.message : "Sikertelen leĂ„â€šĂ‚Â­rĂ„â€šĂ‹â€ˇsgenerĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs.";
       setEditFeedback(message);
     } finally {
       setIsSummaryGenerating(false);
@@ -3821,10 +3821,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       }
 
       setEditForm((prev) => ({ ...prev, year: String(out.inferredYear) }));
-      setEditFeedback(out.persisted ? "AI évbecslés mentve az adatbazisba." : "AI évbecslés elkeszult.");
+      setEditFeedback(out.persisted ? "AI Ă„â€šĂ‚Â©vbecslĂ„â€šĂ‚Â©s mentve az adatbĂ„â€šĂ‹â€ˇzisba." : "AI Ă„â€šĂ‚Â©vbecslĂ„â€šĂ‚Â©s elkĂ„â€šĂ‚Â©szĂ„â€šĂ„Ëťlt.");
       await loadDashboard({ keepCurrentView: true });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Sikertelen évbecslés.";
+      const message = error instanceof Error ? error.message : "Sikertelen Ă„â€šĂ‚Â©vbecslĂ„â€šĂ‚Â©s.";
       setEditFeedback(message);
     } finally {
       setIsYearInferring(false);
@@ -3837,7 +3837,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     if (!sourceBookId) return;
 
     const confirmed = window.confirm(
-      "Biztosan visszaállítod ezt a könyvet az eredeti forrásanyagra? A jelenlegi blokkok, variansok es jegyzetek törlödnek.",
+      "Biztosan visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tod ezt a kĂ„â€šĂ‚Â¶nyvet az eredeti forrĂ„â€šĂ‹â€ˇsanyagra? A jelenlegi blokkok, variansok es jegyzetek tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â¶dnek.",
     );
     if (!confirmed) return;
 
@@ -3857,52 +3857,52 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         .eq("id", sourceBookId)
         .maybeSingle();
       if (sourceBookError || !sourceBook?.id) {
-        throw new Error(sourceBookError?.message || "A forráskönyv nem található.");
+        throw new Error(sourceBookError?.message || "A forrĂ„â€šĂ‹â€ˇskĂ„â€šĂ‚Â¶nyv nem talĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€š.");
       }
       if (sourceBook.status !== "ready") {
-        throw new Error("A forráskönyv nem kesz állapotu.");
+        throw new Error("A forrĂ„â€šĂ‹â€ˇskĂ„â€šĂ‚Â¶nyv nem kesz Ă„â€šĂ‹â€ˇllapotu.");
       }
 
       const { data: sourceChapterRows, error: sourceChapterError } = await chaptersTable
         .select("id,chapter_index,title")
         .eq("book_id", sourceBookId)
         .order("chapter_index", { ascending: true });
-      if (sourceChapterError) throw new Error(sourceChapterError.message || "Sikertelen forrás fejezet lekerdezes.");
+      if (sourceChapterError) throw new Error(sourceChapterError.message || "Sikertelen forrĂ„â€šĂ‹â€ˇs fejezet lekerdezes.");
 
       const { data: sourceBlockRows, error: sourceBlockError } = await blocksTable
         .select("id,chapter_id,block_index,original_text,original_hash")
         .eq("book_id", sourceBookId)
         .order("block_index", { ascending: true });
-      if (sourceBlockError) throw new Error(sourceBlockError.message || "Sikertelen forrás blokk lekerdezes.");
+      if (sourceBlockError) throw new Error(sourceBlockError.message || "Sikertelen forrĂ„â€šĂ‹â€ˇs blokk lekerdezes.");
 
       const { data: sourceFootnoteRows, error: sourceFootnoteError } = await footnotesTable
         .select("number,text,source_chapter_id,source_block_id")
         .eq("book_id", sourceBookId)
         .order("number", { ascending: true });
-      if (sourceFootnoteError) throw new Error(sourceFootnoteError.message || "Sikertelen forrás jegyzet lekerdezes.");
+      if (sourceFootnoteError) throw new Error(sourceFootnoteError.message || "Sikertelen forrĂ„â€šĂ‹â€ˇs jegyzet lekerdezes.");
 
       const { data: sourceAnchorRows, error: sourceAnchorError } = await anchorsTable
         .select("chapter_id,block_id,footnote_number,start_offset,end_offset")
         .eq("book_id", sourceBookId);
-      if (sourceAnchorError) throw new Error(sourceAnchorError.message || "Sikertelen forrás hivatkozas lekerdezes.");
+      if (sourceAnchorError) throw new Error(sourceAnchorError.message || "Sikertelen forrĂ„â€šĂ‹â€ˇs hivatkozas lekerdezes.");
 
       const { error: deleteNotesError } = await notesTable.delete().eq("book_id", bookId);
-      if (deleteNotesError) throw new Error(deleteNotesError.message || "Sikertelen jegyzet törlés.");
+      if (deleteNotesError) throw new Error(deleteNotesError.message || "Sikertelen jegyzet tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.");
 
       const { error: deleteVariantsError } = await variantsTable.delete().eq("book_id", bookId);
-      if (deleteVariantsError) throw new Error(deleteVariantsError.message || "Sikertelen varians törlés.");
+      if (deleteVariantsError) throw new Error(deleteVariantsError.message || "Sikertelen varians tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.");
 
       const { error: deleteAnchorsError } = await anchorsTable.delete().eq("book_id", bookId);
-      if (deleteAnchorsError) throw new Error(deleteAnchorsError.message || "Sikertelen forráshivatkozas törlés.");
+      if (deleteAnchorsError) throw new Error(deleteAnchorsError.message || "Sikertelen forrĂ„â€šĂ‹â€ˇshivatkozas tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.");
 
       const { error: deleteFootnotesError } = await footnotesTable.delete().eq("book_id", bookId);
-      if (deleteFootnotesError) throw new Error(deleteFootnotesError.message || "Sikertelen forrásjegyzet törlés.");
+      if (deleteFootnotesError) throw new Error(deleteFootnotesError.message || "Sikertelen forrĂ„â€šĂ‹â€ˇsjegyzet tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.");
 
       const { error: deleteBlocksError } = await blocksTable.delete().eq("book_id", bookId);
-      if (deleteBlocksError) throw new Error(deleteBlocksError.message || "Sikertelen blokk törlés.");
+      if (deleteBlocksError) throw new Error(deleteBlocksError.message || "Sikertelen blokk tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.");
 
       const { error: deleteChaptersError } = await chaptersTable.delete().eq("book_id", bookId);
-      if (deleteChaptersError) throw new Error(deleteChaptersError.message || "Sikertelen fejezet törlés.");
+      if (deleteChaptersError) throw new Error(deleteChaptersError.message || "Sikertelen fejezet tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.");
 
       const chapterIdMap = new Map<string, string>();
       for (const sourceChapter of (sourceChapterRows as Array<{ id: string; chapter_index: number; title: string | null }> | null) ?? []) {
@@ -3916,7 +3916,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           .select("id")
           .single();
         if (insertChapterError || !insertedChapter?.id) {
-          throw new Error(insertChapterError?.message || "Sikertelen fejezet visszaállítas.");
+          throw new Error(insertChapterError?.message || "Sikertelen fejezet visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tas.");
         }
         chapterIdMap.set(sourceChapter.id, insertedChapter.id as string);
       }
@@ -3953,7 +3953,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           insertBlockResult = await blocksTable.insert(fallbackPayload).select("id").single();
         }
         if (insertBlockResult.error || !(insertBlockResult.data as { id?: string } | null)?.id) {
-          throw new Error(insertBlockResult.error?.message || "Sikertelen blokk visszaállítas.");
+          throw new Error(insertBlockResult.error?.message || "Sikertelen blokk visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tas.");
         }
         blockIdMap.set(sourceBlock.id, (insertBlockResult.data as { id: string }).id);
       }
@@ -3972,7 +3972,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           source_chapter_id: mappedSourceChapterId,
           source_block_id: mappedSourceBlockId,
         });
-        if (insertFootnoteError) throw new Error(insertFootnoteError.message || "Sikertelen forrásjegyzet visszaállítas.");
+        if (insertFootnoteError) throw new Error(insertFootnoteError.message || "Sikertelen forrĂ„â€šĂ‹â€ˇsjegyzet visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tas.");
       }
 
       for (const sourceAnchor of
@@ -3996,15 +3996,15 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           start_offset: sourceAnchor.start_offset,
           end_offset: sourceAnchor.end_offset,
         });
-        if (insertAnchorError) throw new Error(insertAnchorError.message || "Sikertelen forráshivatkozas visszaállítas.");
+        if (insertAnchorError) throw new Error(insertAnchorError.message || "Sikertelen forrĂ„â€šĂ‹â€ˇshivatkozas visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tas.");
       }
 
       await loadDashboard({ keepCurrentView: true });
       setLastEditedPanelUndo(null);
       setLastEditedPanelRedo(null);
-      setUndoFeedback("Az eredeti forrásanyag teljesen visszaállítva.");
+      setUndoFeedback("Az eredeti forrĂ„â€šĂ‹â€ˇsanyag teljesen visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tva.");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Sikertelen forrás-visszaállítas.";
+      const message = error instanceof Error ? error.message : "Sikertelen forrĂ„â€šĂ‹â€ˇs-visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tas.";
       setUndoFeedback(message);
     } finally {
       setIsSourceRestoreInFlight(false);
@@ -4015,16 +4015,16 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     if (state.status !== "ready" || state.role === "guest") return;
     const isSourceBook = !state.data.book.source_book_id;
     if (isSourceBook && state.role !== "admin") {
-      setUndoFeedback("A forráskönyv törlése csak adminnal engedelyezett.");
+      setUndoFeedback("A forrĂ„â€šĂ‹â€ˇskĂ„â€šĂ‚Â¶nyv tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©se csak adminnal engedelyezett.");
       return;
     }
 
     if (isSourceBook && state.role === "admin") {
-      const password = window.prompt("Admin törlés: add meg a jelszavad a forráskönyv törlésehez.");
+      const password = window.prompt("Admin tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s: add meg a jelszavad a forrĂ„â€šĂ‹â€ˇskĂ„â€šĂ‚Â¶nyv tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©sehez.");
       if (!password) return;
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData.user?.email) {
-        setUndoFeedback(userError?.message || "Nem sikerült az admin azonositasa.");
+        setUndoFeedback(userError?.message || "Nem sikerĂ„â€šĂ„Ëťlt az admin azonositasa.");
         return;
       }
       const { error: verifyError } = await supabase.auth.signInWithPassword({
@@ -4032,13 +4032,13 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         password,
       });
       if (verifyError) {
-        setUndoFeedback("Hibas jelszó vagy sikertelen admin ellenőrzés.");
+        setUndoFeedback("Hibas jelszĂ„â€šÄąâ€š vagy sikertelen admin ellenĂ„Ä…Ă˘â‚¬ÂrzĂ„â€šĂ‚Â©s.");
         return;
       }
     }
 
     const confirmed = window.confirm(
-      "Biztosan toroljuk ezt a könyvet? A törlés vegleges, nem visszavonható.",
+      "Biztosan toroljuk ezt a kĂ„â€šĂ‚Â¶nyvet? A tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s vegleges, nem visszavonhatĂ„â€šÄąâ€š.",
     );
     if (!confirmed) return;
 
@@ -4051,12 +4051,12 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         deleteQuery = deleteQuery.eq("user_id", state.userId);
       }
       const { error: deleteError } = await deleteQuery;
-      if (deleteError) throw new Error(deleteError.message || "Sikertelen könyv törlés.");
+      if (deleteError) throw new Error(deleteError.message || "Sikertelen kĂ„â€šĂ‚Â¶nyv tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.");
 
       router.push("/");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Sikertelen könyv törlés.";
+      const message = error instanceof Error ? error.message : "Sikertelen kĂ„â€šĂ‚Â¶nyv tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.";
       setUndoFeedback(message);
     } finally {
       setIsBookDeleteInFlight(false);
@@ -4140,19 +4140,19 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     if (state.status !== "ready") {
       return {
         isReady: false,
-        bookTitle: "Könyv",
-        bookAuthor: "Betöltés...",
+        bookTitle: "KĂ„â€šĂ‚Â¶nyv",
+        bookAuthor: "BetĂ„â€šĂ‚Â¶ltĂ„â€šĂ‚Â©s...",
         blocks: [] as DashboardBlock[],
         completion: EMPTY_COMPLETION,
         progress: completionPercent(EMPTY_COMPLETION.ratio),
         canReader: EMPTY_COMPLETION.isComplete,
-        readerDisabledReason: "Reader mod 0%-nal nem érhető el.",
+        readerDisabledReason: "Reader mod 0%-nal nem Ă„â€šĂ‚Â©rhetĂ„Ä…Ă˘â‚¬Â el.",
         topbarIconSlug: "",
       };
     }
 
     const { book, blocks, completion } = state.data;
-    const bookAuthor = book.author?.trim() || "Ismeretlen szerző";
+    const bookAuthor = book.author?.trim() || "Ismeretlen szerzĂ„Ä…Ă˘â‚¬Â";
     return {
       isReady: true,
       bookTitle: book.title,
@@ -4163,8 +4163,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       canReader: completion.isComplete,
       readerDisabledReason:
         completion.accepted === 0
-          ? "Reader mod 0%-nal nem érhető el."
-          : "Reader mod csak 100%-os completionnel érhető el.",
+          ? "Reader mod 0%-nal nem Ă„â€šĂ‚Â©rhetĂ„Ä…Ă˘â‚¬Â el."
+          : "Reader mod csak 100%-os completionnel Ă„â€šĂ‚Â©rhetĂ„Ä…Ă˘â‚¬Â el.",
       topbarIconSlug: resolveTopbarIconSlug(book),
     };
   }, [state]);
@@ -4498,7 +4498,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     if (state.status !== "ready" || !chapterEdit) return;
     const nextTitle = chapterEdit.title.trim();
     if (!nextTitle) {
-      setChapterEditError("A fejezet cím nem lehet üres.");
+      setChapterEditError("A fejezet cĂ„â€šĂ‚Â­m nem lehet Ă„â€šĂ„Ëťres.");
       return;
     }
 
@@ -4525,7 +4525,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const handleChapterDelete = useCallback(async (group: ChapterGroup) => {
     if (state.status !== "ready" || chapterEditSaving || chapterDeleteSaving || chapterAddSaving) return;
     const confirmed = window.confirm(
-      `Biztosan töröljük a(z) ${group.chapterIndex}. fejezetet? A fejezet blokkjai az előző fejezethez kerülnek.`,
+      `Biztosan tĂ„â€šĂ‚Â¶rĂ„â€šĂ‚Â¶ljĂ„â€šĂ„Ëťk a(z) ${group.chapterIndex}. fejezetet? A fejezet blokkjai az elĂ„Ä…Ă˘â‚¬ÂzĂ„Ä…Ă˘â‚¬Â fejezethez kerĂ„â€šĂ„Ëťlnek.`,
     );
     if (!confirmed) return;
 
@@ -4549,7 +4549,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     const chapterPosition = initialRows.findIndex((row) => row.id === group.chapterId);
     if (chapterPosition < 0) {
       setChapterDeleteSaving(false);
-      setChapterEditError("A torlendo fejezet már nem található.");
+      setChapterEditError("A torlendo fejezet mĂ„â€šĂ‹â€ˇr nem talĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€š.");
       return;
     }
 
@@ -4569,7 +4569,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     const movingBlocks = (movingBlockRows ?? []) as BlockIndexRow[];
     if (movingBlocks.length > 0 && !previousChapter) {
       setChapterDeleteSaving(false);
-      setChapterEditError("Az első fejezet nem törölhető, mert nincs előző fejezet a blokkok átmozgatásához.");
+      setChapterEditError("Az elsĂ„Ä…Ă˘â‚¬Â fejezet nem tĂ„â€šĂ‚Â¶rĂ„â€šĂ‚Â¶lhetĂ„Ä…Ă˘â‚¬Â, mert nincs elĂ„Ä…Ă˘â‚¬ÂzĂ„Ä…Ă˘â‚¬Â fejezet a blokkok Ă„â€šĂ‹â€ˇtmozgatĂ„â€šĂ‹â€ˇsĂ„â€šĂ‹â€ˇhoz.");
       return;
     }
 
@@ -4644,7 +4644,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         .in("source_block_id", movedBlockIds);
       if (footnotesMoveError) {
         setChapterDeleteSaving(false);
-        setChapterEditError(footnotesMoveError.message || "Sikertelen labjegyzet-forrás athelyezes.");
+        setChapterEditError(footnotesMoveError.message || "Sikertelen labjegyzet-forrĂ„â€šĂ‹â€ˇs athelyezes.");
         return;
       }
 
@@ -4654,12 +4654,12 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         .eq("chapter_id", group.chapterId);
       if (remainingCountError) {
         setChapterDeleteSaving(false);
-        setChapterEditError(remainingCountError.message || "Sikertelen blokk-ellenőrzés törlés elott.");
+        setChapterEditError(remainingCountError.message || "Sikertelen blokk-ellenĂ„Ä…Ă˘â‚¬ÂrzĂ„â€šĂ‚Â©s tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s elott.");
         return;
       }
       if ((remainingCount ?? 0) > 0) {
         setChapterDeleteSaving(false);
-        setChapterEditError("A fejezet törlése megszakitva: maradt blokk a torlendo fejezetben.");
+        setChapterEditError("A fejezet tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©se megszakitva: maradt blokk a torlendo fejezetben.");
         return;
       }
     }
@@ -4671,7 +4671,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
     if (deleteError) {
       setChapterDeleteSaving(false);
-      setChapterEditError(deleteError.message || "Sikertelen fejezet törlés.");
+      setChapterEditError(deleteError.message || "Sikertelen fejezet tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©s.");
       return;
     }
 
@@ -4746,7 +4746,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
       const rows = ((chapterRows ?? []) as ChapterRow[]).sort((a, b) => a.chapter_index - b.chapter_index);
       const sourceChapter = rows.find((row) => row.id === block.chapterId);
-      if (!sourceChapter) throw new Error("A blokk fejezete már nem található.");
+      if (!sourceChapter) throw new Error("A blokk fejezete mĂ„â€šĂ‹â€ˇr nem talĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€š.");
 
       for (let index = rows.length - 1; index >= 0; index -= 1) {
         const row = rows[index];
@@ -4783,11 +4783,11 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
       const sourceBlocks = (sourceBlockRows ?? []) as BlockIndexRow[];
       const splitIndex = sourceBlocks.findIndex((row) => row.id === block.id);
-      if (splitIndex < 0) throw new Error("A kijelölt blokk már nem található.");
+      if (splitIndex < 0) throw new Error("A kijelĂ„â€šĂ‚Â¶lt blokk mĂ„â€šĂ‹â€ˇr nem talĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€š.");
 
       const movingBlocks = sourceBlocks.slice(splitIndex);
       if (movingBlocks.length === 0) {
-        throw new Error("A kijelölt blokkbol nem kepzodott uj fejezet.");
+        throw new Error("A kijelĂ„â€šĂ‚Â¶lt blokkbol nem kepzodott uj fejezet.");
       }
 
       let nextBlockIndex = 1;
@@ -4831,7 +4831,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         .eq("book_id", bookId)
         .in("source_block_id", movedBlockIds);
       if (footnotesMoveError) {
-        throw new Error(footnotesMoveError.message || "Sikertelen labjegyzet-forrás athelyezes.");
+        throw new Error(footnotesMoveError.message || "Sikertelen labjegyzet-forrĂ„â€šĂ‹â€ˇs athelyezes.");
       }
 
       const { data: remainingRows, error: remainingFetchError } = await blocksTable
@@ -4889,7 +4889,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     setMergeError(null);
 
     const confirmed = window.confirm(
-      `Biztosan osszevonjuk a ${leftBlock.blockIndex}. es ${rightBlock.blockIndex}. blokkot? A masodik blokk törlödik.`,
+      `Biztosan osszevonjuk a ${leftBlock.blockIndex}. es ${rightBlock.blockIndex}. blokkot? A masodik blokk tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â¶dik.`,
     );
     if (!confirmed) return;
 
@@ -4909,14 +4909,14 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       const leftRow = mergeRows.find((row) => row.id === leftBlock.id);
       const rightRow = mergeRows.find((row) => row.id === rightBlock.id);
       if (!leftRow || !rightRow) {
-        throw new Error("A blokkok már nem találhatók. Frissítsd az oldalt, majd próbáld újra.");
+        throw new Error("A blokkok mĂ„â€šĂ‹â€ˇr nem talĂ„â€šĂ‹â€ˇlhatĂ„â€šÄąâ€šk. FrissĂ„â€šĂ‚Â­tsd az oldalt, majd prĂ„â€šÄąâ€šbĂ„â€šĂ‹â€ˇld Ă„â€šÄąĹşjra.");
       }
 
       const leftText = `${leftRow.original_text ?? ""}`.trim();
       const rightText = `${rightRow.original_text ?? ""}`.trim();
       const mergedOriginalText = [leftText, rightText].filter(Boolean).join(" ");
       if (!mergedOriginalText) {
-        throw new Error("Az osszevonas ures szöveget eredmenyezne, ezert megszakitottuk.");
+        throw new Error("Az osszevonas ures szĂ„â€šĂ‚Â¶veget eredmenyezne, ezert megszakitottuk.");
       }
 
       const { error: mergeError } = await blocksTable
@@ -5114,13 +5114,13 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             className={`${styles.infoHeaderActionButton} ${chapterAddMode ? styles.infoHeaderActionButtonActive : ""}`}
             onClick={handleToggleChapterAddMode}
             disabled={chapterEditSaving || chapterDeleteSaving || chapterAddSaving || !isReady}
-            title={chapterAddMode ? "Fejezet-hozzaadas mod kikapcsolasa" : "Fejezet-hozzaadas mod bekapcsolasa"}
+            title={chapterAddMode ? "Fejezet-hozzÄ‚Ë‡adÄ‚Ë‡s mÄ‚Ĺ‚d kikapcsolÄ‚Ë‡sa" : "Fejezet-hozzÄ‚Ë‡adÄ‚Ë‡s mÄ‚Ĺ‚d bekapcsolÄ‚Ë‡sa"}
           >
             <ToolIcon type="add" />
-            <span>{chapterAddMode ? "Aktiv" : "Fejezet +"}</span>
+            <span>{chapterAddMode ? "AktÄ‚Â­v" : "Fejezet +"}</span>
           </button>
         </div>
-        <span>{chapterAddMode ? "Aktiv mod: kattints egy blokkra uj fejezethez." : "Fejezet progress"}</span>
+        <span>{chapterAddMode ? "AktÄ‚Â­v mÄ‚Ĺ‚d: kattints egy blokkra Ä‚Ĺźj fejezethez." : "Fejezet progress"}</span>
       </header>
       <div className={styles.infoColumnBody}>
         {chapterProgressItems.length === 0 ? (
@@ -5154,11 +5154,11 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     <section className={mobile ? styles.mobileInfoBlock : styles.infoColumn}>
       <header className={styles.infoColumnHeader}>
         <strong>Jegyzetek</strong>
-        <span>Kifejezés + leírás</span>
+        <span>KifejezĂ„â€šĂ‚Â©s + leĂ„â€šĂ‚Â­rĂ„â€šĂ‹â€ˇs</span>
       </header>
       <div className={styles.infoColumnBody}>
         {noteNavigatorItems.length === 0 ? (
-          <div className={styles.infoEmptyState}>Nincs tárolt jegyzet.</div>
+          <div className={styles.infoEmptyState}>Nincs tĂ„â€šĂ‹â€ˇrolt jegyzet.</div>
         ) : (
           noteNavigatorItems.map((item) => {
             const isExpanded = expandedNoteIds.has(item.id);
@@ -5211,12 +5211,12 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const renderBookmarkNavigator = (mobile: boolean) => (
     <section className={mobile ? styles.mobileInfoBlock : styles.infoColumn}>
       <header className={styles.infoColumnHeader}>
-        <strong>Könyvjelzok</strong>
+        <strong>KÄ‚Â¶nyvjelzÄąâ€k</strong>
         <span>Tarolt poziciok</span>
       </header>
       <div className={styles.infoColumnBody}>
         {bookmarkNavigatorItems.length === 0 ? (
-          <div className={styles.infoEmptyState}>Nincs tárolt könyvjelzo.</div>
+          <div className={styles.infoEmptyState}>Nincs tĂ„â€šĂ‹â€ˇrolt kĂ„â€šĂ‚Â¶nyvjelzo.</div>
         ) : (
           bookmarkNavigatorItems.map(({ entry, placement }) => (
             <button
@@ -5232,10 +5232,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   style={{ "--bookmark-color": bookmarkColorByKey[entry.colorKey] ?? BOOKMARK_COLOR_OPTIONS[0].color } as CSSProperties}
                   aria-hidden="true"
                 />
-                {entry.name || "Nev nelkul"}
+                {entry.name || "NÄ‚Â©v nÄ‚Â©lkÄ‚Ä˝l"}
               </span>
               <span className={styles.infoListDescription}>
-                {entry.kind === "progress" ? "Haladas jelzo" : "Fontos jelöles"}
+                {entry.kind === "progress" ? "HaladÄ‚Ë‡s jelzo" : "Fontos jelĂ„â€šĂ‚Â¶les"}
               </span>
               <span className={styles.infoListMeta}>
                 {placement ? `${placement.chapterIndex}.f / ${placement.block.blockIndex}.b` : "n/a"}
@@ -5250,13 +5250,13 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const renderEditorialNotePanel = (mobile: boolean) => (
     <section className={mobile ? styles.mobileInfoBlock : styles.infoColumn}>
       <header className={styles.infoColumnHeader}>
-        <strong>Szerkesztői jegyzet</strong>
+        <strong>SzerkesztĂ„Ä…Ă˘â‚¬Âi jegyzet</strong>
         <span>Folyamat emlekezteto</span>
       </header>
       <div className={styles.infoColumnBody}>
         <article className={styles.editorialNoteCard}>
           <p className={styles.editorialNoteLine}>
-            Nezet: <strong>{store.viewState === "workbench" ? "Workbench" : "Reader"}</strong>
+            Nézet: <strong>{store.viewState === "workbench" ? "Workbench" : "Reader"}</strong>
           </p>
           <p className={styles.editorialNoteLine}>
             Elfogadatlan generalt blokk:{" "}
@@ -5265,10 +5265,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             </strong>
           </p>
           <p className={styles.editorialNoteLine}>
-            Tobb blokk generalas szabad hely: <strong>{generationCapacityRemaining}</strong>
+            TĂ„â€šĂ‚Â¶bb blokk generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs szabad hely: <strong>{generationCapacityRemaining}</strong>
           </p>
           <p className={styles.editorialNoteHint}>
-            Blokk veglegesiteshez hasznald az <strong>Elfogad</strong> lépést.
+            Blokk veglegesiteshez hasznald az <strong>Elfogad</strong> lĂ„â€šĂ‚Â©pĂ„â€šĂ‚Â©st.
           </p>
         </article>
       </div>
@@ -5335,7 +5335,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         className={`${styles.mobilePageTab} ${mobilePage === "bookmarks" ? styles.mobilePageTabActive : ""}`}
         onClick={handleSelectMobileBookmarksTab}
       >
-        <span>Könyvjelzok</span>
+        <span>KÄ‚Â¶nyvjelzÄąâ€k</span>
         <ToolIcon type="bookmark" />
       </button>
     </nav>
@@ -5382,7 +5382,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   const pageStyle = { "--panel-accent-color": panelAccentColor } as CSSProperties;
   const renderBookMetaSection = () => {
     if (state.status !== "ready" || state.role !== "admin") return null;
-    const sourceName = state.data.book.source_name?.trim() || "lokalis_feltöltés";
+    const sourceName = state.data.book.source_name?.trim() || "lokalis_feltĂ„â€šĂ‚Â¶ltĂ„â€šĂ‚Â©s";
     const sourceUrl = state.data.book.source_url?.trim() || null;
     const sourceRetrievedAt = state.data.book.source_retrieved_at ?? null;
     const sourceLicenseUrl = state.data.book.source_license_url?.trim() || null;
@@ -5399,27 +5399,27 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               onClick={handleToggleAdminSourceEditMode}
               aria-pressed={adminSourceEditMode}
             >
-              {adminSourceEditMode ? "Forrás szerkesztés: aktív" : "Forrás szerkesztés"}
+              {adminSourceEditMode ? "ForrĂ„â€šĂ‹â€ˇs szerkesztĂ„â€šĂ‚Â©s: aktĂ„â€šĂ‚Â­v" : "ForrĂ„â€šĂ‹â€ˇs szerkesztĂ„â€šĂ‚Â©s"}
             </button>
           </div>
 
           <div className={styles.editGrid}>
                 <label className={styles.editField}>
-                  <span>Cím</span>
+                  <span>CĂ„â€šĂ‚Â­m</span>
                   <input
                     className="input"
                     value={editForm.title}
                     onChange={(event) => setEditForm((prev) => ({ ...prev, title: event.target.value }))}
-                    placeholder="pl. A jó palócok"
+                    placeholder="pl. A jĂ„â€šÄąâ€š palĂ„â€šÄąâ€šcok"
                   />
                 </label>
                 <label className={styles.editField}>
-                  <span>Szerző</span>
+                  <span>SzerzĂ„Ä…Ă˘â‚¬Â</span>
                   <input
                     className="input"
                     value={editForm.author}
                     onChange={(event) => setEditForm((prev) => ({ ...prev, author: event.target.value }))}
-                    placeholder="pl. Mikszáth Kálmán"
+                    placeholder="pl. MikszĂ„â€šĂ‹â€ˇth KĂ„â€šĂ‹â€ˇlmĂ„â€šĂ‹â€ˇn"
                   />
                 </label>
                 <label className={styles.editField}>
@@ -5444,7 +5444,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           </div>
 
           <label className={styles.editField}>
-            <span>Rövid leírás</span>
+            <span>RĂ„â€šĂ‚Â¶vid leĂ„â€šĂ‚Â­rĂ„â€šĂ‹â€ˇs</span>
             <textarea
               className={styles.editTextarea}
               value={editForm.description}
@@ -5455,10 +5455,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
           <div className={styles.editActions}>
             <button className="btn" type="button" onClick={handleGenerateSummary} disabled={isSummaryGenerating}>
-              {isSummaryGenerating ? "Generalas..." : "Leiras generalasa"}
+              {isSummaryGenerating ? "GenerĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs..." : "LeĂ„â€šĂ‚Â­rĂ„â€šĂ‹â€ˇs generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsa"}
             </button>
             <button className="btn" type="button" onClick={handleInferPublicationYear} disabled={isYearInferring}>
-              {isYearInferring ? "AI évbecslés..." : "Ev becslese (AI)"}
+              {isYearInferring ? "AI Ă„â€šĂ‚Â©vbecslĂ„â€šĂ‚Â©s..." : "Ev becslese (AI)"}
             </button>
           </div>
 
@@ -5489,10 +5489,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             </button>
           </div>
 
-          <section className={styles.sourcePanel} aria-label="Forrás es licenc">
-            <div className={styles.sourcePanelTitle}>Forrás es licenc (elozet)</div>
+          <section className={styles.sourcePanel} aria-label="ForrĂ„â€šĂ‹â€ˇs es licenc">
+            <div className={styles.sourcePanelTitle}>ForrĂ„â€šĂ‹â€ˇs es licenc (elozet)</div>
             <div className={styles.sourceRow}>
-              <span>Forrás</span>
+              <span>ForrĂ„â€šĂ‹â€ˇs</span>
               <strong>{sourceName}</strong>
             </div>
             {sourceWorkId ? (
@@ -5503,9 +5503,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             ) : null}
             {sourceUrl ? (
               <div className={styles.sourceRow}>
-                <span>Forrás URL</span>
+                <span>ForrĂ„â€šĂ‹â€ˇs URL</span>
                 <a href={sourceUrl} target="_blank" rel="noreferrer">
-                  Megnyitás
+                  MegnyitĂ„â€šĂ‹â€ˇs
                 </a>
               </div>
             ) : null}
@@ -5537,7 +5537,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             ) : null}
             {sourceName.toLowerCase() === "project_gutenberg" ? (
               <div className={styles.sourceDisclaimer}>
-                Project Gutenberg forrás. Hasznalat országfüggő szerzői jogi szabályokhoz kötött lehet.
+                Project Gutenberg forrĂ„â€šĂ‹â€ˇs. Hasznalat orszĂ„â€šĂ‹â€ˇgfĂ„â€šĂ„ËťggĂ„Ä…Ă˘â‚¬Â szerzĂ„Ä…Ă˘â‚¬Âi jogi szabĂ„â€šĂ‹â€ˇlyokhoz kĂ„â€šĂ‚Â¶tĂ„â€šĂ‚Â¶tt lehet.
               </div>
             ) : null}
           </section>
@@ -5547,7 +5547,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
   };
 
   const renderBookmarkPalette = (size: "desktop" | "mobile") => (
-    <div className={size === "desktop" ? styles.bookmarkPalette : styles.mobileBookmarkPalette} role="radiogroup" aria-label="Könyvjelzo szinkategoria">
+    <div className={size === "desktop" ? styles.bookmarkPalette : styles.mobileBookmarkPalette} role="radiogroup" aria-label="KÄ‚Â¶nyvjelzÄąâ€ szinkategoria">
       {BOOKMARK_COLOR_OPTIONS.map((option) => (
         <button
           key={option.key}
@@ -5570,16 +5570,16 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     const canDeleteThisBook = state.role === "admin" || !isSourceBook;
 
     return (
-      <section className={`card ${styles.bottomBookActions}`} aria-label="Könyv muveletek">
+      <section className={`card ${styles.bottomBookActions}`} aria-label="KĂ„â€šĂ‚Â¶nyv muveletek">
         <div className={styles.bottomBookActionsGrid}>
           <button
             className={styles.bottomBookActionButton}
             type="button"
             onClick={() => void handleRestoreBookFromSource()}
             disabled={!hasSourceBook || isEditorBusy}
-            title={hasSourceBook ? "Eredeti könyv visszaállítasa" : "Ehhez a könyvhoz nincs forráskönyv linkelve"}
+            title={hasSourceBook ? "Eredeti kĂ„â€šĂ‚Â¶nyv visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tasa" : "Ehhez a kĂ„â€šĂ‚Â¶nyvhoz nincs forrĂ„â€šĂ‹â€ˇskĂ„â€šĂ‚Â¶nyv linkelve"}
           >
-            <span>{isSourceRestoreInFlight ? "Forrás visszaállítasa..." : "Eredeti könyv visszaállítasa"}</span>
+            <span>{isSourceRestoreInFlight ? "ForrĂ„â€šĂ‹â€ˇs visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tasa..." : "Eredeti kĂ„â€šĂ‚Â¶nyv visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tasa"}</span>
             <ToolIcon type="undo" />
           </button>
           <button
@@ -5590,12 +5590,12 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             title={
               canDeleteThisBook
                 ? isSourceBook
-                  ? "Forráskönyv törlése (admin jelszó szükséges)"
-                  : "Sajat könyv törlése"
-                : "Forráskönyvet csak admin torolhet"
+                  ? "ForrĂ„â€šĂ‹â€ˇskĂ„â€šĂ‚Â¶nyv tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©se (admin jelszĂ„â€šÄąâ€š szĂ„â€šĂ„ËťksĂ„â€šĂ‚Â©ges)"
+                  : "Sajat kĂ„â€šĂ‚Â¶nyv tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©se"
+                : "ForrĂ„â€šĂ‹â€ˇskĂ„â€šĂ‚Â¶nyvet csak admin torolhet"
             }
           >
-            <span>{isBookDeleteInFlight ? "Könyv törlése..." : "Könyv törlése"}</span>
+            <span>{isBookDeleteInFlight ? "KĂ„â€šĂ‚Â¶nyv tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©se..." : "KĂ„â€šĂ‚Â¶nyv tĂ„â€šĂ‚Â¶rlĂ„â€šĂ‚Â©se"}</span>
             <ActionIcon type="delete" />
           </button>
         </div>
@@ -5611,7 +5611,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         <button
           type="button"
           className={styles.mobileToolFab}
-          aria-label="Tool panel megnyitása"
+          aria-label="Tool panel megnyitĂ„â€šĂ‹â€ˇsa"
           aria-expanded={mobileToolPanelOpen}
           onClick={handleOpenMobileToolPanel}
         >
@@ -5623,14 +5623,14 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             <button
               type="button"
               className={styles.mobileToolBackdrop}
-              aria-label="Tool panel bezárása"
+              aria-label="Tool panel bezĂ„â€šĂ‹â€ˇrĂ„â€šĂ‹â€ˇsa"
               onClick={handleCloseMobileToolPanel}
             />
             <section className={styles.mobileToolSheet} aria-label="Dashboard tool panel">
               <button
                 type="button"
                 className={styles.mobileToolClose}
-                aria-label="Tool panel bezárása"
+                aria-label="Tool panel bezĂ„â€šĂ‹â€ˇrĂ„â€šĂ‹â€ˇsa"
                 onClick={handleCloseMobileToolPanel}
               >
                 X
@@ -5651,23 +5651,23 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               </section>
               <div className={styles.mobileToolRows}>
                 <section className={styles.mobileActivityGroup}>
-                  <div className={styles.mobileActivityGroupTitle}>Nezet</div>
+                  <div className={styles.mobileActivityGroupTitle}>Nézet</div>
                   <label className={styles.mobileViewSelectControl}>
-                    <span>Nezet menu</span>
+                    <span>Nézet menü</span>
                     <select
                       className={styles.mobileViewSelect}
                       value={store.desktopLayout}
                       onChange={handleMobileLayoutChange}
-                      aria-label="Nezet menu"
+                      aria-label="Nézet menü"
                     >
-                      <option value="single">Egy oldalas nézet</option>
-                      <option value="split">Osztott nézet</option>
+                      <option value="single">Egy oldalas nĂ„â€šĂ‚Â©zet</option>
+                      <option value="split">Osztott nĂ„â€šĂ‚Â©zet</option>
                     </select>
                   </label>
                   {renderMobilePageTabs()}
                 </section>
                 <section className={styles.mobileActivityGroup}>
-                  <div className={styles.mobileActivityGroupTitle}>Szerkesztés</div>
+                  <div className={styles.mobileActivityGroupTitle}>SzerkesztĂ„â€šĂ‚Â©s</div>
                   {state.role === "admin" ? (
                     <button
                       className={`${styles.mobileToolRow} ${styles.adminModeToggle} ${adminSourceEditMode ? styles.adminModeToggleActive : ""}`}
@@ -5676,7 +5676,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       aria-checked={adminSourceEditMode}
                       onClick={handleToggleAdminSourceEditMode}
                     >
-                      <span>{adminSourceEditMode ? "ADMIN: source aktív" : "ADMIN: source off"}</span>
+                      <span>{adminSourceEditMode ? "ADMIN: source aktĂ„â€šĂ‚Â­v" : "ADMIN: source off"}</span>
                       <ToolIcon type="admin" />
                     </button>
                   ) : null}
@@ -5687,7 +5687,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       onClick={handleToggleChapterAddMode}
                       disabled={chapterEditSaving || chapterDeleteSaving || chapterAddSaving || !isReady}
                     >
-                      <span>{chapterAddMode ? "Fejezet +: aktív" : "Fejezet +"}</span>
+                      <span>{chapterAddMode ? "Fejezet +: aktĂ„â€šĂ‚Â­v" : "Fejezet +"}</span>
                       <ToolIcon type="add" />
                     </button>
                   ) : null}
@@ -5698,7 +5698,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                     disabled={!isReady || !lastEditedPanelUndo || isEditorBusy}
                   >
                     <span>
-                      {isUndoApplying ? "Visszaállítás..." : "Utolsó szerkesztés visszavonása"}
+                      {isUndoApplying ? "VisszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­tĂ„â€šĂ‹â€ˇs..." : "UtolsĂ„â€šÄąâ€š szerkesztĂ„â€šĂ‚Â©s visszavonĂ„â€šĂ‹â€ˇsa"}
                     </span>
                     <ToolIcon type="undo" />
                   </button>
@@ -5714,7 +5714,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                     </button>
                   ) : null}
                   {lastEditedPanelUndo ? (
-                    <div className={styles.mobileToolHint}>Visszaállítható: {lastEditedPanelUndo.actionLabel}</div>
+                    <div className={styles.mobileToolHint}>VisszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­thatĂ„â€šÄąâ€š: {lastEditedPanelUndo.actionLabel}</div>
                   ) : null}
                   {lastEditedPanelRedo ? (
                     <div className={styles.mobileToolHint}>Ujraalkalmazhato: {lastEditedPanelRedo.actionLabel}</div>
@@ -5729,14 +5729,14 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                     data-onboarding-id="onb-replay"
                     onClick={handleOpenOnboardingGuide}
                   >
-                    <span>Onboarding sugo</span>
+                    <span>Onboarding sÄ‚ĹźgÄ‚Ĺ‚</span>
                     <ToolIcon type="onboarding" />
                   </button>
                 </section>
                 <section className={styles.mobileActivityGroup}>
-                  <div className={styles.mobileActivityGroupTitle}>Könyvjelzo</div>
+                  <div className={styles.mobileActivityGroupTitle}>KÄ‚Â¶nyvjelzÄąâ€</div>
                   <div className={styles.mobileBookmarkColorControl}>
-                    <span>Kategoria</span>
+                    <span>Kategória</span>
                     {renderBookmarkPalette("mobile")}
                   </div>
                   {hasBookmarks ? (
@@ -5750,7 +5750,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                             data-bookmark-id={entry.id}
                             onClick={handleSelectBookmarkFromList}
                           >
-                            <span>{entry.kind === "progress" ? "Haladas" : "Fontos"}: {entry.name || "Nev nelkul"}</span>
+                            <span>{entry.kind === "progress" ? "HaladÄ‚Ë‡s" : "Fontos"}: {entry.name || "NÄ‚Â©v nÄ‚Â©lkÄ‚Ä˝l"}</span>
                             <ToolIcon type="bookmark" />
                           </button>
                         ))}
@@ -5761,8 +5761,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                           className={`input ${styles.mobileBookmarkNameInput}`}
                           value={selectedBookmark?.name ?? ""}
                           onChange={handleSelectedBookmarkNameChange}
-                          placeholder="Könyvjelzo label"
-                          aria-label="Könyvjelzo label"
+                          placeholder="KÄ‚Â¶nyvjelzÄąâ€ label"
+                          aria-label="KÄ‚Â¶nyvjelzÄąâ€ label"
                           disabled={!selectedBookmark}
                         />
                       </label>
@@ -5772,7 +5772,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                         disabled={!selectedBookmark}
                         onClick={handleJumpToSelectedBookmarkAndClose}
                       >
-                        <span>Ugras a könyvjelzohoz</span>
+                        <span>Ugrás a könyvjelzőhöz</span>
                         <ToolIcon type="bookmark" />
                       </button>
                       <button
@@ -5780,7 +5780,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                         type="button"
                         onClick={handleDeleteSelectedBookmark}
                       >
-                        <span>Könyvjelzo törlése</span>
+                        <span>KÄ‚Â¶nyvjelzÄąâ€ tÄ‚Â¶rlÄ‚Â©se</span>
                         X
                       </button>
                     </>
@@ -5823,7 +5823,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           <p className={styles.onboardingPopupHint}>Ehhez a lépéshez most nincs aktív horgonypont a nézetben.</p>
         ) : null}
         {isGuidePreview ? (
-          <p className={styles.onboardingPopupHint}>Sugo nézet: válassz másik lépést az onboarding panelen.</p>
+          <p className={styles.onboardingPopupHint}>Súgó nézet: válassz másik lépést az onboarding panelen.</p>
         ) : null}
         <div className={styles.onboardingPopupActions}>
           <button type="button" className="btn" onClick={handleOnboardingNext}>
@@ -5831,7 +5831,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           </button>
           {isGuidePreview ? (
             <button type="button" className="btn" onClick={() => setOnboardingSelectedStepId(null)}>
-              Flow folytatása
+              Flow folytatĂ„â€šĂ‹â€ˇsa
             </button>
           ) : currentOnboardingStep.skippable ? (
             <button type="button" className="btn" onClick={handleOnboardingSkip}>
@@ -5848,9 +5848,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     const highlightedStepId = onboardingSelectedStepId ?? currentOnboardingStep?.id ?? null;
 
     return (
-      <section className={styles.onboardingGuidePanel} aria-label="Onboarding sugo lépések">
+      <section className={styles.onboardingGuidePanel} aria-label="Onboarding sÄ‚ĹźgÄ‚Ĺ‚ lÄ‚Â©pÄ‚Â©sek">
         <div className={styles.onboardingGuideHeader}>
-          <strong>Onboarding sugo</strong>
+          <strong>Onboarding sÄ‚ĹźgÄ‚Ĺ‚</strong>
           <button
             type="button"
             className={styles.onboardingGuideClose}
@@ -5890,7 +5890,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             className="btn"
             onClick={() => setOnboardingSelectedStepId(null)}
           >
-            Flow nézet
+            Flow nĂ„â€šĂ‚Â©zet
           </button>
         </div>
       </section>
@@ -5910,7 +5910,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           type="button"
           className={styles.runtimeAlertClose}
           onClick={() => setRuntimeAlert(null)}
-          aria-label="Uzenet bezárása"
+          aria-label="Uzenet bezĂ„â€šĂ‹â€ˇrĂ„â€šĂ‹â€ˇsa"
         >
           X
         </button>
@@ -5922,16 +5922,16 @@ export function BookDashboard({ bookId }: { bookId: string }) {
     if (!generationCommentOpen || !pendingGenerationRequest) return null;
 
     let title = "Generalasi komment";
-    let description = "Adj opcionális kommentet a generalashoz.";
+    let description = "Adj opcionĂ„â€šĂ‹â€ˇlis kommentet a generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇshoz.";
     if (pendingGenerationRequest.kind === "block") {
-      title = `Blokk generalas (${pendingGenerationRequest.block.blockIndex}. blokk)`;
-      description = "Adj indulasi kommentet a blokk generalashoz.";
+      title = `Blokk generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs (${pendingGenerationRequest.block.blockIndex}. blokk)`;
+      description = "Adj indulasi kommentet a blokk generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsĂ„â€šĂ‹â€ˇhoz.";
     } else if (pendingGenerationRequest.kind === "batch") {
-      title = "Tobb blokk generalasa";
-      description = "Adj kozos indulasi kommentet a blokkok generalasahoz.";
+      title = "TĂ„â€šĂ‚Â¶bb blokk generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsa";
+      description = "Adj kĂ„â€šĂ‚Â¶zĂ„â€šĂ‚Â¶s indulĂ„â€šĂ‹â€ˇsi kommentet a blokkok generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsĂ„â€šĂ‹â€ˇhoz.";
     } else if (pendingGenerationRequest.kind === "chapter") {
-      title = `Fejezet cím generálása (${pendingGenerationRequest.group.chapterIndex}. fejezet)`;
-      description = "Adj kommentet a fejezetcím fordításához vagy újracímzéshez.";
+      title = `Fejezet cĂ„â€šĂ‚Â­m generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsa (${pendingGenerationRequest.group.chapterIndex}. fejezet)`;
+      description = "Adj kommentet a fejezetcĂ„â€šĂ‚Â­m fordĂ„â€šĂ‚Â­tĂ„â€šĂ‹â€ˇsĂ„â€šĂ‹â€ˇhoz vagy Ă„â€šÄąĹşjracĂ„â€šĂ‚Â­mzĂ„â€šĂ‚Â©shez.";
     }
 
     return (
@@ -5943,7 +5943,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               type="button"
               className={styles.generationCommentClose}
               onClick={closeGenerationCommentModal}
-              aria-label="Generalasi komment ablak bezárása"
+              aria-label="Generalasi komment ablak bezĂ„â€šĂ‹â€ˇrĂ„â€šĂ‹â€ˇsa"
             >
               X
             </button>
@@ -5961,7 +5961,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           <div className={styles.generationCommentMeta}>{generationCommentDraft.trim().length}/600</div>
           <div className={styles.generationCommentActions}>
             <button type="button" className="btn" onClick={() => void handleConfirmGenerationComment()}>
-              Generalas indítása
+              Generalas indĂ„â€šĂ‚Â­tĂ„â€šĂ‹â€ˇsa
             </button>
             <button type="button" className="btn" onClick={closeGenerationCommentModal}>
               Megse
@@ -5984,7 +5984,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           href="/"
           title={bookTitle}
           subtitle={bookAuthor}
-          ariaLabel="Könyv oldal"
+          ariaLabel="KĂ„â€šĂ‚Â¶nyv oldal"
           middleSlot={
             topbarIconSlug ? (
               <span className={styles.topBarBookIcon} aria-hidden="true">
@@ -6009,8 +6009,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   className={`${styles.topBarFavoriteButton} ${isPersonalFavoriteBook ? styles.topBarFavoriteButtonActive : ""}`}
                   onClick={handleToggleBookFavorite}
                   disabled={isFavoriteSaving}
-                  aria-label={isPersonalFavoriteBook ? "Könyv eltávolítasa a saját kedvencekbol" : "Könyv jelölese saját kedvenckent"}
-                  title={isPersonalFavoriteBook ? "Sajat kedvenc könyv" : "Jeloles saját kedvenckent"}
+                  aria-label={isPersonalFavoriteBook ? "KĂ„â€šĂ‚Â¶nyv eltĂ„â€šĂ‹â€ˇvolĂ„â€šĂ‚Â­tasa a sajĂ„â€šĂ‹â€ˇt kedvencekbol" : "KĂ„â€šĂ‚Â¶nyv jelĂ„â€šĂ‚Â¶lese sajĂ„â€šĂ‹â€ˇt kedvenckent"}
+                  title={isPersonalFavoriteBook ? "Sajat kedvenc kĂ„â€šĂ‚Â¶nyv" : "Jeloles sajĂ„â€šĂ‹â€ˇt kedvenckent"}
                 >
                   <ToolIcon type="favorite" />
                 </button>
@@ -6021,17 +6021,17 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   className={`${styles.topBarFavoriteButton} ${styles.topBarGlobalFavoriteButton} ${isGlobalFavoriteBook ? styles.topBarFavoriteButtonActive : ""}`}
                   onClick={handleToggleGlobalBookFavorite}
                   disabled={isGlobalFavoriteSaving}
-                  aria-label={isGlobalFavoriteBook ? "Globális admin kedvenc kikapcsolasa" : "Globális admin kedvenc bekapcsolasa"}
+                  aria-label={isGlobalFavoriteBook ? "GlobĂ„â€šĂ‹â€ˇlis admin kedvenc kikapcsolĂ„â€šĂ‹â€ˇsa" : "GlobĂ„â€šĂ‹â€ˇlis admin kedvenc bekapcsolĂ„â€šĂ‹â€ˇsa"}
                   title={
                     isGlobalFavoriteBook
-                      ? "Globális admin kedvenc (jelszóval módosítva)"
-                      : "Globális admin kedvenc beallitasa (jelszó szükséges)"
+                      ? "GlobĂ„â€šĂ‹â€ˇlis admin kedvenc (jelszĂ„â€šÄąâ€šval mĂ„â€šÄąâ€šdosĂ„â€šĂ‚Â­tva)"
+                      : "GlobĂ„â€šĂ‹â€ˇlis admin kedvenc beallitasa (jelszĂ„â€šÄąâ€š szĂ„â€šĂ„ËťksĂ„â€šĂ‚Â©ges)"
                   }
                 >
                   <ToolIcon type="admin" />
                 </button>
               ) : null}
-              <Link className={styles.topBarBackButton} href="/" aria-label="Vissza a könyvtarba" title="Vissza a könyvtarba">
+              <Link className={styles.topBarBackButton} href="/" aria-label="Vissza a kĂ„â€šĂ‚Â¶nyvtarba" title="Vissza a kĂ„â€šĂ‚Â¶nyvtarba">
                 <ToolIcon type="back" />
               </Link>
             </div>
@@ -6041,7 +6041,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
 
     <main className={styles.main}>
       {state.status === "booting" ? (
-        <div className="card">Betöltés...</div>
+        <div className="card">BetĂ„â€šĂ‚Â¶ltĂ„â€šĂ‚Â©s...</div>
       ) : state.status === "error" ? (
         <div className="card">
           <div style={{ fontWeight: 650, marginBottom: 6 }}>Dashboard hiba</div>
@@ -6053,7 +6053,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
           </div>
         </div>
       ) : blocks.length === 0 ? (
-        <div className="card">Ehhez a könyvhoz meg nincs blokk.</div>
+        <div className="card">Ehhez a kĂ„â€šĂ‚Â¶nyvhoz meg nincs blokk.</div>
       ) : isMobile ? (
         <div className={styles.mobileStage}>
           {renderMobileContent()}
@@ -6091,7 +6091,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
         <aside className={styles.sidebar}>
           <section className={`card ${styles.activityPanel}`}>
             <div className={styles.activityGroup}>
-              <div className={styles.activityGroupTitle}>Nezet</div>
+              <div className={styles.activityGroupTitle}>Nézet</div>
               <div className={styles.activityOptions}>
                 <button
                   className={`${styles.activityIconButton} ${store.desktopLayout === "single" ? styles.activeToggle : ""}`}
@@ -6103,8 +6103,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       activePanel: prev.activePanel ?? "translated",
                     }))
                   }
-                  aria-label="Egy oldalas nézet"
-                  title="Egy oldalas nézet"
+                  aria-label="Egy oldalas nĂ„â€šĂ‚Â©zet"
+                  title="Egy oldalas nĂ„â€šĂ‚Â©zet"
                 >
                   <ToolIcon type="single" />
                 </button>
@@ -6112,8 +6112,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   className={`${styles.activityIconButton} ${store.desktopLayout === "split" ? styles.activeToggle : ""}`}
                   type="button"
                   onClick={() => setStore((prev) => ({ ...prev, desktopLayout: "split" }))}
-                  aria-label="Osztott nézet"
-                  title="Osztott nézet"
+                  aria-label="Osztott nĂ„â€šĂ‚Â©zet"
+                  title="Osztott nĂ„â€šĂ‚Â©zet"
                 >
                   <ToolIcon type="split" />
                 </button>
@@ -6127,8 +6127,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                   className={`${styles.activityIconButton} ${onboardingGuideOpen ? styles.activeToggle : ""}`}
                   type="button"
                   data-onboarding-id="onb-replay"
-                  aria-label="Onboarding sugo"
-                  title="Onboarding sugo"
+                  aria-label="Onboarding sÄ‚ĹźgÄ‚Ĺ‚"
+                  title="Onboarding sÄ‚ĹźgÄ‚Ĺ‚"
                   onClick={handleOpenOnboardingGuide}
                 >
                   <ToolIcon type="onboarding" />
@@ -6137,10 +6137,10 @@ export function BookDashboard({ bookId }: { bookId: string }) {
             </div>
 
             <div className={styles.activityGroup}>
-              <div className={styles.activityGroupTitle}>Könyvjelzo</div>
+              <div className={styles.activityGroupTitle}>KÄ‚Â¶nyvjelzÄąâ€</div>
               <div className={styles.activityOptions}>
                 <label className={styles.bookmarkColorControl}>
-                  <span>Kategoria</span>
+                  <span>Kategória</span>
                   {renderBookmarkPalette("desktop")}
                 </label>
                 {hasBookmarks ? (
@@ -6157,9 +6157,9 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                             onClick={handleSelectBookmarkFromList}
                           >
                             <span className={styles.bookmarkListMeta}>
-                              {entry.kind === "progress" ? "Haladas" : "Fontos"}
+                              {entry.kind === "progress" ? "HaladÄ‚Ë‡s" : "Fontos"}
                             </span>
-                            <span>{entry.name || "Nev nelkul"}</span>
+                            <span>{entry.name || "NÄ‚Â©v nÄ‚Â©lkÄ‚Ä˝l"}</span>
                             <span className={styles.bookmarkListMeta}>
                               {placement ? `${placement.chapterIndex}.f / ${placement.block.blockIndex}.b` : "n/a"}
                             </span>
@@ -6173,8 +6173,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                         className={`input ${styles.bookmarkNameInput}`}
                         value={selectedBookmark?.name ?? ""}
                         onChange={handleSelectedBookmarkNameChange}
-                        placeholder="Könyvjelzo label"
-                        aria-label="Könyvjelzo label"
+                        placeholder="KÄ‚Â¶nyvjelzÄąâ€ label"
+                        aria-label="KÄ‚Â¶nyvjelzÄąâ€ label"
                         disabled={!selectedBookmark}
                       />
                     </label>
@@ -6183,8 +6183,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       type="button"
                       disabled={!selectedBookmark}
                       onClick={handleJumpToSelectedBookmark}
-                      aria-label="Ugras a könyvjelzohoz"
-                      title="Ugras a könyvjelzohoz"
+                      aria-label="Ugrás a könyvjelzőhöz"
+                      title="Ugrás a könyvjelzőhöz"
                     >
                       <ToolIcon type="bookmark" />
                     </button>
@@ -6193,7 +6193,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       type="button"
                       onClick={handleDeleteSelectedBookmark}
                     >
-                      Könyvjelzo törlése
+                      Könyvjelző törlése
                     </button>
                   </>
                 ) : null}
@@ -6210,8 +6210,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       type="button"
                       role="switch"
                       aria-checked={adminSourceEditMode}
-                      aria-label={adminSourceEditMode ? "Admin source szerkesztés kikapcsolása" : "Admin source szerkesztés bekapcsolása"}
-                      title={adminSourceEditMode ? "Admin source szerkesztés kikapcsolása" : "Admin source szerkesztés bekapcsolása"}
+                      aria-label={adminSourceEditMode ? "Admin source szerkesztĂ„â€šĂ‚Â©s kikapcsolĂ„â€šĂ‹â€ˇsa" : "Admin source szerkesztĂ„â€šĂ‚Â©s bekapcsolĂ„â€šĂ‹â€ˇsa"}
+                      title={adminSourceEditMode ? "Admin source szerkesztĂ„â€šĂ‚Â©s kikapcsolĂ„â€šĂ‹â€ˇsa" : "Admin source szerkesztĂ„â€šĂ‚Â©s bekapcsolĂ„â€šĂ‹â€ˇsa"}
                       onClick={handleToggleAdminSourceEditMode}
                     >
                       ADMIN
@@ -6219,8 +6219,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                     <button
                       className={`${styles.activityIconButton} ${chapterAddMode ? styles.activeToggle : ""}`}
                       type="button"
-                      aria-label={chapterAddMode ? "Fejezet-hozzaadas mod kikapcsolasa" : "Fejezet-hozzaadas mod bekapcsolasa"}
-                      title={chapterAddMode ? "Fejezet-hozzaadas mod kikapcsolasa" : "Fejezet-hozzaadas mod bekapcsolasa"}
+                      aria-label={chapterAddMode ? "Fejezet-hozzÄ‚Ë‡adÄ‚Ë‡s mÄ‚Ĺ‚d kikapcsolÄ‚Ë‡sa" : "Fejezet-hozzÄ‚Ë‡adÄ‚Ë‡s mÄ‚Ĺ‚d bekapcsolÄ‚Ë‡sa"}
+                      title={chapterAddMode ? "Fejezet-hozzÄ‚Ë‡adÄ‚Ë‡s mÄ‚Ĺ‚d kikapcsolÄ‚Ë‡sa" : "Fejezet-hozzÄ‚Ë‡adÄ‚Ë‡s mÄ‚Ĺ‚d bekapcsolÄ‚Ë‡sa"}
                       onClick={handleToggleChapterAddMode}
                       disabled={chapterEditSaving || chapterDeleteSaving || chapterAddSaving || !isReady}
                     >
@@ -6238,8 +6238,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                     <button
                       className={styles.activityIconButton}
                       type="button"
-                      aria-label="Tobb blokk generalasa"
-                      title={`Tobb blokk generalasa (${generationCapacityRemaining})`}
+                      aria-label="TĂ„â€šĂ‚Â¶bb blokk generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsa"
+                      title={`TĂ„â€šĂ‚Â¶bb blokk generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇsa (${generationCapacityRemaining})`}
                       onClick={handleRequestBatchGenerate}
                       disabled={
                         !isReady ||
@@ -6256,8 +6256,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       type="button"
                       role="switch"
                       aria-checked={autoGenerateOnScroll}
-                      aria-label="Gorgetes alapu auto-generalas kapcsolasa"
-                      title={autoGenerateOnScroll ? "Gorgetes alapu auto-generalas: ON" : "Gorgetes alapu auto-generalas: OFF"}
+                      aria-label="GĂ„â€šĂ‚Â¶rgetĂ„â€šĂ‚Â©s alapĂ„â€šÄąĹş auto-generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs kapcsolĂ„â€šĂ‹â€ˇsa"
+                      title={autoGenerateOnScroll ? "GĂ„â€šĂ‚Â¶rgetĂ„â€šĂ‚Â©s alapĂ„â€šÄąĹş auto-generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs: ON" : "GĂ„â€šĂ‚Â¶rgetĂ„â€šĂ‚Â©s alapĂ„â€šÄąĹş auto-generĂ„â€šĂ‹â€ˇlĂ„â€šĂ‹â€ˇs: OFF"}
                       onClick={() => setAutoGenerateOnScroll((prev) => !prev)}
                     >
                       <ToolIcon type="sync" />
@@ -6267,8 +6267,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                       type="button"
                       role="switch"
                       aria-checked={autoTranslateChapterTitles}
-                      aria-label="Fejezetcím auto-fordítás kapcsolása"
-                      title={autoTranslateChapterTitles ? "Fejezetcím auto-fordítás: ON" : "Fejezetcím auto-fordítás: OFF"}
+                      aria-label="FejezetcĂ„â€šĂ‚Â­m auto-fordĂ„â€šĂ‚Â­tĂ„â€šĂ‹â€ˇs kapcsolĂ„â€šĂ‹â€ˇsa"
+                      title={autoTranslateChapterTitles ? "FejezetcĂ„â€šĂ‚Â­m auto-fordĂ„â€šĂ‚Â­tĂ„â€šĂ‹â€ˇs: ON" : "FejezetcĂ„â€šĂ‚Â­m auto-fordĂ„â€šĂ‚Â­tĂ„â€šĂ‹â€ˇs: OFF"}
                       onClick={() => setAutoTranslateChapterTitles((prev) => !prev)}
                     >
                       <ActionIcon type="edit" />
@@ -6278,8 +6278,8 @@ export function BookDashboard({ bookId }: { bookId: string }) {
                 <button
                   className={styles.activityIconButton}
                   type="button"
-                  aria-label="Utolsó szerkesztés visszavonása"
-                  title={lastEditedPanelUndo ? `Utolsó szerkesztés visszavonása: ${lastEditedPanelUndo.actionLabel}` : "Nincs visszaállítható szerkesztés"}
+                  aria-label="UtolsĂ„â€šÄąâ€š szerkesztĂ„â€šĂ‚Â©s visszavonĂ„â€šĂ‹â€ˇsa"
+                  title={lastEditedPanelUndo ? `UtolsĂ„â€šÄąâ€š szerkesztĂ„â€šĂ‚Â©s visszavonĂ„â€šĂ‹â€ˇsa: ${lastEditedPanelUndo.actionLabel}` : "Nincs visszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­thatĂ„â€šÄąâ€š szerkesztĂ„â€šĂ‚Â©s"}
                   onClick={() => void handleUndoLastEditedPanelChange()}
                   disabled={!isReady || !lastEditedPanelUndo || isEditorBusy}
                 >
@@ -6301,7 +6301,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
               <div className={styles.activityMeta}>
                 Elfogadatlan generalt blokk: {generatedUnacceptedCount}/{MAX_UNACCEPTED_GENERATED_BLOCKS}
               </div>
-              {lastEditedPanelUndo ? <div className={styles.activityMeta}>Visszaállítható: {lastEditedPanelUndo.actionLabel}</div> : null}
+              {lastEditedPanelUndo ? <div className={styles.activityMeta}>VisszaĂ„â€šĂ‹â€ˇllĂ„â€šĂ‚Â­thatĂ„â€šÄąâ€š: {lastEditedPanelUndo.actionLabel}</div> : null}
               {lastEditedPanelRedo ? <div className={styles.activityMeta}>Ujraalkalmazhato: {lastEditedPanelRedo.actionLabel}</div> : null}
               {batchFeedback ? <div className={styles.activityMeta}>{batchFeedback}</div> : null}
               {undoFeedback ? <div className={styles.activityMeta}>{undoFeedback}</div> : null}

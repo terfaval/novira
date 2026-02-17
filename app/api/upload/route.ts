@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const supabase = getSupabaseServerClient(accessToken);
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   if (authErr || !authData.user) {
-    return NextResponse.json({ ok: false, message: "Ervenytelen munkamenet." }, { status: 401 });
+    return NextResponse.json({ ok: false, message: "Érvénytelen munkamenet." }, { status: 401 });
   }
   if (isGuestUser(authData.user)) {
     return NextResponse.json({ ok: false, message: "Regisztralt felhasznalo szukseges." }, { status: 403 });
@@ -49,13 +49,13 @@ export async function POST(req: NextRequest) {
   });
 
   if (!(file instanceof File)) {
-    return NextResponse.json({ ok: false, message: "A fajl kotelezo." }, { status: 400 });
+    return NextResponse.json({ ok: false, message: "A fájl kötelező." }, { status: 400 });
   }
   if (!title) {
-    return NextResponse.json({ ok: false, message: "A cim kotelezo." }, { status: 400 });
+    return NextResponse.json({ ok: false, message: "A cím kötelező." }, { status: 400 });
   }
   if (file.size > MAX_UPLOAD_BYTES) {
-    return NextResponse.json({ ok: false, message: "A fajl tul nagy (max 12 MB)." }, { status: 413 });
+    return NextResponse.json({ ok: false, message: "A fájl túl nagy (max 12 MB)." }, { status: 413 });
   }
 
   const format = detectUploadFormat(file.name, file.type);
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
   if (!isAllowedMime(format, file.type)) {
     return NextResponse.json(
-      { ok: false, message: "A MIME tipus nem megfelelo a fajl kiterjesztesehez." },
+      { ok: false, message: "A MIME típus nem megfelelő a fájl kiterjesztéséhez." },
       { status: 415 }
     );
   }
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     .upload(storagePath, fileBuffer, { upsert: false, contentType: sourceMime });
   if (uploadRes.error) {
     return NextResponse.json(
-      { ok: false, message: `A fajl tarolasa sikertelen: ${uploadRes.error.message}` },
+      { ok: false, message: `A fájl tárolása sikertelen: ${uploadRes.error.message}` },
       { status: 500 }
     );
   }
@@ -161,16 +161,16 @@ function isAllowedMime(format: UploadFormat, mime: string): boolean {
 }
 
 function mapInsertError(error: { message?: string } | null): Error {
-  const raw = error?.message ?? "Nem sikerult letrehozni a konyv rekordot.";
+  const raw = error?.message ?? "Nem sikerült létrehozni a könyv rekordot.";
   const normalized = raw.toLowerCase();
 
   if (normalized.includes("could not find") && normalized.includes("column")) {
     return new Error(
-      "Adatbazis schema elteres: hianyzik egy feltolteshez szukseges oszlop a books tablabol."
+      "Adatbázis séma eltérés: hiányzik egy feltöltéshez szükséges oszlop a books táblából."
     );
   }
   if (normalized.includes("row-level security")) {
-    return new Error("Nincs jogosultsag a konyv letrehozasahoz (RLS policy hiba).");
+    return new Error("Nincs jogosultság a könyv létrehozásához (RLS policy hiba).");
   }
 
   return new Error(raw);
@@ -194,7 +194,7 @@ async function setBookStatus(
 
   const { error } = await supabase.from("books").update(payload).eq("id", bookId);
   if (error) {
-    throw new Error(`Nem sikerult frissiteni a konyv statuszt: ${error.message}`);
+    throw new Error(`Nem sikerült frissíteni a könyv státuszt: ${error.message}`);
   }
 }
 

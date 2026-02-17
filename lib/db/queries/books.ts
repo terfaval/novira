@@ -292,10 +292,10 @@ export async function ensureUserBookContext(args: {
   }
 
   if (sourceBook.is_public !== true) {
-    throw new Error("Ehhez a konyvhoz nincs hozzaferes.");
+    throw new Error("Ehhez a könyvhöz nincs hozzáférés.");
   }
   if (sourceBook.status !== "ready") {
-    throw new Error("A publikus alapkonyv meg nincs kesz allapotban.");
+    throw new Error("A publikus alapkönyv még nincs kész állapotban.");
   }
 
   let existingForkId: string | null = null;
