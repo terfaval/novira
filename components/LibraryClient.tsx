@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toSessionIdentity } from "@/lib/auth/identity";
 import type { BookRow } from "@/lib/types";
@@ -93,12 +93,51 @@ export function LibraryClient({
 }: LibraryClientProps = {}) {
   const [state, setState] = useState<LoadState>({ status: "booting" });
   const [activeBookId, setActiveBookId] = useState<string | null>(null);
+
+  // Hover-preview only (does NOT change carousel window / pagination)
+  const [previewBookId, setPreviewBookId] = useState<string | null>(null);
+
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortMode, setSortMode] = useState<SortMode>("author_asc");
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
   const [viewportWidth, setViewportWidth] = useState<number | null>(null);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+
+  // Hover stabilization timers
+  const hoverOpenTimer = useRef<number | null>(null);
+  const hoverCloseTimer = useRef<number | null>(null);
+
+  function schedulePreviewOpen(bookId: string) {
+    if (hoverCloseTimer.current) {
+      window.clearTimeout(hoverCloseTimer.current);
+      hoverCloseTimer.current = null;
+    }
+    if (hoverOpenTimer.current) window.clearTimeout(hoverOpenTimer.current);
+
+    hoverOpenTimer.current = window.setTimeout(() => {
+      setPreviewBookId(bookId);
+    }, 80);
+  }
+
+  function schedulePreviewClose() {
+    if (hoverOpenTimer.current) {
+      window.clearTimeout(hoverOpenTimer.current);
+      hoverOpenTimer.current = null;
+    }
+    if (hoverCloseTimer.current) window.clearTimeout(hoverCloseTimer.current);
+
+    hoverCloseTimer.current = window.setTimeout(() => {
+      setPreviewBookId(null);
+    }, 140);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (hoverOpenTimer.current) window.clearTimeout(hoverOpenTimer.current);
+      if (hoverCloseTimer.current) window.clearTimeout(hoverCloseTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -185,9 +224,11 @@ export function LibraryClient({
       setActiveBookId(state.books[0].id);
     }
   }, [activeBookId, state]);
+
   const readyBooks = state.status === "ready" ? state.books : [];
   const normalizedSearch = normalizeText(searchText);
   const books = [...readyBooks];
+
   const filteredAndSortedBooks = books
     .filter((book) => {
       if (statusFilter !== "all" && book.status !== statusFilter) return false;
@@ -209,6 +250,7 @@ export function LibraryClient({
       if (sortMode === "edited_ratio_asc") return resolveEditedRatio(a) - resolveEditedRatio(b);
       return b.updated_at.localeCompare(a.updated_at);
     });
+
   const filteredBooks = [
     ...filteredAndSortedBooks.filter((book) => isFavorite(book)),
     ...filteredAndSortedBooks.filter((book) => !isFavorite(book)),
@@ -217,9 +259,10 @@ export function LibraryClient({
   const activeIndex = filteredBooks.findIndex((book) => book.id === activeBookId);
   const effectiveActiveIndex = activeIndex >= 0 ? activeIndex : filteredBooks.length > 0 ? 0 : -1;
   const activeBook = effectiveActiveIndex >= 0 ? filteredBooks[effectiveActiveIndex] : null;
+
   const isMobileViewport = viewportWidth !== null && viewportWidth <= 720;
-  const enableHoverPreview = !isMobileViewport;
   const carouselVisibleCount = resolveCarouselVisibleCount(viewportWidth);
+
   const visibleBooks = useMemo(() => {
     if (effectiveActiveIndex < 0 || filteredBooks.length === 0) return [];
     const windowSize = Math.min(filteredBooks.length, carouselVisibleCount);
@@ -228,10 +271,26 @@ export function LibraryClient({
     const start = Math.max(0, Math.min(maxStart, preferredStart));
     return filteredBooks.slice(start, start + windowSize);
   }, [carouselVisibleCount, effectiveActiveIndex, filteredBooks]);
+
   const renderedCarouselBooks = isMobileViewport ? filteredBooks : visibleBooks;
+
+  const visualActiveBookId =
+    !isMobileViewport &&
+    previewBookId &&
+    renderedCarouselBooks.some((book) => book.id === previewBookId)
+      ? previewBookId
+      : activeBookId;
+
+  // If preview book falls out of the visible window, clear preview to avoid "stuck" state.
+  useEffect(() => {
+    if (!previewBookId) return;
+    if (!renderedCarouselBooks.some((b) => b.id === previewBookId)) setPreviewBookId(null);
+  }, [previewBookId, renderedCarouselBooks]);
+
   const hasPrev = effectiveActiveIndex > 0;
   const hasNext = effectiveActiveIndex >= 0 && effectiveActiveIndex < filteredBooks.length - 1;
   const paginationStep = Math.max(1, Math.min(carouselVisibleCount, filteredBooks.length));
+
   const paginationStarts = useMemo(() => {
     if (filteredBooks.length === 0) return [];
     const starts: number[] = [];
@@ -240,33 +299,35 @@ export function LibraryClient({
     }
     return starts;
   }, [filteredBooks.length, paginationStep]);
+
   const activePaginationIndex =
     effectiveActiveIndex >= 0 ? Math.floor(effectiveActiveIndex / paginationStep) : -1;
-  const bookIndexById = useMemo(() => {
-    const map = new Map<string, number>();
-    filteredBooks.forEach((book, index) => map.set(book.id, index));
-    return map;
-  }, [filteredBooks]);
 
-  function activateByIndex(index: number) {
-    const next = filteredBooks[index];
-    if (!next) return;
-    setActiveBookId(next.id);
-  }
+  const activateByIndex = useCallback(
+    (index: number) => {
+      const next = filteredBooks[index];
+      if (!next) return;
+      setActiveBookId(next.id);
+      setPreviewBookId(null);
+    },
+    [filteredBooks],
+  );
 
-  function goPrev() {
+  const goPrev = useCallback(() => {
     if (!hasPrev) return;
+    setPreviewBookId(null);
     const remaining = effectiveActiveIndex;
     const step = Math.min(paginationStep, remaining);
     activateByIndex(effectiveActiveIndex - step);
-  }
+  }, [activateByIndex, effectiveActiveIndex, hasPrev, paginationStep]);
 
-  function goNext() {
+  const goNext = useCallback(() => {
     if (!hasNext) return;
+    setPreviewBookId(null);
     const remaining = filteredBooks.length - 1 - effectiveActiveIndex;
     const step = Math.min(paginationStep, remaining);
     activateByIndex(effectiveActiveIndex + step);
-  }
+  }, [activateByIndex, effectiveActiveIndex, filteredBooks.length, hasNext, paginationStep]);
 
   useEffect(() => {
     function isTypingTarget(target: EventTarget | null) {
@@ -327,7 +388,7 @@ export function LibraryClient({
   if (readyBooks.length === 0) return <LibraryEmpty />;
 
   const allStatuses = Array.from(new Set(readyBooks.map((book) => book.status))).sort((a, b) =>
-    a.localeCompare(b, "hu")
+    a.localeCompare(b, "hu"),
   );
 
   const renderToolsContent = () => (
@@ -345,11 +406,7 @@ export function LibraryClient({
 
       <label className="library-tool-field">
         <span className="library-tool-label">Státusz</span>
-        <select
-          className="input"
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-        >
+        <select className="input" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
           <option value="all">Minden</option>
           {allStatuses.map((status) => (
             <option key={status} value={status}>
@@ -361,11 +418,7 @@ export function LibraryClient({
 
       <label className="library-tool-field">
         <span className="library-tool-label">Sorbarendezés</span>
-        <select
-          className="input"
-          value={sortMode}
-          onChange={(event) => setSortMode(event.target.value as SortMode)}
-        >
+        <select className="input" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}>
           <option value="updated_desc">Frissítés (új -&gt; régi)</option>
           <option value="updated_asc">Frissítés (régi -&gt; új)</option>
           <option value="title_asc">Cím (A-Z)</option>
@@ -395,37 +448,40 @@ export function LibraryClient({
       ) : null}
 
       <section className="library-carousel-shell" aria-label="Könyvlista">
-        <button
-          type="button"
-          className="carousel-arrow"
-          onClick={goPrev}
-          disabled={!hasPrev}
-          aria-label="Előző könyv"
-        >
+        <button type="button" className="carousel-arrow" onClick={goPrev} disabled={!hasPrev} aria-label="Előző könyv">
           <span className="carousel-arrow-icon left" aria-hidden="true" />
         </button>
 
-        <div
-          className="library-carousel-stage"
-        >
+        <div className="library-carousel-stage">
           {activeBook ? (
             <div className="library-carousel-track">
               {renderedCarouselBooks.map((book) => {
-                const isActive = isMobileViewport ? false : book.id === activeBook.id;
-                const bookIndex = bookIndexById.get(book.id) ?? -1;
-                const isBeforeActive = bookIndex >= 0 && bookIndex < effectiveActiveIndex;
-                const isAfterActive = bookIndex > effectiveActiveIndex;
+                const isActive = isMobileViewport ? false : book.id === visualActiveBookId;
+
                 return (
                   <div
                     key={book.id}
-                    className={`library-carousel-item${isActive ? " is-active" : " is-inactive"}${isBeforeActive ? " is-before-active" : ""}${isAfterActive ? " is-after-active" : ""}`}
+                    className={`library-carousel-item${isActive ? " is-active" : " is-inactive"}`}
+                    onPointerEnter={
+                      isMobileViewport
+                        ? undefined
+                        : () => {
+                            schedulePreviewOpen(book.id);
+                          }
+                    }
+                    onPointerLeave={
+                      isMobileViewport
+                        ? undefined
+                        : () => {
+                            schedulePreviewClose();
+                          }
+                    }
                   >
                     <BookCard
                       book={book}
                       isActive={isActive}
                       onActivate={setActiveBookId}
                       openOnInactive={isMobileViewport}
-                      onHoverStart={enableHoverPreview ? setActiveBookId : undefined}
                     />
                   </div>
                 );
@@ -436,13 +492,7 @@ export function LibraryClient({
           )}
         </div>
 
-        <button
-          type="button"
-          className="carousel-arrow"
-          onClick={goNext}
-          disabled={!hasNext}
-          aria-label="Következő könyv"
-        >
+        <button type="button" className="carousel-arrow" onClick={goNext} disabled={!hasNext} aria-label="Következő könyv">
           <span className="carousel-arrow-icon right" aria-hidden="true" />
         </button>
       </section>
@@ -451,12 +501,12 @@ export function LibraryClient({
         {paginationStarts.map((startIndex, pageIndex) => {
           const pageEnd = Math.min(filteredBooks.length, startIndex + paginationStep);
           return (
-          <span
-            key={`${startIndex}-${pageEnd}`}
-            className={`carousel-dot${pageIndex === activePaginationIndex ? " is-active" : ""}`}
-            aria-label={`${startIndex + 1}-${pageEnd}. könyvoldal`}
-            aria-hidden="true"
-          />
+            <span
+              key={`${startIndex}-${pageEnd}`}
+              className={`carousel-dot${pageIndex === activePaginationIndex ? " is-active" : ""}`}
+              aria-label={`${startIndex + 1}-${pageEnd}. könyvoldal`}
+              aria-hidden="true"
+            />
           );
         })}
       </div>
@@ -475,12 +525,7 @@ export function LibraryClient({
 
       {mobileToolsOpen && showMobileToolsFab && showTools ? (
         <>
-          <button
-            type="button"
-            className="mobile-tools-backdrop"
-            aria-label="Tool panel bezárása"
-            onClick={() => setMobileToolsOpen(false)}
-          />
+          <button type="button" className="mobile-tools-backdrop" aria-label="Tool panel bezárása" onClick={() => setMobileToolsOpen(false)} />
           <section className="mobile-tools-sheet" aria-label="Mobil tool panel">
             {renderToolsContent()}
           </section>

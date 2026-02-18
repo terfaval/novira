@@ -1,4 +1,6 @@
-﻿:root {
+﻿/* globals.css (fixed: hover selects active; smoother carousel resize; no hover overlay) */
+
+:root {
   --shell-main-max: 1120px;
   --shell-side-pad: 20px;
   --shell-top-offset: 24px;
@@ -240,11 +242,13 @@ main {
   font-size: clamp(12px, 1.35vw, 14px);
   color: var(--muted);
 }
+
 .home-guest-actions {
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
+
 .home-guest-actions .btn {
   border-radius: 999px;
   padding: 7px 10px;
@@ -259,29 +263,35 @@ main {
   justify-content: center;
   padding: 24px var(--shell-side-pad);
 }
+
 .auth-wireframe-card {
   width: min(100%, 520px);
   display: grid;
   gap: 12px;
 }
+
 .auth-wireframe-field {
   display: grid;
   gap: 6px;
 }
+
 .auth-wireframe-field > span {
   font-size: 13px;
   color: var(--muted);
 }
+
 .auth-wireframe-actions {
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
+
 .auth-wireframe-error {
   margin: 0;
   color: #9b2f2f;
   font-size: 14px;
 }
+
 @media (max-width: 720px) {
   .home-guest-actions {
     gap: 6px;
@@ -348,6 +358,10 @@ main {
   gap: 10px;
 }
 
+/* ============================= */
+/* CAROUSEL (desktop)            */
+/* ============================= */
+
 .library-carousel-shell {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -365,7 +379,9 @@ main {
   height: 100%;
   display: flex;
   justify-content: center;
-  overflow: hidden;
+
+  overflow-x: hidden;
+  overflow-y: visible; /* hover shadow/translate safe */
 }
 
 .library-carousel-track {
@@ -375,6 +391,7 @@ main {
   height: 100%;
   width: fit-content;
   max-width: 100%;
+  overflow: visible;
 }
 
 .carousel-arrow {
@@ -418,26 +435,39 @@ main {
   }
 }
 
+/* IMPORTANT: smooth resize uses flex-basis (not width) */
 .library-carousel-item {
   display: flex;
   min-height: 0;
   height: 100%;
-  transition: transform 180ms ease, opacity 180ms ease, filter 180ms ease;
+  flex: 0 0 auto;
+  transition: flex-basis 220ms ease, transform 180ms ease, opacity 180ms ease, filter 180ms ease;
+  will-change: flex-basis, transform;
 }
 
 .library-carousel-item.is-active {
-  width: min(276px, 70vw);
+  flex-basis: min(276px, 70vw);
   opacity: 1;
   transform: translateY(0);
 }
 
 .library-carousel-item.is-inactive {
-  width: clamp(26px, 3.1vw, 36px);
+  flex-basis: clamp(26px, 3.1vw, 36px);
   align-items: center;
   justify-content: center;
   opacity: 0.96;
   filter: none;
-  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.library-carousel-item.is-inactive .book-spine {
+  transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
+}
+
+.library-carousel-item.is-inactive .book-spine:hover,
+.library-carousel-item.is-inactive .book-spine:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px var(--book-card-shadow);
+  filter: brightness(1.06);
 }
 
 .carousel-pagination {
@@ -606,6 +636,8 @@ main:has(.book-page-shell) {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .library-carousel-track {
@@ -622,8 +654,13 @@ main:has(.book-page-shell) {
     display: none;
   }
 
+  .library-carousel-item {
+    transition: none;
+  }
+
   .library-carousel-item.is-active {
     order: 0;
+    flex-basis: auto;
     width: 100%;
     min-height: 60%;
     height: 60%;
@@ -631,6 +668,7 @@ main:has(.book-page-shell) {
 
   .library-carousel-item.is-inactive {
     order: 1;
+    flex-basis: auto;
     width: 100%;
     height: 7%;
     min-height: 48px;
@@ -1078,51 +1116,7 @@ details[open] > .book-accordion-trigger::after {
   content: "\25BC";
 }
 
-/* ============================= */
-/* CAROUSEL LAYOUT               */
-/* ============================= */
-
-.library-carousel-stage {
-  width: 100%;
-  min-height: 0;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.library-carousel-track {
-  display: flex;
-  align-items: stretch;
-  gap: 10px;
-  width: fit-content;     /* fontos: ne legyen 100% */
-  max-width: 100%;
-}
-
-.library-carousel-item {
-  display: flex;
-  min-height: 0;
-  height: 100%;
-  transition: transform 180ms ease, opacity 180ms ease, filter 180ms ease;
-}
-
-.library-carousel-item.is-active {
-  width: min(276px, 70vw);
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.library-carousel-item.is-inactive {
-  width: clamp(26px, 3.1vw, 36px);
-  align-items: center;
-  justify-content: center;
-  opacity: 0.96;
-}
-
-/* ============================= */
-/* BOOK SPINE (stabil layout)   */
-/* ============================= */
-
+/* BOOK SPINE */
 .book-spine {
   position: relative;
   height: 100%;
@@ -1136,39 +1130,6 @@ details[open] > .book-accordion-trigger::after {
   text-align: center;
 }
 
-@media (max-width: 720px) {
-  .home-layer-top,
-  .home-layer-plus {
-    left: max(4px, calc((100vw - min(100vw, var(--shell-main-max))) / 2 + 6px));
-    z-index: 10;
-  }
-
-  .home-plus-button {
-    width: 52px;
-    height: 52px;
-  }
-
-  .home-layer-main {
-    padding: 74px 0 12px;
-  }
-
-  .home-topbar-logo {
-    gap: 10px;
-  }
-
-  .home-topbar-logo-mark {
-    width: clamp(34px, 8.8vw, 40px);
-  }
-
-  .home-topbar-title {
-    font-size: clamp(20px, 5.1vw, 24px);
-  }
-
-  .home-topbar-subtitle {
-    font-size: clamp(11px, 3.2vw, 13px);
-  }
-}
-
 /* AUTHOR - TOP */
 .book-spine-author-line {
   position: absolute;
@@ -1177,7 +1138,7 @@ details[open] > .book-accordion-trigger::after {
   transform: translateX(-50%) rotate(180deg);
   writing-mode: vertical-rl;
   font-size: 9px;
-  font-weight: 400;   /* normal */
+  font-weight: 400;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1198,7 +1159,7 @@ details[open] > .book-accordion-trigger::after {
   transform: translate(-50%, -50%) rotate(180deg);
   writing-mode: vertical-rl;
   font-size: 9px;
-  font-weight: 800;   /* vastag */
+  font-weight: 800;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1226,81 +1187,7 @@ details[open] > .book-accordion-trigger::after {
   transform-origin: center;
 }
 
-/* Final mobile carousel overrides (must stay last to beat duplicated legacy blocks). */
-@media (max-width: 720px) {
-  .home-layer-main {
-    padding: 74px 12px 12px;
-  }
-
-  .library-layout {
-    --mobile-carousel-stage-width: min(calc(100vw - 44px), 560px);
-  }
-
-  .library-carousel-shell {
-    justify-items: start;
-  }
-
-  .library-carousel-stage {
-    width: var(--mobile-carousel-stage-width);
-    max-width: var(--mobile-carousel-stage-width);
-    margin-inline: 0;
-    touch-action: pan-y;
-    align-items: flex-start;
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
-
-  .library-carousel-track {
-    width: 100%;
-    height: auto;
-    max-width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    overflow: visible;
-    padding-bottom: 4px;
-  }
-
-  .library-carousel-item.is-inactive {
-    width: 100%;
-    align-items: stretch;
-    justify-content: stretch;
-    min-height: 56px;
-    height: auto;
-  }
-
-  .library-carousel-item.is-before-active {
-    order: 0;
-  }
-
-  .library-carousel-item.is-active {
-    order: 1;
-    width: 100%;
-    min-height: 60%;
-    height: 60%;
-  }
-
-  .library-carousel-item.is-after-active {
-    order: 2;
-  }
-
-  .library-carousel-item.is-active .book-card {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .library-carousel-item.is-inactive .book-spine {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .carousel-pagination {
-    display: none;
-  }
-}
-
-/* Final desktop carousel sizing overrides (keep after mobile-final block). */
+/* Final desktop sizing overrides */
 @media (min-width: 721px) {
   .library-layout {
     --desktop-carousel-height: clamp(420px, 58vh, 560px);
@@ -1319,6 +1206,7 @@ details[open] > .book-accordion-trigger::after {
     max-height: var(--desktop-carousel-height);
     min-height: 340px;
     align-items: center;
+    padding-block: 10px;
   }
 
   .library-carousel-track {
@@ -1330,7 +1218,7 @@ details[open] > .book-accordion-trigger::after {
   }
 
   .library-carousel-item.is-active {
-    width: clamp(300px, calc(var(--desktop-carousel-height) * 0.66), 370px);
+    flex-basis: clamp(300px, calc(var(--desktop-carousel-height) * 0.66), 370px);
   }
 
   .library-carousel-item.is-active .book-card,
@@ -1394,7 +1282,7 @@ details[open] > .book-accordion-trigger::after {
   }
 
   .library-carousel-item.is-active {
-    width: clamp(330px, calc(var(--desktop-carousel-height) * 0.68), 420px);
+    flex-basis: clamp(330px, calc(var(--desktop-carousel-height) * 0.68), 420px);
   }
 
   .book-title {
@@ -1435,7 +1323,7 @@ details[open] > .book-accordion-trigger::after {
   }
 }
 
-/* Top bar alignment + landing layout */
+/* Top bar alignment + landing layout (unchanged) */
 .home-topbar-shell {
   width: 100%;
   display: flex;
@@ -1710,4 +1598,58 @@ details[open] > .book-accordion-trigger::after {
   .landing-audience-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* ============================= */
+/* SMOOTHER CAROUSEL HOVER (v1)  */
+/* Paste this near the end of globals.css so it wins specificity. */
+/* ============================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .library-carousel-item,
+  .library-carousel-item * {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.library-carousel-item {
+  position: relative;
+  will-change: width, transform, opacity, filter;
+  transition:
+    width 220ms cubic-bezier(.2, .8, .2, 1),
+    transform 220ms cubic-bezier(.2, .8, .2, 1),
+    opacity 180ms ease,
+    filter 180ms ease;
+}
+
+/* Small hitbox buffer: reduces "flicker" when the item expands on hover. */
+.library-carousel-item::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 18px;
+  pointer-events: none;
+}
+
+.library-carousel-item.is-inactive {
+  opacity: 0.92;
+  transform: translateY(0);
+}
+
+.library-carousel-item.is-active {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+/* Keep spine micro-hover subtle; main movement is on the item transition. */
+.library-carousel-item.is-inactive .book-spine {
+  transform: translateY(0);
+  transition: transform 160ms ease, box-shadow 160ms ease, filter 180ms ease;
+}
+
+.library-carousel-item.is-inactive:hover .book-spine {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
 }

@@ -76,6 +76,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-BOOKDASHBOARD-MOJIBAKE-FIX-AND-HOME-CAROUSEL-HOVER
+- Goal: Fix garbled Book Dashboard Hungarian UI text and stop Home carousel from auto-advancing on hover so only cards on the current page show hover effects.
+- Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/LibraryClient.tsx`, `app/globals.css`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
 - Ticket: ADHOC-ADMIN-LIBRARY-EXCLUDE-USER-FORKS
 - Goal: For admin library carousel, hide user fork copies (books with `source_book_id`) unless the fork is owned by the admin, while still showing all base books public or private.
 - Files modified: `components/LibraryClient.tsx`, `SPEC.md`, `TICKETS.md`

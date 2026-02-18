@@ -142,12 +142,19 @@ export function BookCard({
   }
 
   function primaryAction() {
+    // Desired behavior:
+    // - inactive spine: click activates (unless openOnInactive)
+    // - active card (including hover-selected): click navigates to book page
     if (isActive || openOnInactive) {
       navigate();
       return;
     }
     onActivate?.(book.id);
   }
+
+  // NOTE: switched to pointer events for more consistent hover on trackpads
+  const enter = () => onHoverStart?.(book.id);
+  const leave = () => onHoverEnd?.(book.id);
 
   if (!isActive) {
     const spineStyle = { "--spine-color": spineColor } as CSSProperties;
@@ -158,8 +165,8 @@ export function BookCard({
         role="link"
         tabIndex={0}
         onClick={primaryAction}
-        onMouseEnter={() => onHoverStart?.(book.id)}
-        onMouseLeave={() => onHoverEnd?.(book.id)}
+        onPointerEnter={enter}
+        onPointerLeave={leave}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
@@ -191,8 +198,8 @@ export function BookCard({
       role="link"
       tabIndex={0}
       onClick={primaryAction}
-      onMouseEnter={() => onHoverStart?.(book.id)}
-      onMouseLeave={() => onHoverEnd?.(book.id)}
+      onPointerEnter={enter}
+      onPointerLeave={leave}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
