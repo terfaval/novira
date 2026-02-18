@@ -23,6 +23,7 @@ Date: 2026-02-11
 ### 2.2 Row Level Security (RLS)
 - Enforce that a user can only access rows where owner/user columns match `auth.uid()`.
 - Books/Chapters/Blocks/Variants/Notes all protected via RLS.
+- User-scoped variants/notes/edits must be isolated per `owner_id` / `user_id`, even when source books are shared.
 
 ### 2.3 Server-side LLM calls
 - LLM provider key stored only in server env vars.
@@ -113,5 +114,6 @@ Date: 2026-02-16
 - Admin update policy for cross-user book visibility uses fixed admin user id:
   - `956eb736-0fb5-49eb-9be8-7011517b9873`.
 - Editorial isolation rule:
-  - editing a public base book by non-owner always happens on a user-owned fork linked by `source_book_id`.
+  - editing a public base book by non-owner happens via user-scoped variants/notes/edits layered over shared source blocks; no full fork is created by default.
+  - admin can modify any source text (`original_text`) or source metadata; non-admin can only modify source text/metadata for own source books.
 - Source provenance editing is admin-only through the book page admin panel mode (`Forras szerkesztes`).

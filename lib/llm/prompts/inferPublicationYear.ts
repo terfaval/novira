@@ -12,23 +12,26 @@ export function buildInferPublicationYearPrompt(
   const sampleSnippet = sampleText ? sampleText.slice(0, 1400) : "Nincs szovegreszlet.";
 
   const system = [
-    "Irodalomtorteneti asszisztens vagy.",
-    "Feladat: becsuld meg egy mu eredeti (elso) kiadasi evet.",
-    "Ha bizonytalan vagy, akkor is adj legjobb ev-becslest (ne adj nullt, csak ha tenyleg nincs eleg informacio).",
-    "Csak ervenyes JSON-t adj vissza, semmi mast.",
-    'Formatum: {"year": number | null, "confidence": "low" | "medium" | "high", "reason": string}',
+    "Irodalomtörténeti asszisztens vagy.",
+    "Feladat: becsüld meg egy mű eredeti (első) kiadási évét a megadott metaadatok alapján.",
+    "Ha nincs elég információ, add vissza: {\"year\": null}.",
+    "A kimenet mindig és kizárólag érvényes JSON legyen; semmi magyarázat, semmi extra mező.",
+    "Formátum: {\"year\": number | null}",
+    "Szabályok:",
+    "- Csak 1500 és a jelen év közötti év lehet érvényes.",
+    "- Ha csak újrakiadás/fordítás éve sejthető, de az eredeti nem, inkább null.",
   ].join("\n");
 
   const user = [
     `Cím: ${input.bookTitle ?? "Ismeretlen cím"}`,
     `Szerző: ${input.author ?? "Ismeretlen szerző"}`,
-    `Leiras: ${input.description ?? ""}`,
-    `Forrás fájlnév: ${input.sourceFilename ?? ""}`,
+    `Leírás: ${(input.description ?? "").trim()}`,
+    `Forrás fájlnév: ${(input.sourceFilename ?? "").trim()}`,
     "Fejezetcímek:",
     chapterList,
-    "Szovegreszlet:",
+    "Szövegrészlet:",
     sampleSnippet,
-    "Csak JSON valasszal valaszolj.",
+    "Csak JSON válasszal válaszolj.",
   ].join("\n\n");
 
   return { system, user };

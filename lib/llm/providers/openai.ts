@@ -1,5 +1,5 @@
 /**
- * OpenAI provider implementation (example).
+ * OpenAI provider implementation.
  *
  * Requirements:
  * - Server-side only (no client keys)
@@ -22,73 +22,89 @@ import { buildTranslateBlockPrompt } from "../prompts/translateBlock";
 import { buildGenerateNotePrompt } from "../prompts/generateNote";
 import { buildInferPublicationYearPrompt } from "../prompts/inferPublicationYear";
 
+function isGpt5Family(model: string): boolean {
+  return /^gpt-5/i.test((model ?? "").trim());
+}
+
+function getClient(apiKey: string) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const OpenAI = require("openai");
+  return new OpenAI({ apiKey });
+}
+
+const DEFAULT_MODEL = "gpt-4o-mini";
+
+function resolveModel(): string {
+  return process.env.OPENAI_MODEL ?? DEFAULT_MODEL;
+}
+
+async function callTextModel(params: {
+  model: string;
+  system: string;
+  user: string;
+  maxOutputTokens: number;
+}): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
+  const client = getClient(apiKey);
+
+  const { model, system, user, maxOutputTokens } = params;
+
+  // GPT‑5 family: use Responses API (most stable) and do NOT set sampling params.
+  if (isGpt5Family(model)) {
+    const resp = await client.responses.create({
+      model,
+      input: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      max_output_tokens: maxOutputTokens,
+    });
+
+    // openai v6: `output_text` is the concatenated text output across segments.
+    const text = (resp?.output_text ?? "").trim();
+    return text;
+  }
+
+  // Fallback for non‑GPT‑5 models (kept for compatibility).
+  const resp = await client.chat.completions.create({
+    model,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ],
+    max_tokens: maxOutputTokens,
+    // Intentionally omit temperature to avoid capability mismatches across models.
+  });
+
+  return (resp?.choices?.[0]?.message?.content ?? "").trim();
+}
+
 export class OpenAiProvider implements LlmProvider {
   public name = "openai";
 
   async translateBlock(input: TranslateBlockInput): Promise<TranslateBlockOutput> {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
-
-    // Lazy import so it's optional until wired.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const OpenAI = require("openai");
-    const client = new OpenAI({ apiKey });
-
     const { system, user } = buildTranslateBlockPrompt(input);
     const maxOutputTokens = input.options?.maxOutputTokens ?? 450;
-    const model = process.env.OPENAI_MODEL ?? "gpt-5-mini";
+    const model = resolveModel();
 
-    const resp = await client.chat.completions.create({
-      model,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      temperature: 0.2,
-      max_completion_tokens: maxOutputTokens,
-    });
-
-    const text = (resp?.choices?.[0]?.message?.content ?? "").trim();
+    const text = await callTextModel({ model, system, user, maxOutputTokens });
     if (!text) throw new Error("Empty model output");
     return { text };
   }
 
   async generateNote(input: GenerateNoteInput): Promise<GenerateNoteOutput> {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
-
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const OpenAI = require("openai");
-    const client = new OpenAI({ apiKey });
-
     const { system, user } = buildGenerateNotePrompt(input);
     const maxOutputTokens = input.options?.maxOutputTokens ?? 220;
-    const model = process.env.OPENAI_MODEL ?? "gpt-5-mini";
+    const model = resolveModel();
 
-    const resp = await client.chat.completions.create({
-      model,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      temperature: 0.2,
-      max_completion_tokens: maxOutputTokens,
-    });
-
-    const noteText = (resp?.choices?.[0]?.message?.content ?? "").trim();
+    const noteText = await callTextModel({ model, system, user, maxOutputTokens });
     if (!noteText) throw new Error("Empty model output");
     return { noteText };
   }
 
   async generateBookSummary(input: GenerateBookSummaryInput): Promise<GenerateBookSummaryOutput> {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
-
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const OpenAI = require("openai");
-    const client = new OpenAI({ apiKey });
-
-    const model = process.env.OPENAI_MODEL ?? "gpt-5-mini";
+    const model = resolveModel();
     const chapterList =
       input.chapterTitles && input.chapterTitles.length > 0
         ? input.chapterTitles.slice(0, 8).map((title, index) => `${index + 1}. ${title}`).join("\n")
@@ -97,57 +113,29 @@ export class OpenAiProvider implements LlmProvider {
     const sampleText = (input.sampleText ?? "").trim();
     const sampleSnippet = sampleText ? sampleText.slice(0, 1200) : "Nincs szovegreszlet.";
 
-    const resp = await client.chat.completions.create({
-      model,
-      messages: [
-        {
-          role: "system",
-          content:
-            "Magyar irodalmi szerkesztő vagy. Feladatod: rövid, semleges, kétmondatos összefoglaló készítése.",
-        },
-        {
-          role: "user",
-          content: [
-            `Cím: ${input.bookTitle ?? "Ismeretlen cím"}`,
-            `Szerző: ${input.author ?? "Ismeretlen szerző"}`,
-            "Fejezetcímek (ha vannak):",
-            chapterList,
-            "Reszlet a szovegbol:",
-            sampleSnippet,
-            "Irj pontosan 2 mondatot magyarul. Ne hasznalj felsorolast.",
-          ].join("\n\n"),
-        },
-      ],
-      temperature: 0.2,
-      max_completion_tokens: 180,
-    });
+    const system =
+      "Magyar irodalmi szerkesztő vagy. Feladatod: rövid, semleges, kétmondatos összefoglaló készítése.";
 
-    const summaryText = (resp?.choices?.[0]?.message?.content ?? "").trim();
+    const user = [
+      `Cím: ${input.bookTitle ?? "Ismeretlen cím"}`,
+      `Szerző: ${input.author ?? "Ismeretlen szerző"}`,
+      "Fejezetcímek (ha vannak):",
+      chapterList,
+      "Reszlet a szovegbol:",
+      sampleSnippet,
+      "Irj pontosan 2 mondatot magyarul. Ne hasznalj felsorolast.",
+    ].join("\n\n");
+
+    const summaryText = await callTextModel({ model, system, user, maxOutputTokens: 180 });
     if (!summaryText) throw new Error("Empty model output");
     return { summaryText };
   }
 
   async inferPublicationYear(input: InferPublicationYearInput): Promise<InferPublicationYearOutput> {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
-
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const OpenAI = require("openai");
-    const client = new OpenAI({ apiKey });
-    const model = process.env.OPENAI_MODEL ?? "gpt-5-mini";
+    const model = resolveModel();
     const { system, user } = buildInferPublicationYearPrompt(input);
 
-    const resp = await client.chat.completions.create({
-      model,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      temperature: 0.1,
-      max_completion_tokens: 120,
-    });
-
-    const raw = (resp?.choices?.[0]?.message?.content ?? "").trim();
+    const raw = await callTextModel({ model, system, user, maxOutputTokens: 120 });
     if (!raw) return { year: null };
 
     let parsedYear: number | null = null;
@@ -171,27 +159,12 @@ export class OpenAiProvider implements LlmProvider {
   }
 
   async generateChapterTitle(input: GenerateChapterTitleInput): Promise<GenerateChapterTitleOutput> {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
-
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const OpenAI = require("openai");
-    const client = new OpenAI({ apiKey });
-    const model = process.env.OPENAI_MODEL ?? "gpt-5-mini";
+    const model = resolveModel();
     const maxOutputTokens = input.options?.maxOutputTokens ?? 80;
     const { system, user } = buildGenerateChapterTitlePrompt(input);
 
-    const resp = await client.chat.completions.create({
-      model,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      temperature: 0.2,
-      max_completion_tokens: maxOutputTokens,
-    });
-
-    const chapterTitle = (resp?.choices?.[0]?.message?.content ?? "").replace(/^["'`]+|["'`]+$/g, "").trim();
+    const out = await callTextModel({ model, system, user, maxOutputTokens });
+    const chapterTitle = out.replace(/^["'`]+|["'`]+$/g, "").trim();
     if (!chapterTitle) throw new Error("Empty model output");
     return { chapterTitle: chapterTitle.slice(0, 160).trim() || `Fejezet ${input.chapterIndex}` };
   }

@@ -29,6 +29,21 @@ Acceptance:
 
 ---
 
+## Ticket ADHOC-DATA-MODEL-SHARED-SOURCE-BOOKS
+Type: Backend + DB + Data migration + UI
+
+Goal:
+Realign the data model so every upload/import creates an uploader-owned source book (canonical base), and user edits are stored only as user-scoped variants/notes/edits on top of shared source blocks (no full fork by default). Admin can edit any source book regardless of ownership.
+
+Acceptance:
+- Source book is uploader-owned; admin can edit any source book; non-admin can edit source text/metadata only on own source books.
+- Users see source blocks, but do not receive a full personal copy of all blocks by default.
+- User edits and generated content are stored as per-user overrides and visible only to that user.
+- Opening a public base book does not auto-create a full fork; editor works on shared source blocks with user-scoped overrides.
+- Migration plan: export existing books, reset storage, reimport (Gutenberg import can be used for automated recovery).
+
+---
+
 ## Ticket 1 - Project Bootstrap
 Scaffold Next.js app and baseline repo files.
 
@@ -60,6 +75,21 @@ Rate limiting, file size limits, error states.
 ---
 
 ## Implemented (Ad-hoc)
+
+- Ticket: ADHOC-ADMIN-LIBRARY-EXCLUDE-USER-FORKS
+- Goal: For admin library carousel, hide user fork copies (books with `source_book_id`) unless the fork is owned by the admin, while still showing all base books public or private.
+- Files modified: `components/LibraryClient.tsx`, `SPEC.md`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-BOOKDASHBOARD-BLOCK-GENERATION-OUTPUT-LIMIT
+- Goal: Prevent Book Dashboard block generation from truncating mid-sentence by scaling LLM output token limits to block length within server caps.
+- Files modified: `app/api/llm/route.ts`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-LLM-500-DEFAULT-MODEL-FIX
+- Goal: Align default OpenAI model to `gpt-4o-mini` and use compatible chat completion token cap to prevent LLM 500s when GPT-5 access is unavailable.
+- Files modified: `lib/llm/providers/openai.ts`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
 
 - Ticket: ADHOC-ADMIN-PERSONAL-VS-GLOBAL-FAVORITE-BOUNDARY
 - Goal: Split favorite handling into user-scoped personal favorites and separately gated global admin favorites, so admin default edits are private unless explicit privileged action is used.
@@ -1093,4 +1123,9 @@ Step board:
 - Ticket: ADHOC-HOME-CAROUSEL-DESKTOP-ARROW-ONLY-NO-HOVER-AUTO-ACTIVATE
 - Goal: On desktop Home/Landing carousel, stop hover/focus auto-activation so book/page changes happen only via left/right arrow controls (and keyboard arrows).
 - Files modified: `components/LibraryClient.tsx`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-GUEST-FORK-UNIQUE-CONSTRAINT-REUSE
+- Goal: When guest opens a public base book, reuse existing fork if the unique user+source constraint triggers during fork creation.
+- Files modified: `lib/db/queries/books.ts`, `TICKETS.md`
 - Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)

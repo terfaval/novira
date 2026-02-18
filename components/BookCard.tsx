@@ -110,11 +110,15 @@ export function BookCard({
   isActive = true,
   onActivate,
   openOnInactive = false,
+  onHoverStart,
+  onHoverEnd,
 }: {
   book: BookRow;
   isActive?: boolean;
   onActivate?: (bookId: string) => void;
   openOnInactive?: boolean;
+  onHoverStart?: (bookId: string) => void;
+  onHoverEnd?: (bookId: string) => void;
 }) {
   const router = useRouter();
   const href = `/book/${book.id}`;
@@ -154,6 +158,8 @@ export function BookCard({
         role="link"
         tabIndex={0}
         onClick={primaryAction}
+        onMouseEnter={() => onHoverStart?.(book.id)}
+        onMouseLeave={() => onHoverEnd?.(book.id)}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
@@ -185,6 +191,8 @@ export function BookCard({
       role="link"
       tabIndex={0}
       onClick={primaryAction}
+      onMouseEnter={() => onHoverStart?.(book.id)}
+      onMouseLeave={() => onHoverEnd?.(book.id)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();

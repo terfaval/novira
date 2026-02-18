@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   const { data: cachedBookRows } = await supabase
     .from("books")
     .select("id")
-    .eq("user_id", userId)
+    .eq("owner_id", userId)
     .eq("source_name", "project_gutenberg")
     .eq("source_work_id", sourceWorkId)
     .eq("status", "ready")

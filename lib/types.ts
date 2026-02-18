@@ -10,11 +10,13 @@ export type BookStatus =
 
 export type BookRow = {
   id: string;
+  owner_id: string;
   user_id: string;
   is_public?: boolean;
   is_favorite?: boolean;
   is_personal_favorite?: boolean;
   is_global_favorite?: boolean;
+  is_source?: boolean;
   source_book_id?: string | null;
   title: string;
   author: string | null;

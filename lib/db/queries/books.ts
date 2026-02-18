@@ -100,12 +100,6 @@ export type BookDashboardData = {
   completion: DashboardCompletion;
 };
 
-export type EnsureUserBookContextResult = {
-  resolvedBookId: string;
-  forked: boolean;
-  sourceBookId: string | null;
-};
-
 function errorMessage(error: { message?: string } | null): string {
   if (!error) return "Ismeretlen hiba.";
   return typeof error.message === "string" && error.message.trim()
@@ -120,257 +114,11 @@ function readChapter(chapters: ChapterJoinRow): { chapterIndex: number; chapterT
   return { chapterIndex: value.chapter_index, chapterTitle: value.title };
 }
 
-function hasMissingColumnError(error: { message?: string } | null, columnName: string): boolean {
-  const normalized = `${error?.message ?? ""}`.toLowerCase();
-  const needle = columnName.trim().toLowerCase();
-  if (!needle) return false;
-  return normalized.includes("column") && normalized.includes(needle);
-}
-
 function hasMissingRelationError(error: { message?: string } | null, relationName: string): boolean {
   const normalized = `${error?.message ?? ""}`.toLowerCase();
   const needle = relationName.trim().toLowerCase();
   if (!needle) return false;
   return normalized.includes("relation") && normalized.includes(needle);
-}
-
-type ChapterCloneRow = {
-  id: string;
-  chapter_index: number;
-  title: string | null;
-};
-
-type BlockCloneRow = {
-  id: string;
-  chapter_id: string;
-  block_index: number;
-  original_text: string;
-  original_hash: string;
-};
-
-type FootnoteCloneRow = {
-  number: number;
-  text: string;
-  source_chapter_id: string;
-  source_block_id: string;
-};
-
-type FootnoteAnchorCloneRow = {
-  chapter_id: string;
-  block_id: string;
-  footnote_number: number;
-  start_offset: number;
-  end_offset: number;
-};
-
-async function cloneBookStructure(args: {
-  supabase: SupabaseClient;
-  sourceBookId: string;
-  forkBookId: string;
-  userId: string;
-}): Promise<void> {
-  const { supabase, sourceBookId, forkBookId, userId } = args;
-  const chaptersTable = supabase.from("chapters") as any;
-  const blocksTable = supabase.from("blocks") as any;
-  const footnotesTable = supabase.from("footnotes") as any;
-  const anchorsTable = supabase.from("footnote_anchors") as any;
-
-  const { data: sourceChapterRows, error: sourceChapterError } = await chaptersTable
-    .select("id,chapter_index,title")
-    .eq("book_id", sourceBookId)
-    .order("chapter_index", { ascending: true });
-  if (sourceChapterError) throw new Error(errorMessage(sourceChapterError));
-
-  const chapterIdMap = new Map<string, string>();
-  for (const chapter of (sourceChapterRows ?? []) as ChapterCloneRow[]) {
-    const { data: insertedChapter, error: insertChapterError } = await chaptersTable
-      .insert({
-        owner_id: userId,
-        book_id: forkBookId,
-        chapter_index: chapter.chapter_index,
-        title: chapter.title ?? null,
-      })
-      .select("id")
-      .single();
-    if (insertChapterError || !insertedChapter?.id) {
-      throw new Error(errorMessage(insertChapterError));
-    }
-    chapterIdMap.set(chapter.id, insertedChapter.id as string);
-  }
-
-  const { data: sourceBlockRows, error: sourceBlockError } = await blocksTable
-    .select("id,chapter_id,block_index,original_text,original_hash")
-    .eq("book_id", sourceBookId)
-    .order("block_index", { ascending: true });
-  if (sourceBlockError) throw new Error(errorMessage(sourceBlockError));
-
-  const blockIdMap = new Map<string, string>();
-  for (const block of (sourceBlockRows ?? []) as BlockCloneRow[]) {
-    const mappedChapterId = chapterIdMap.get(block.chapter_id);
-    if (!mappedChapterId) continue;
-
-    const { data: insertedBlock, error: insertBlockError } = await blocksTable
-      .insert({
-        owner_id: userId,
-        book_id: forkBookId,
-        chapter_id: mappedChapterId,
-        block_index: block.block_index,
-        original_text: block.original_text,
-        original_hash: block.original_hash,
-      })
-      .select("id")
-      .single();
-    if (insertBlockError || !insertedBlock?.id) {
-      throw new Error(errorMessage(insertBlockError));
-    }
-    blockIdMap.set(block.id, insertedBlock.id as string);
-  }
-
-  const { data: sourceFootnotes, error: sourceFootnotesError } = await footnotesTable
-    .select("number,text,source_chapter_id,source_block_id")
-    .eq("book_id", sourceBookId)
-    .order("number", { ascending: true });
-  if (sourceFootnotesError) throw new Error(errorMessage(sourceFootnotesError));
-
-  for (const footnote of (sourceFootnotes ?? []) as FootnoteCloneRow[]) {
-    const mappedSourceChapterId = chapterIdMap.get(footnote.source_chapter_id);
-    const mappedSourceBlockId = blockIdMap.get(footnote.source_block_id);
-    if (!mappedSourceChapterId || !mappedSourceBlockId) continue;
-
-    const { error: footnoteInsertError } = await footnotesTable.insert({
-      owner_id: userId,
-      book_id: forkBookId,
-      number: footnote.number,
-      text: footnote.text,
-      source_chapter_id: mappedSourceChapterId,
-      source_block_id: mappedSourceBlockId,
-    });
-    if (footnoteInsertError) throw new Error(errorMessage(footnoteInsertError));
-  }
-
-  const { data: sourceAnchors, error: sourceAnchorsError } = await anchorsTable
-    .select("chapter_id,block_id,footnote_number,start_offset,end_offset")
-    .eq("book_id", sourceBookId);
-  if (sourceAnchorsError) throw new Error(errorMessage(sourceAnchorsError));
-
-  for (const anchor of (sourceAnchors ?? []) as FootnoteAnchorCloneRow[]) {
-    const mappedChapterId = chapterIdMap.get(anchor.chapter_id);
-    const mappedBlockId = blockIdMap.get(anchor.block_id);
-    if (!mappedChapterId || !mappedBlockId) continue;
-
-    const { error: anchorInsertError } = await anchorsTable.insert({
-      owner_id: userId,
-      book_id: forkBookId,
-      chapter_id: mappedChapterId,
-      block_id: mappedBlockId,
-      footnote_number: anchor.footnote_number,
-      start_offset: anchor.start_offset,
-      end_offset: anchor.end_offset,
-    });
-    if (anchorInsertError) throw new Error(errorMessage(anchorInsertError));
-  }
-}
-
-/**
- * Resolves the effective book id for a user's editor session.
- *
- * Behavior:
- * - if the requested book belongs to the user, return it unchanged;
- * - if it is a public base book from another user, create/reuse a fork
- *   so the user edits only their own copy.
- */
-export async function ensureUserBookContext(args: {
-  supabase: SupabaseClient;
-  userId: string;
-  requestedBookId: string;
-}): Promise<EnsureUserBookContextResult> {
-  const { supabase, userId, requestedBookId } = args;
-  const booksTable = supabase.from("books") as any;
-
-  const { data: sourceBook, error: sourceBookError } = await booksTable.select("*").eq("id", requestedBookId).single();
-  if (sourceBookError || !sourceBook?.id) {
-    throw new Error(errorMessage(sourceBookError));
-  }
-
-  if ((sourceBook.user_id as string) === userId) {
-    return {
-      resolvedBookId: requestedBookId,
-      forked: false,
-      sourceBookId: (sourceBook.source_book_id as string | null | undefined) ?? null,
-    };
-  }
-
-  if (sourceBook.is_public !== true) {
-    throw new Error("Ehhez a könyvhöz nincs hozzáférés.");
-  }
-  if (sourceBook.status !== "ready") {
-    throw new Error("A publikus alapkönyv még nincs kész állapotban.");
-  }
-
-  let existingForkId: string | null = null;
-  const existingForkResult = await booksTable
-    .select("id")
-    .eq("user_id", userId)
-    .eq("source_book_id", requestedBookId)
-    .order("created_at", { ascending: true })
-    .limit(1);
-  if (!existingForkResult.error) {
-    existingForkId = (existingForkResult.data as Array<{ id: string }> | null)?.[0]?.id ?? null;
-  } else if (!hasMissingColumnError(existingForkResult.error, "source_book_id")) {
-    throw new Error(errorMessage(existingForkResult.error));
-  }
-
-  if (existingForkId) {
-    return { resolvedBookId: existingForkId, forked: false, sourceBookId: requestedBookId };
-  }
-
-  const forkBasePayload = {
-    owner_id: userId,
-    user_id: userId,
-    title: sourceBook.title,
-    author: sourceBook.author ?? null,
-    description: sourceBook.description ?? null,
-    source_format: sourceBook.source_format,
-    source_filename: sourceBook.source_filename,
-    source_mime: sourceBook.source_mime,
-    source_size_bytes: sourceBook.source_size_bytes,
-    source_storage_path: sourceBook.source_storage_path,
-    status: "ready",
-    error_message: null,
-    is_public: false,
-    source_book_id: requestedBookId,
-  };
-
-  let insertForkResult = await booksTable.insert(forkBasePayload).select("id").single();
-  if (insertForkResult.error && hasMissingColumnError(insertForkResult.error, "source_book_id")) {
-    const fallbackPayload = { ...forkBasePayload };
-    delete (fallbackPayload as Record<string, unknown>).source_book_id;
-    insertForkResult = await booksTable.insert(fallbackPayload).select("id").single();
-  }
-  if (insertForkResult.error && hasMissingColumnError(insertForkResult.error, "is_public")) {
-    const fallbackPayload = { ...forkBasePayload };
-    delete (fallbackPayload as Record<string, unknown>).is_public;
-    delete (fallbackPayload as Record<string, unknown>).source_book_id;
-    insertForkResult = await booksTable.insert(fallbackPayload).select("id").single();
-  }
-
-  const forkBookId = (insertForkResult.data as { id?: string } | null)?.id ?? null;
-  if (insertForkResult.error || !forkBookId) {
-    throw new Error(errorMessage(insertForkResult.error));
-  }
-
-  try {
-    await cloneBookStructure({ supabase, sourceBookId: requestedBookId, forkBookId, userId });
-  } catch (error) {
-    await booksTable.delete().eq("id", forkBookId).eq("user_id", userId);
-    throw error;
-  }
-
-  return {
-    resolvedBookId: forkBookId,
-    forked: true,
-    sourceBookId: requestedBookId,
-  };
 }
 
 /**
@@ -399,22 +147,32 @@ export async function fetchBookDashboardData(
 
   if (blockError) throw new Error(errorMessage(blockError));
 
-  const { data: variantRows, error: variantError } = await supabase
-    .from("variants")
-    .select("id,block_id,text,status,variant_index,updated_at")
-    .eq("book_id", bookId)
-    .order("updated_at", { ascending: false })
-    .order("variant_index", { ascending: false });
+  let variantRows: VariantQueryRow[] | null = [];
+  if (viewerUserId) {
+    const { data: fetchedVariants, error: variantError } = await supabase
+      .from("variants")
+      .select("id,block_id,text,status,variant_index,updated_at")
+      .eq("book_id", bookId)
+      .eq("owner_id", viewerUserId)
+      .order("updated_at", { ascending: false })
+      .order("variant_index", { ascending: false });
 
-  if (variantError) throw new Error(errorMessage(variantError));
+    if (variantError) throw new Error(errorMessage(variantError));
+    variantRows = fetchedVariants as VariantQueryRow[] | null;
+  }
 
-  const { data: notesRows, error: notesError } = await supabase
-    .from("notes")
-    .select("id,block_id,anchor_start,anchor_end,kind,content,created_at")
-    .eq("book_id", bookId)
-    .order("created_at", { ascending: true });
+  let notesRows: NoteQueryRow[] | null = [];
+  if (viewerUserId) {
+    const { data: fetchedNotes, error: notesError } = await supabase
+      .from("notes")
+      .select("id,block_id,anchor_start,anchor_end,kind,content,created_at")
+      .eq("book_id", bookId)
+      .eq("owner_id", viewerUserId)
+      .order("created_at", { ascending: true });
 
-  if (notesError) throw new Error(errorMessage(notesError));
+    if (notesError) throw new Error(errorMessage(notesError));
+    notesRows = fetchedNotes as NoteQueryRow[] | null;
+  }
 
   const { data: footnoteRows, error: footnoteError } = await supabase
     .from("footnotes")

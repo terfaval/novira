@@ -20,6 +20,19 @@ const RATE_CFG = { windowMs: 10 * 60 * 1000, max: 30 };
 const INPUT_CHAR_CAP = 8000;
 const SELECTED_TEXT_CAP = 1200;
 const MAX_OUTPUT_TOKENS_CAP = 1200;
+const DEFAULT_TRANSLATE_MAX_OUTPUT_TOKENS = 450;
+
+function resolveTranslateMaxOutputTokens(originalText: string, override?: number): number {
+  if (override && Number.isFinite(override)) {
+    return Math.min(Math.trunc(override), MAX_OUTPUT_TOKENS_CAP);
+  }
+
+  const charCount = originalText?.length ?? 0;
+  const estimatedTokens = Math.ceil(charCount / 4);
+  const withBuffer = estimatedTokens + 80;
+  const resolved = Math.max(DEFAULT_TRANSLATE_MAX_OUTPUT_TOKENS, withBuffer);
+  return Math.min(resolved, MAX_OUTPUT_TOKENS_CAP);
+}
 
 const TranslateBlockSchema = z
   .object({
@@ -132,13 +145,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
     }
 
     const userId = auth.data.user.id;
-    const adminOnlyAction = body.action === "generate_book_summary" || body.action === "infer_publication_year";
-    if (adminOnlyAction && !isAdminUser(auth.data.user)) {
-      return NextResponse.json(
-        { ok: false, error: err("UNAUTHORIZED", "Admin jogosultsag szukseges.") },
-        { status: 403 }
-      );
-    }
+    const isAdmin = isAdminUser(auth.data.user);
     const ip = getClientIp(req);
     const rlKey = `llm:${userId}:${ip}`;
 
@@ -153,12 +160,11 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
     const provider = new OpenAiProvider();
 
     if (body.action === "generate_book_summary") {
-      const { data: bookRow, error: bookErr } = await supabase
-        .from("books")
-        .select("id,title,author")
-        .eq("id", body.bookId)
-        .eq("user_id", userId)
-        .single();
+      const bookQuery = supabase.from("books").select("id,title,author").eq("id", body.bookId);
+      if (!isAdmin) {
+        bookQuery.eq("owner_id", userId);
+      }
+      const { data: bookRow, error: bookErr } = await bookQuery.single();
       if (bookErr || !bookRow) {
         return NextResponse.json(
           { ok: false, error: err("BAD_REQUEST", "A könyv nem található a felhasználóhoz.") },
@@ -202,12 +208,14 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
     }
 
     if (body.action === "infer_publication_year") {
-      const { data: bookRow, error: bookErr } = await supabase
+      const bookQuery = supabase
         .from("books")
         .select("id,title,author,description,source_filename,publication_year,year")
-        .eq("id", body.bookId)
-        .eq("user_id", userId)
-        .single();
+        .eq("id", body.bookId);
+      if (!isAdmin) {
+        bookQuery.eq("owner_id", userId);
+      }
+      const { data: bookRow, error: bookErr } = await bookQuery.single();
       if (bookErr || !bookRow) {
         return NextResponse.json(
           { ok: false, error: err("BAD_REQUEST", "A könyv nem található a felhasználóhoz.") },
@@ -268,10 +276,18 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
       const legacyPayload = { year: out.year };
 
       const booksTable = supabase.from("books") as any;
-      const fullUpdate = await booksTable.update(fullPayload).eq("id", body.bookId).eq("user_id", userId);
+      const fullUpdateQuery = booksTable.update(fullPayload).eq("id", body.bookId);
+      if (!isAdmin) {
+        fullUpdateQuery.eq("owner_id", userId);
+      }
+      const fullUpdate = await fullUpdateQuery;
       if (fullUpdate.error) {
         if (hasMissingOptionalYearColumns(fullUpdate.error)) {
-          const legacyUpdate = await booksTable.update(legacyPayload).eq("id", body.bookId).eq("user_id", userId);
+          const legacyUpdateQuery = booksTable.update(legacyPayload).eq("id", body.bookId);
+          if (!isAdmin) {
+            legacyUpdateQuery.eq("owner_id", userId);
+          }
+          const legacyUpdate = await legacyUpdateQuery;
           if (legacyUpdate.error) {
             return NextResponse.json(
               { ok: false, error: err("INTERNAL", legacyUpdate.error.message ?? "Sikertelen ev mentes.") },
@@ -291,12 +307,11 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
     }
 
     if (body.action === "generate_chapter_title") {
-      const { data: bookRow, error: bookErr } = await supabase
-        .from("books")
-        .select("id,title,author")
-        .eq("id", body.bookId)
-        .eq("user_id", userId)
-        .single();
+      const bookQuery = supabase.from("books").select("id,title,author").eq("id", body.bookId);
+      if (!isAdmin) {
+        bookQuery.eq("owner_id", userId);
+      }
+      const { data: bookRow, error: bookErr } = await bookQuery.single();
       if (bookErr || !bookRow) {
         return NextResponse.json(
           { ok: false, error: err("BAD_REQUEST", "A könyv nem található a felhasználóhoz.") },
@@ -363,6 +378,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
     }
 
     if (body.action === "translate_block") {
+      const maxOutputTokens = resolveTranslateMaxOutputTokens(ctx.originalText, body.options?.maxOutputTokens);
       let out: { text: string };
       try {
         out = await provider.translateBlock({
@@ -373,7 +389,10 @@ export async function POST(req: NextRequest): Promise<NextResponse<LlmResponse>>
           userComment: body.options?.userComment ?? null,
           prevText: ctx.prevText,
           nextText: ctx.nextText,
-          options: body.options,
+          options: {
+            ...body.options,
+            maxOutputTokens,
+          },
         });
       } catch (providerError) {
         return NextResponse.json({ ok: false, error: mapProviderError(providerError) }, { status: 500 });

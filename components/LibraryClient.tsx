@@ -126,8 +126,8 @@ export function LibraryClient({
 
       if (!identity?.userId) {
         query = query.eq("is_public", true).eq("status", "ready");
-      } else if (identity.role !== "admin") {
-        query = query.or(`user_id.eq.${identity.userId},is_public.eq.true`);
+      } else {
+        query = query.or(`owner_id.eq.${identity.userId},is_public.eq.true`);
       }
 
       const { data, error } = await query;
@@ -169,11 +169,9 @@ export function LibraryClient({
     }
 
     loadBooks();
-    const id = window.setInterval(loadBooks, 4000);
 
     return () => {
       cancelled = true;
-      window.clearInterval(id);
     };
   }, [requireSession, supabase]);
 
@@ -220,6 +218,7 @@ export function LibraryClient({
   const effectiveActiveIndex = activeIndex >= 0 ? activeIndex : filteredBooks.length > 0 ? 0 : -1;
   const activeBook = effectiveActiveIndex >= 0 ? filteredBooks[effectiveActiveIndex] : null;
   const isMobileViewport = viewportWidth !== null && viewportWidth <= 720;
+  const enableHoverPreview = !isMobileViewport;
   const carouselVisibleCount = resolveCarouselVisibleCount(viewportWidth);
   const visibleBooks = useMemo(() => {
     if (effectiveActiveIndex < 0 || filteredBooks.length === 0) return [];
@@ -426,6 +425,7 @@ export function LibraryClient({
                       isActive={isActive}
                       onActivate={setActiveBookId}
                       openOnInactive={isMobileViewport}
+                      onHoverStart={enableHoverPreview ? setActiveBookId : undefined}
                     />
                   </div>
                 );

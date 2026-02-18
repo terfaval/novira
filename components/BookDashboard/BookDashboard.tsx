@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   type ChangeEvent,
@@ -23,7 +23,6 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   acceptBlockVariant,
   deleteEditedBlockVariant,
-  ensureUserBookContext,
   fetchBookDashboardData,
   type BookDashboardData,
   type DashboardBlock,
@@ -2387,17 +2386,7 @@ export function BookDashboard({ bookId }: { bookId: string }) {
       }
 
       try {
-        const context = await ensureUserBookContext({
-          supabase,
-          userId: identity.userId,
-          requestedBookId: bookId,
-        });
-        if (context.resolvedBookId !== bookId) {
-          router.replace(`/book/${context.resolvedBookId}`);
-          return;
-        }
-
-        const data = await fetchBookDashboardData(supabase, context.resolvedBookId, identity.userId);
+        const data = await fetchBookDashboardData(supabase, bookId, identity.userId);
         setState({ status: "ready", userId: identity.userId, role: identity.role, data });
         setEditForm(toBookEditForm(data));
 

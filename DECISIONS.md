@@ -172,3 +172,17 @@ All Hungarian UI copy must use correct Hungarian orthography, including full acc
 Scope:
 - Applies to all user-facing Hungarian text in web UI.
 - Technical identifiers, enum values, and database keys remain unchanged unless separately ticketed.
+
+---
+
+## D-020 - Shared Source Books + User-Scoped Overrides
+Status: Accepted | Date: 2026-02-17
+
+Decision:
+Use a shared, uploader-owned source book as the canonical base for every upload/import. Users see the source blocks but only create their own content for the specific blocks they generate or edit (user-scoped variants/notes/edits). No full per-user fork is created by default.
+
+Implications:
+- Admin can modify any source text (`original_text`) or source metadata, regardless of ownership.
+- Non-admin users can modify source text/metadata only on their own source books.
+- User edits are stored as per-user overrides layered on top of the shared source blocks.
+- Library/book access should not rely on auto-created forks for editing access.
