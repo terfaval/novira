@@ -76,6 +76,11 @@ Rate limiting, file size limits, error states.
 
 ## Implemented (Ad-hoc)
 
+- Ticket: ADHOC-UI-STOCK-TEMPLATE
+- Goal: Capture the shared landing/home/carousel design tokens and component behaviors in an MD reference so future agents can reuse the same UI stock.
+- Files modified: `docs/UI_STOCK_TEMPLATE.md`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED`
+
 - Ticket: ADHOC-BOOKDASHBOARD-MOJIBAKE-FIX-AND-HOME-CAROUSEL-HOVER
 - Goal: Fix garbled Book Dashboard Hungarian UI text and stop Home carousel from auto-advancing on hover so only cards on the current page show hover effects.
 - Files modified: `components/BookDashboard/BookDashboard.tsx`, `components/LibraryClient.tsx`, `app/globals.css`, `TICKETS.md`
@@ -1133,4 +1138,9 @@ Step board:
 - Ticket: ADHOC-GUEST-FORK-UNIQUE-CONSTRAINT-REUSE
 - Goal: When guest opens a public base book, reuse existing fork if the unique user+source constraint triggers during fork creation.
 - Files modified: `lib/db/queries/books.ts`, `TICKETS.md`
+- Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)
+
+- Ticket: ADHOC-PG-IMPORT-LARGE-FILE-LIMIT
+- Goal: Raise the `sources` bucket size cap (now 1 GB), allow `application/zip` uploads, and skip uploading blobs larger than `SOURCE_STORAGE_MAX_UPLOAD_BYTES` so oversized Project Gutenberg HTML ZIPs import successfully even though Supabase caps single uploads (~50 MB) on the hosted tier.
+- Files modified: `app/api/import/external/route.ts`, `.env.example`, `supabase/migrations/supabase_migrations_0002_upload_books.sql`, `TICKETS.md`
 - Commit hash: `WORKTREE-UNCOMMITTED` (changes made in workspace; commit not created in this session)

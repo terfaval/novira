@@ -74,6 +74,24 @@ begin
   end loop;
 end $$;
 
+do $$
+declare
+  r record;
+begin
+  for r in
+    select c.conname
+    from pg_constraint c
+    join pg_class t on t.oid = c.conrelid
+    join pg_namespace n on n.oid = t.relnamespace
+    where n.nspname = 'public'
+      and t.relname = 'books'
+      and c.contype = 'c'
+      and pg_get_constraintdef(c.oid) ilike '%status%'
+  loop
+    execute format('alter table public.books drop constraint %I', r.conname);
+  end loop;
+end $$;
+
 alter table public.books
   add constraint books_source_format_check
   check (source_format in ('html', 'rtf', 'docx'));
@@ -119,13 +137,14 @@ values (
   'sources',
   'sources',
   false,
-  12582912,
+  1073741824,
   array[
     'text/html',
     'application/xhtml+xml',
     'application/rtf',
     'text/rtf',
     'application/x-rtf',
+    'application/zip',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
   ]
 )

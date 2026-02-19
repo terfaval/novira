@@ -8,6 +8,10 @@ import type { CanonicalBook } from "@/lib/upload/parser";
 import { importProjectGutenbergHtmlZip } from "@/lib/upload/external/projectGutenberg";
 
 const BUCKET_NAME = process.env.SUPABASE_UPLOAD_BUCKET ?? "sources";
+const SOURCE_STORAGE_MAX_UPLOAD_BYTES = Number.parseInt(
+  process.env.SOURCE_STORAGE_MAX_UPLOAD_BYTES ?? "52428800",
+  10
+);
 
 const ExternalImportSchema = z.object({
   source: z.literal("project_gutenberg"),
@@ -75,15 +79,26 @@ export async function POST(req: NextRequest) {
   }
   const zipHash = createHash("sha256").update(imported.zipBuffer).digest("hex");
   const sourceFilename = `pg${sourceWorkId}-h.zip`;
-  const storagePath = `${userId}/external/${Date.now()}-${sourceFilename}`;
+  const storagePathBase = `${userId}/external/${Date.now()}-${sourceFilename}`;
+  const shouldUploadSourceFile =
+    SOURCE_STORAGE_MAX_UPLOAD_BYTES > 0
+      ? imported.zipBuffer.byteLength <= SOURCE_STORAGE_MAX_UPLOAD_BYTES
+      : true;
+  const storagePath = shouldUploadSourceFile ? storagePathBase : "";
 
-  const uploadRes = await supabase.storage
-    .from(BUCKET_NAME)
-    .upload(storagePath, imported.zipBuffer, { upsert: false, contentType: "application/zip" });
-  if (uploadRes.error) {
-    return NextResponse.json(
-      { ok: false, message: `A forrásfájl tárolása sikertelen: ${uploadRes.error.message}` },
-      { status: 500 }
+  if (shouldUploadSourceFile) {
+    const uploadRes = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(storagePath, imported.zipBuffer, { upsert: false, contentType: "application/zip" });
+    if (uploadRes.error) {
+      return NextResponse.json(
+        { ok: false, message: `A forrásfájl tárolása sikertelen: ${uploadRes.error.message}` },
+        { status: 500 }
+      );
+    }
+  } else {
+    console.warn(
+      `Skipping Supabase storage upload (${imported.zipBuffer.byteLength} bytes) because it exceeds SOURCE_STORAGE_MAX_UPLOAD_BYTES=${SOURCE_STORAGE_MAX_UPLOAD_BYTES}.`
     );
   }
 
@@ -152,7 +167,9 @@ export async function POST(req: NextRequest) {
     if (bookId) {
       await setBookStatus(supabase, bookId, "failed", message);
     } else {
+    if (storagePath) {
       await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
+    }
     }
     return NextResponse.json({ ok: false, message }, { status: 500 });
   }
